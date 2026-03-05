@@ -1,0 +1,9 @@
+require("./users");
+require("./decisionModel");
+require("./criteria");
+require("./subCriteria");
+require("./alternatives");
+require("./evaluations");
+require("./rules");
+require("./ruleConditions");
+require("./results");

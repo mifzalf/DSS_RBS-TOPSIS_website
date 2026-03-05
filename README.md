@@ -59,3 +59,15 @@ Database:
 Other Tools:
 - REST API
 - Git & GitHub
+
+## Author
+
+Muhammad Ifzal Faidurrahman  
+Diploma in Informatics Engineering  
+Politeknik Elektronika Negeri Surabaya
+
+---
+
+## License
+
+This project is intended for educational and research purposes.
