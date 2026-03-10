@@ -3,7 +3,6 @@ backend
 ├── config
 │
 ├── controllers
-│   ├── auth.controller.js
 │   ├── decisionModel.controller.js
 │   ├── criteria.controller.js
 │   └── recommendation.controller.js
@@ -14,7 +13,6 @@ backend
 ├── models
 │
 ├── routes
-│   ├── auth.js
 │   ├── decisionModel.js
 │   ├── criteria.js
 │   └── recommendation.js
@@ -27,3 +25,9 @@ backend
 │
 ├── app.js
 └── package.json
+
+alternatives
+evaluations
+rules
+ruleConditions
+results
