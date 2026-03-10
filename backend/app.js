@@ -13,8 +13,8 @@ const { db, configureDB } = require('./config/database')
 require('./models/association')
 
 // const authRouter = require('./routes/auth')
-// const decisionModelRouter = require('./routes/decisionModel')
-// const criteriaRouter = require('./routes/criteria')
+const decisionModelRouter = require('./routes/decisionModel')
+const criteriaRouter = require('./routes/criteria')
 // const subCriteriaRouter = require('./routes/subCriteria')
 // const alternativeRouter = require('./routes/alternative')
 // const evaluationRouter = require('./routes/evaluation')
@@ -60,8 +60,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // app.use(verifyToken)
 
-// app.use('/decision-model', decisionModelRouter)
-// app.use('/criteria', criteriaRouter)
+app.use('/decision-model', decisionModelRouter)
+app.use('/criteria', criteriaRouter)
 // app.use('/sub-criteria', subCriteriaRouter)
 // app.use('/alternatives', alternativeRouter)
 // app.use('/evaluations', evaluationRouter)

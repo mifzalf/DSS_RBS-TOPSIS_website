@@ -1,6 +1,5 @@
 const { DataTypes } = require("sequelize");
 const { db } = require("../config/database");
-const User = require("./users");
 
 const DecisionModel = db.define("decision_model", {
   id: {
@@ -21,8 +20,5 @@ const DecisionModel = db.define("decision_model", {
 }, {
   timestamps: false,
 });
-
-User.hasMany(DecisionModel, { foreignKey: "created_by" });
-DecisionModel.belongsTo(User, { foreignKey: "created_by" });
 
 module.exports = DecisionModel;

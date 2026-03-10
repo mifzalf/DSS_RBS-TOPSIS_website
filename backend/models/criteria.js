@@ -8,24 +8,38 @@ const Criteria = db.define("criteria", {
     primaryKey: true,
     autoIncrement: true,
   },
+
+  decision_model_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+
   code: {
     type: DataTypes.STRING,
   },
+
   name: {
     type: DataTypes.STRING,
+    allowNull: false
   },
+
   type: {
     type: DataTypes.ENUM("benefit", "cost"),
   },
+
   weight: {
     type: DataTypes.FLOAT,
   },
+
   status_active: {
     type: DataTypes.BOOLEAN,
+    defaultValue: true
   },
+
   created_at: {
     type: DataTypes.DATE,
   },
+
 }, {
   timestamps: false,
 });
