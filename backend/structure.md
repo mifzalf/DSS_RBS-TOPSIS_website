@@ -26,5 +26,4 @@ backend
 ├── app.js
 └── package.json
 
-ruleConditions
 results
