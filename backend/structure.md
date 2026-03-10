@@ -26,8 +26,7 @@ backend
 ├── app.js
 └── package.json
 
-alternatives
-evaluations
+ evaluations
 rules
 ruleConditions
 results

@@ -16,7 +16,7 @@ require('./models/association')
 const decisionModelRouter = require('./routes/decisionModel')
 const criteriaRouter = require('./routes/criteria')
 const alternativesRouter = require('./routes/alternatives')
-// const evaluationRouter = require('./routes/evaluation')
+const evaluationRouter = require('./routes/evaluations')
 // const ruleRouter = require('./routes/rule')
 // const recommendationRouter = require('./routes/recommendation')
 
@@ -62,7 +62,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/decision-model', decisionModelRouter)
 app.use('/criteria', criteriaRouter)
 app.use('/alternatives', alternativesRouter)
-// app.use('/evaluations', evaluationRouter)
+app.use('/evaluations', evaluationRouter)
 // app.use('/rules', ruleRouter)
 // app.use('/recommendation', recommendationRouter)
 
