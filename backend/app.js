@@ -17,7 +17,7 @@ const decisionModelRouter = require('./routes/decisionModel')
 const criteriaRouter = require('./routes/criteria')
 const alternativesRouter = require('./routes/alternatives')
 const evaluationRouter = require('./routes/evaluations')
-// const ruleRouter = require('./routes/rule')
+const ruleRouter = require('./routes/rules')
 // const recommendationRouter = require('./routes/recommendation')
 
 // const verifyToken = require('./middleware/jwt')
@@ -63,7 +63,7 @@ app.use('/decision-model', decisionModelRouter)
 app.use('/criteria', criteriaRouter)
 app.use('/alternatives', alternativesRouter)
 app.use('/evaluations', evaluationRouter)
-// app.use('/rules', ruleRouter)
+app.use('/rules', ruleRouter)
 // app.use('/recommendation', recommendationRouter)
 
 app.use(function(req,res,next){
