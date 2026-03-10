@@ -1,0 +1,29 @@
+backend
+│
+├── config
+│
+├── controllers
+│   ├── auth.controller.js
+│   ├── decisionModel.controller.js
+│   ├── criteria.controller.js
+│   └── recommendation.controller.js
+│
+├── middleware
+│   └── jwt.js
+│
+├── models
+│
+├── routes
+│   ├── auth.js
+│   ├── decisionModel.js
+│   ├── criteria.js
+│   └── recommendation.js
+│
+├── services
+│   ├── matrixBuilder.service.js
+│   ├── ruleEngine.service.js
+│   ├── topsis.service.js
+│   └── recommendation.service.js
+│
+├── app.js
+└── package.json
