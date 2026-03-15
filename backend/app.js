@@ -13,12 +13,12 @@ const { db, configureDB } = require('./config/database')
 require('./models/association')
 
 // const authRouter = require('./routes/auth')
-const decisionModelRouter = require('./routes/decisionModel')
-const criteriaRouter = require('./routes/criteria')
-const alternativesRouter = require('./routes/alternatives')
-const evaluationRouter = require('./routes/evaluations')
-const ruleRouter = require('./routes/rules')
-const resultsRouter = require('./routes/results')
+const decisionModelRouter = require('./routes/decisionModel.route')
+const criteriaRouter = require('./routes/criteria.route')
+const alternativesRouter = require('./routes/alternatives.route')
+const evaluationRouter = require('./routes/evaluations.route')
+const ruleRouter = require('./routes/rules.route')
+const resultsRouter = require('./routes/results.route')
 
 // const verifyToken = require('./middleware/jwt')
 
