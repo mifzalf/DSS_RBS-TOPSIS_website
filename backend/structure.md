@@ -1,29 +1,36 @@
 backend
 │
-├── config
+├── routes
+│    ├── criteria.js
+│    ├── alternatives.js
+│    ├── evaluations.js
+│    └── recommendation.js
 │
 ├── controllers
-│   ├── decisionModel.controller.js
-│   ├── criteria.controller.js
-│   └── recommendation.controller.js
-│
-├── middleware
-│   └── jwt.js
-│
-├── models
-│
-├── routes
-│   ├── decisionModel.js
-│   ├── criteria.js
-│   └── recommendation.js
+│    ├── criteria.controller.js
+│    ├── alternatives.controller.js
+│    ├── evaluations.controller.js
+│    └── recommendation.controller.js
 │
 ├── services
-│   ├── matrixBuilder.service.js
-│   ├── ruleEngine.service.js
-│   ├── topsis.service.js
-│   └── recommendation.service.js
+│    ├── ruleEngine.service.js
+│    ├── matrixBuilder.service.js
+│    ├── topsis.service.js
+│    └── recommendation.service.js
+│
+├── models
 │
 ├── app.js
 └── package.json
 
-results
+
+
+1 ruleEngine.service.js
+2 matrixBuilder.service.js
+
+3 topsis.service.js
+4 recommendation.service.js
+5 recommendation.controller.js
+6 recommendation.route.js
+7 integrasi ke app.js
+8 testing DSS end-to-end
