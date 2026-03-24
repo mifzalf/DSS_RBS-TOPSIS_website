@@ -1,116 +1,210 @@
-# DSS RBS–TOPSIS
+# RBS–TOPSIS Decision Support System
 
-A web-based Decision Support System (DSS) yang menggabungkan **Rule-Based System (RBS)** dengan metode **TOPSIS** untuk pengambilan keputusan multi-kriteria. Backend menyediakan autentikasi JWT, otorisasi per decision model, serta pipeline rekomendasi lengkap yang dapat diintegrasikan dengan frontend React atau aplikasi lain.
+A web-based Decision Support System (DSS) framework that integrates a **Rule-Based System (RBS)** with the **TOPSIS (Technique for Order Preference by Similarity to Ideal Solution)** method for multi-criteria decision making.
 
----
-
-## 🚀 Fitur Utama
-
-- CRUD lengkap untuk decision model, anggota (owner/editor/viewer), kriteria, sub-kriteria, alternatif, evaluasi, rules, dan rule condition.
-- Autentikasi JWT (register/login) dengan middleware verifikasi token.
-- Otorisasi per decision model melalui tabel relasi user ↔ model (`decisionModelUser`).
-- Pipeline rekomendasi sinkron (RBS → TOPSIS) yang menyimpan hasil ke tabel `results`.
-- Struktur backend modular dan mudah dikembangkan.
+This backend service provides secure authentication, role-based authorization per decision model, and a complete recommendation pipeline that can be seamlessly integrated with a frontend application.
 
 ---
 
-## 🧠 Gambaran Sistem
+## 🚀 Key Features
 
-Input Data → Rule-Based Filtering → Kandidat → Perhitungan TOPSIS → Ranking → Penyimpanan hasil.
-
-- **Rule-Based System** menyaring/mengklasifikasikan alternatif berdasarkan aturan logis.
-- **TOPSIS** menghitung skor preferensi setiap alternatif terhadap solusi ideal.
+- Full CRUD operations for:
+  - Decision Models
+  - Members (Owner / Editor / Viewer)
+  - Criteria & Sub-criteria
+  - Alternatives & Evaluations
+  - Rules & Rule Conditions
+- JWT-based authentication (Register & Login)
+- Role-based authorization per decision model
+- Integrated **RBS → TOPSIS recommendation pipeline**
+- RESTful API ready for frontend integration
+- Modular and scalable backend architecture
 
 ---
 
-## 🏗️ Arsitektur Backend
+## 🧠 System Overview
 
-1. **Autentikasi** – `POST /auth/register` dan `POST /auth/login` menghasilkan token JWT.
-2. **Context User** – middleware `currentUser` memuat profil pengguna setelah token tervalidasi.
-3. **Otorisasi** – middleware `authorizeDecisionModel` memastikan role pengguna (owner/editor/viewer) sesuai sebelum controller dijalankan.
-4. **Controller** – hanya menangani logika bisnis; validasi dan otorisasi telah ditangani di lapisan rute.
-5. **Service** – rule engine, TOPSIS, dan rekomendasi bekerja di layer service untuk menjaga keterpisahan kode.
+This system is designed as a **generic Decision Support System framework**, allowing it to be applied to various decision-making scenarios.
+
+### Decision Flow
+
+Input Data  
+→ Rule-Based System (Filtering / Classification)  
+→ Candidate Alternatives  
+→ TOPSIS Calculation  
+→ Ranking Results  
+→ Stored Recommendations  
+
+### Core Concept
+
+- **Rule-Based System (RBS)**  
+  Used for filtering or classifying alternatives based on logical conditions.
+
+- **TOPSIS Method**  
+  Used for ranking alternatives based on their distance to ideal solutions.
+
+---
+
+## 🏗️ Backend Architecture
+
+The backend is structured using a layered architecture:
+
+### 1. Authentication Layer
+
+- POST /auth/register  
+- POST /auth/login  
+
+Returns a JWT token for accessing protected endpoints.
+
+---
+
+### 2. User Context
+
+Middleware: currentUser
+
+- Extracts user information from JWT  
+- Attaches user data to the request  
+
+---
+
+### 3. Authorization Layer
+
+Middleware: authorizeDecisionModel
+
+- Ensures access based on roles:
+  - Owner  
+  - Editor  
+  - Viewer  
+
+---
+
+### 4. Controller Layer
+
+- Handles business logic  
+- Keeps controllers clean by delegating validation and authorization  
+
+---
+
+### 5. Recommendation Engine
+
+Located in the service layer:
+
+- Rule Engine Service  
+  Filters or classifies alternatives  
+
+- TOPSIS Service  
+  Computes preference scores and ranking  
+
+- Recommendation Service  
+  Executes full pipeline:  
+  RBS → TOPSIS → Result Storage  
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **Backend**: Node.js, Express.js
-- **Database**: MySQL (Sequelize ORM)
-- **Auth**: JWT, bcrypt
-- **Utilities**: dotenv, helmet, cors, morgan
+- Backend: Node.js, Express.js  
+- Database: MySQL (Sequelize ORM)  
+- Authentication: JWT, bcrypt  
+- Other Tools:
+  - dotenv  
+  - helmet  
+  - cors  
+  - morgan  
 
 ---
 
-## ⚙️ Menjalankan Proyek
+## ⚙️ Getting Started
 
-```bash
-cd backend
-npm install
-cp .env.example .env   # isi DB_HOST, DB_NAME, DB_USERNAME, DB_PASSWORD, JWT_SECRET
-npm run start
-```
+cd backend  
+npm install  
+cp .env.example .env  
+npm run start  
 
-Contoh variabel lingkungan:
+### Environment Variables
 
-```
-PORT=3000
-DB_HOST=localhost
-DB_NAME=db-dss-rbs-topsis
-DB_USERNAME=admin
-DB_PASSWORD=passwordku
-JWT_SECRET=supersecretkey
-JWT_EXPIRES_IN=2h
-```
+PORT=  
+DB_HOST=  
+DB_NAME=  
+DB_USERNAME=  
+DB_PASSWORD=  
+JWT_SECRET=  
+JWT_EXPIRES_IN=  
 
 ---
 
-## 🔐 Autentikasi & Role Decision Model
+## 🔐 Authentication & Roles
 
-1. Register atau login untuk mendapatkan token JWT.
-2. Sertakan header `Authorization: Bearer <TOKEN>` pada setiap request.
-3. Saat membuat decision model, pembuat otomatis menjadi **owner**. Owner dapat menambahkan **editor** atau **viewer** melalui endpoint members.
+1. Register or login to get a JWT token  
+2. Include token in request headers:
 
-### Endpoint Manajemen Anggota (Owner Only)
+Authorization: Bearer <TOKEN>
 
-- `GET /decision-model/:decisionModelId/members`
-- `POST /decision-model/:decisionModelId/members`
-- `PATCH /decision-model/:decisionModelId/members/:memberId`
-- `DELETE /decision-model/:decisionModelId/members/:memberId`
+3. Decision model roles:
+
+- Owner → full access  
+- Editor → modify data  
+- Viewer → read-only access  
 
 ---
 
-## 📊 Endpoint Rekomendasi
+## 👥 Member Management (Owner Only)
 
-- `POST /recommendations/decision-model/:decisionModelId` – menjalankan pipeline rekomendasi.
-- Tambahkan query `?clear=true` untuk menghapus hasil sebelumnya sebelum kalkulasi ulang.
-- Ambil hasil lengkap via `GET /results/decision-model/:decisionModelId`.
+- GET /decision-model/:decisionModelId/members  
+- POST /decision-model/:decisionModelId/members  
+- PATCH /decision-model/:decisionModelId/members/:memberId  
+- DELETE /decision-model/:decisionModelId/members/:memberId  
 
-```bash
+---
+
+## 📊 Recommendation API
+
+### Run Recommendation
+
+POST /recommendations/decision-model/:decisionModelId  
+
+Optional query:
+
+?clear=true  
+
+Clears previous results before recalculation.
+
+---
+
+### Example Request
+
 curl -X POST \
   -H "Authorization: Bearer <TOKEN>" \
   http://localhost:3000/recommendations/decision-model/1
-```
 
 ---
 
-## 📁 Struktur Direktori (Ringkas)
+### Get Results
 
-- `controller/` – logika bisnis per resource
-- `routes/` – definisi endpoint + middleware otorisasi
-- `middleware/` – JWT, `currentUser`, `authorizeDecisionModel`
-- `service/` – rule engine, TOPSIS, rekomendasi, otorisasi
-- `models/` – Sequelize + relasi `decisionModelUser`
-- `utils/` – helper (mis. handler error)
+GET /results/decision-model/:decisionModelId  
 
 ---
 
-## 🔮 Pengembangan Lanjut
+## 📁 Project Structure
 
-- Testing otomatis (Jest/Supertest)
-- Rule builder dinamis
-- Dashboard analitik & dokumentasi API (Swagger)
-- Metode DSS tambahan (AHP, SAW, dsb.)
+backend/  
+│  
+├── controllers/        # Business logic  
+├── routes/             # API endpoints  
+├── middleware/         # Authentication & authorization  
+├── services/           # RBS, TOPSIS, recommendation logic  
+├── models/             # Sequelize models & relations  
+├── utils/              # Helper utilities  
+└── config/             # Configuration files  
+
+---
+
+## 🔮 Future Improvements
+
+- Automated testing (Jest / Supertest)  
+- Dynamic rule builder (UI-based)  
+- Analytical dashboard & visualization  
+- Support for additional decision methods (AHP, SAW, etc.)  
 
 ---
 
@@ -118,10 +212,10 @@ curl -X POST \
 
 Muhammad Ifzal Faidurrahman  
 Diploma in Informatics Engineering  
-Politeknik Elektronika Negeri Surabaya
+Politeknik Elektronika Negeri Surabaya  
 
 ---
 
-## 📄 Lisensi
+## 📄 License
 
-Proyek ini ditujukan untuk kebutuhan pendidikan dan riset.
+This project is intended for educational and research purposes.
