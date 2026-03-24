@@ -7,3 +7,4 @@ require("./evaluations");
 require("./rules");
 require("./ruleConditions");
 require("./results");
+require("./decisionModelUser");

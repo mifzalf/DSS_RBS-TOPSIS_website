@@ -1,60 +1,78 @@
 const DecisionModel = require("../models/decisionModel")
+const DecisionModelUser = require("../models/decisionModelUser")
+const { ROLES } = require("../service/authorization.service")
+const handleControllerError = require("../utils/controllerError")
 
 exports.createDecisionModel = async (req, res) => {
     try {
         const { name, descriptions } = req.body
+        const userId = req.currentUser?.id
 
         const newDecisionModel = await DecisionModel.create({
             name,
             descriptions,
             created_at: new Date(),
         })
+
+        await DecisionModelUser.create({
+            decision_model_id: newDecisionModel.id,
+            user_id: userId,
+            role: ROLES.OWNER,
+            created_at: new Date()
+        })
+
         res.status(201).json({
             message:"Decision Model created successfully",
             data: newDecisionModel
         })
         
     } catch (error) {
-        res.status(500).json({
-             message: error.message
-         })
+        return handleControllerError(res,error)
     }
 }
 
 exports.getAllDecisionModels = async (req, res) => {
     try {
-        const decisionModels = await DecisionModel.findAll()
+        const decisionModels = await DecisionModel.findAll({
+            include: [
+                {
+                    association: "members",
+                    where: { user_id: req.currentUser.id },
+                    attributes: ["role"],
+                    required: true
+                }
+            ],
+            order: [["created_at", "DESC"]]
+        })
+
+        const data = decisionModels.map(model => {
+            const plain = model.get({ plain: true })
+            const membershipRole = plain.members?.[0]?.role
+            delete plain.members
+            return {
+                ...plain,
+                role: membershipRole
+            }
+        })
 
         res.json({
             message: "Decision Models retrieved successfully",
-            data: decisionModels
+            data
         })
     } catch (error) {
-        res.status(500).json({
-            message: error.message
-        })
+        return handleControllerError(res,error)
     }
 }
 
 exports.getDecisionModelById = async (req, res) => {
     try {
         const { id } = req.params
-        const decisionModel = await DecisionModel.findByPk(id)
-
-        if (!decisionModel) {
-            return res.status(404).json({
-                message: "Decision Model not found"
-            })
-        }
-
         res.json({
             message: "Decision Model retrieved successfully",
-            data: decisionModel
+            data: req.decisionModel || await DecisionModel.findByPk(id)
         })
     } catch (error) {
-        res.status(500).json({
-            message: error.message
-        })
+        return handleControllerError(res,error)
     }
 }
 
@@ -63,7 +81,7 @@ exports.updateDecisionModel = async (req, res) => {
         const { id } = req.params
         const { name, descriptions } = req.body
 
-        const decisionModel = await DecisionModel.findByPk(id)
+        const decisionModel = req.decisionModel || await DecisionModel.findByPk(id)
 
         if (!decisionModel) {
             return res.status(404).json({
@@ -88,9 +106,7 @@ exports.updateDecisionModel = async (req, res) => {
             data: decisionModel
         })
     } catch (error) {
-        res.status(500).json({
-            message: error.message
-        })
+        return handleControllerError(res,error)
     }
 }
 
@@ -98,7 +114,7 @@ exports.deleteDecisionModel = async (req, res) => {
     try {
         const { id } = req.params
 
-        const decisionModel = await DecisionModel.findByPk(id)
+        const decisionModel = req.decisionModel || await DecisionModel.findByPk(id)
 
         if (!decisionModel) {
             return res.status(404).json({
@@ -111,8 +127,6 @@ exports.deleteDecisionModel = async (req, res) => {
             message: "Decision Model deleted successfully"
         })
     } catch (error) {
-        res.status(500).json({
-            message: error.message
-        })
+        return handleControllerError(res,error)
     }
 }
