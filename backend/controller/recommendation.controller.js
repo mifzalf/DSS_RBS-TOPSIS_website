@@ -1,7 +1,7 @@
 const DecisionModel = require("../models/decisionModel")
 const Alternative = require("../models/alternatives")
 const Result = require("../models/results")
-const recommendationService = require("../service/recommendation.service")
+const recommendationService = require("../service/DSS/recommendation.service")
 const handleControllerError = require("../utils/controllerError")
 
 const formatResult = (result, alternativesCache) => {

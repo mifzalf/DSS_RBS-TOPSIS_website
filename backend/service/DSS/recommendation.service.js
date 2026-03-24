@@ -2,7 +2,7 @@ const ruleEngine = require("./ruleEngine.service")
 const matrixBuilder = require("./matrixBuilder.service")
 const topsis = require("./topsis.service")
 
-const Result = require("../models/results")
+const Result = require("../../models/results")
 
 exports.generateRecommendation = async (decisionModelId) => {
 

@@ -1,7 +1,7 @@
-const Alternative = require("../models/alternatives")
-const Criteria = require("../models/criteria")
-const Evaluation = require("../models/evaluations")
-const SubCriteria = require("../models/subCriteria")
+const Alternative = require("../../models/alternatives")
+const Criteria = require("../../models/criteria")
+const Evaluation = require("../../models/evaluations")
+const SubCriteria = require("../../models/subCriteria")
 
 exports.buildMatrix = async (decisionModelId)=>{
 

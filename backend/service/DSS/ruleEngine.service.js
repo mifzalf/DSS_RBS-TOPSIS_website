@@ -1,6 +1,6 @@
-const Rule = require("../models/rules")
-const RuleCondition = require("../models/ruleConditions")
-const Alternative = require("../models/alternatives")
+const Rule = require("../../models/rules")
+const RuleCondition = require("../../models/ruleConditions")
+const Alternative = require("../../models/alternatives")
 
 const evaluateCondition = (fieldValue, operator, conditionValue) => {
 
