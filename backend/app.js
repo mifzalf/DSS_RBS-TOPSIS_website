@@ -12,7 +12,7 @@ const { db, configureDB } = require('./config/database')
 
 require('./models/association')
 
-// const authRouter = require('./routes/auth')
+const authRouter = require('./routes/auth.route')
 const decisionModelRouter = require('./routes/decisionModel.route')
 const criteriaRouter = require('./routes/criteria.route')
 const alternativesRouter = require('./routes/alternatives.route')
@@ -20,8 +20,8 @@ const evaluationRouter = require('./routes/evaluations.route')
 const ruleRouter = require('./routes/rules.route')
 const resultsRouter = require('./routes/results.route')
 const recommendationRouter = require('./routes/recommendation.route')
-
-// const verifyToken = require('./middleware/jwt')
+const currentUser = require('./middleware/currentUser')
+const verifyToken = require('./middleware/jwt')
 
 const app = express()
 
@@ -34,6 +34,11 @@ app.use(express.urlencoded({ extended: false }))
 app.use(cookieParser())
 
 app.use(express.static(path.join(__dirname, 'public')));
+
+app.use('/auth', authRouter);
+
+app.use(verifyToken);
+app.use(currentUser);
 
 (async () => {
   try {
@@ -55,10 +60,6 @@ app.use(express.static(path.join(__dirname, 'public')));
     console.error(error)
   }
 })()
-
-// app.use('/auth', authRouter)
-
-// app.use(verifyToken)
 
 app.use('/decision-model', decisionModelRouter)
 app.use('/criteria', criteriaRouter)

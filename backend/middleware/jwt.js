@@ -1,20 +1,37 @@
-// const jwt = require("jsonwebtoken")
+const jwt = require("jsonwebtoken")
 
-// const verifyToken = (req, res, next) => {
-//     try {
-//         const token = req.header("Authorization")?.replace("Bearer ", "")
-//         if (!token) return res.status(401).json({ msg: "tidak ada akses" })
+const verifyToken = (req, res, next) => {
+    try {
+        if (!process.env.JWT_SECRET) {
+            return res.status(500).json({
+                message: "JWT_SECRET belum dikonfigurasi"
+            })
+        }
 
-//         jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-//             if (err) return res.status(401).json({ msg: "invalid / expired token" })
-//             req.user = decoded
-//             next()
-//         })
+        const authHeader = req.header("Authorization")
 
-//     } catch (error) {
-//         console.log(error)
-//         res.status(500).json({ msg: "Terjadi kesalahan pada fungsi jwt" })
-//     }
-// }
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            return res.status(401).json({
+                message: "Token otorisasi diperlukan"
+            })
+        }
 
-// module.exports = verifyToken
+        const token = authHeader.replace("Bearer ", "").trim()
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET)
+
+        req.user = {
+            id: decoded.id,
+            username: decoded.username,
+            name: decoded.name
+        }
+
+        next()
+    } catch (error) {
+        return res.status(401).json({
+            message: "Token tidak valid atau sudah kedaluwarsa"
+        })
+    }
+}
+
+module.exports = verifyToken
