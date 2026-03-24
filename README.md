@@ -1,87 +1,96 @@
-# DSS_RBS-TOPSIS_website
-RBS-TOPSIS Decision Support System  A generic web-based Decision Support System (DSS) framework  that combines Rule-Based System and TOPSIS for multi-criteria  decision making.  The system is designed to be flexible and adaptable for  various decision-making scenarios.
+# DSS RBS–TOPSIS
 
-## Overview
+Aplikasi ini merupakan kerangka Decision Support System berbasis web yang menggabungkan Rule-Based System (RBS) dan metode TOPSIS untuk pengambilan keputusan multi-kriteria. Backend menyediakan autentikasi JWT, otorisasi per decision model, serta proses rekomendasi yang dapat diintegrasikan dengan frontend React.
 
-Decision Support Systems are widely used to assist decision makers in situations involving multiple criteria and complex conditions.  
+## Fitur Utama
 
-This project integrates two approaches:
+- CRUD lengkap untuk decision model, anggota (owner/editor/viewer), kriteria, sub-kriteria, alternatif, evaluasi, rules, dan rule condition.
+- Autentikasi JWT dengan endpoint register/login dan middleware verifikasi token.
+- Otorisasi berbasis decision model melalui relasi user ↔ model (`decisionModelUser`).
+- Proses rekomendasi sinkron yang menjalankan RBS dan TOPSIS lalu menyimpan hasil ke tabel `results`.
+- API REST yang siap dikonsumsi oleh aplikasi frontend.
 
-1. **Rule-Based System (RBS)**  
-   Used for filtering or classifying alternatives based on predefined rules.
+## Arsitektur Backend
 
-2. **TOPSIS Method**  
-   Used to rank alternatives by measuring their distance from the ideal positive and negative solutions.
+1. **Autentikasi** – `POST /auth/register` dan `POST /auth/login` menghasilkan token JWT. Semua endpoint lain mewajibkan header `Authorization: Bearer <token>`.
+2. **Konteks User** – middleware `currentUser` memuat profil pengguna dari DB setelah token tervalidasi.
+3. **Otorisasi** – middleware `authorizeDecisionModel` menggunakan service otorisasi untuk memastikan role pengguna sesuai sebelum controller dieksekusi.
+4. **Controller** – fokus pada logika bisnis karena autentikasi/otorisasi dan pemuatan entitas dilakukan di layer route.
+5. **Service Rekomendasi** – modul TOPSIS dan rule engine mengolah data dan menghasilkan ranking akhir.
 
-By combining both approaches, the system can:
+## Teknologi
 
-- Filter candidates using logical rules
-- Rank the qualified candidates based on multiple criteria
-- Generate structured and objective recommendations
+- **Backend**: Node.js, Express.js
+- **Database**: MySQL (Sequelize ORM)
+- **Autentikasi**: JWT + bcrypt
+- **Lainnya**: dotenv, helmet, cors, morgan
 
-## Features
-
-- Multi-criteria decision analysis
-- Rule-based filtering mechanism
-- TOPSIS ranking algorithm
-- Web-based interface
-- Flexible criteria and weighting system
-- Adaptable for multiple decision-making scenarios
-
-# System Workflow
-
-The decision process in this system follows these stages:
-
-Input Data
-↓
-Rule-Based System (Filtering)
-↓
-Candidate Selection
-↓
-TOPSIS Calculation
-↓
-Ranking Result
-↓
-Recommendation Output
-
-## Tech Stack
-
-Frontend:
-- React (Vite)
-
-Backend:
-- Node.js
-- Express.js
-
-Database:
-- MySQL
-
-Other Tools:
-- REST API
-- Git & GitHub
-
-## Recommendation Endpoint
-
-Backend kini menyediakan endpoint resmi untuk menjalankan proses RBS + TOPSIS secara sinkron:
-
-- **POST `/recommendations/decision-model/:decisionModelId`** – menjalankan rule engine dan TOPSIS untuk model keputusan tertentu. Parameter URL adalah ID decision model.
-- Tambahkan query `?clear=true` bila ingin menghapus hasil lama sebelum perhitungan baru.
-- Respons berisi ringkasan jumlah data yang diproses beserta array hasil terbaru. Data lengkap tetap dapat diambil melalui endpoint `/results/decision-model/:id`.
-
-Contoh pemanggilan:
+## Menjalankan Proyek
 
 ```bash
-curl -X POST http://localhost:3000/recommendations/decision-model/1
+cd backend
+npm install
+cp .env.example .env   # isi DB_HOST, DB_NAME, DB_USERNAME, DB_PASSWORD, JWT_SECRET
+npm run start
 ```
 
-## Author
+Variabel lingkungan penting:
 
-Muhammad Ifzal Faidurrahman  
-Diploma in Informatics Engineering  
-Politeknik Elektronika Negeri Surabaya
+```
+PORT=3000
+DB_HOST=localhost
+DB_NAME=db-dss-rbs-topsis
+DB_USERNAME=admin
+DB_PASSWORD=passwordku
+JWT_SECRET=supersecretkey
+JWT_EXPIRES_IN=2h
+```
 
----
+## Alur Autentikasi & Role
 
-## License
+1. Register atau login untuk mendapatkan token JWT.
+2. Kirim token melalui header `Authorization: Bearer <token>`.
+3. Saat membuat decision model, pembuat otomatis menjadi **owner**. Owner dapat menambah **editor** atau **viewer** melalui endpoint members.
 
-This project is intended for educational and research purposes.
+### Endpoint Manajemen Anggota (owner-only)
+
+- `GET /decision-model/:decisionModelId/members`
+- `POST /decision-model/:decisionModelId/members`
+- `PATCH /decision-model/:decisionModelId/members/:memberId`
+- `DELETE /decision-model/:decisionModelId/members/:memberId`
+
+## Endpoint Rekomendasi
+
+`POST /recommendations/decision-model/:decisionModelId`
+
+- Query opsional `?clear=true` untuk menghapus hasil lama sebelum menjalankan ulang.
+- Respons berisi ringkasan decision model dan daftar hasil ranking terbaru.
+- Data lengkap dapat diambil melalui `GET /results/decision-model/:decisionModelId`.
+
+```bash
+curl -X POST \
+  -H "Authorization: Bearer <TOKEN>" \
+  http://localhost:3000/recommendations/decision-model/1
+```
+
+## Struktur Direktori
+
+- `controller/` – logika bisnis per resource.
+- `routes/` – deklarasi endpoint beserta middleware otorisasi.
+- `middleware/` – JWT, `currentUser`, dan `authorizeDecisionModel`.
+- `service/` – rekomendasi, otorisasi, helper lainnya.
+- `models/` – definisi Sequelize termasuk relasi `decisionModelUser`.
+- `utils/` – helper penanganan error (`controllerError`).
+
+## Pengembangan Lanjut
+
+- Tambahkan testing otomatis (Jest/Supertest) untuk auth, otorisasi, dan rekomendasi.
+- Bangun logging terstruktur atau monitoring untuk produksi.
+- Integrasikan UI React guna memanfaatkan seluruh API ini.
+
+## Kontributor
+
+- Putri Selly Agustin – [pselly0504@gmail.com](mailto:pselly0504@gmail.com)
+- Muhamad Fahrurozi
+
+"Terima kasih telah mendukung pengembangan sistem rekomendasi data mining ini. Semoga bermanfaat dalam membantu pengambilan keputusan yang lebih baik."
