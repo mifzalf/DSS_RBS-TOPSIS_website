@@ -2,6 +2,7 @@ const DecisionModel = require("../models/decisionModel")
 const Alternative = require("../models/alternatives")
 const Result = require("../models/results")
 const recommendationService = require("../service/recommendation.service")
+const handleControllerError = require("../utils/controllerError")
 
 const formatResult = (result, alternativesCache) => {
    const alternative = alternativesCache.get(result.alternative_id)
@@ -22,7 +23,7 @@ exports.generateRecommendation = async (req, res) => {
       const { decisionModelId } = req.params
       const clearPrevious = req.query.clear === "true"
 
-      const decisionModel = await DecisionModel.findByPk(decisionModelId)
+      const decisionModel = req.decisionModel || await DecisionModel.findByPk(decisionModelId)
 
       if (!decisionModel) {
          return res.status(404).json({
@@ -54,8 +55,6 @@ exports.generateRecommendation = async (req, res) => {
          data
       })
    } catch (error) {
-      return res.status(500).json({
-         message: error.message
-      })
+      return handleControllerError(res, error)
    }
 }

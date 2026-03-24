@@ -1,5 +1,6 @@
 const Rule = require("../models/rules")
 const DecisionModel = require("../models/decisionModel")
+const handleControllerError = require("../utils/controllerError")
 
 exports.createRule = async (req,res)=>{
   try{
@@ -38,16 +39,14 @@ exports.createRule = async (req,res)=>{
     })
 
   }catch(error){
-    res.status(500).json({
-      message:error.message
-    })
+    return handleControllerError(res,error)
   }
 }
 
 exports.getRulesByDecisionModel = async (req,res)=>{
   try{
 
-    const {decisionModelId} = req.params
+    const decisionModelId = req.decisionModelId || req.params.decisionModelId || req.params.decision_model_id
 
     const rules = await Rule.findAll({
       where:{decision_model_id:decisionModelId},
@@ -59,9 +58,7 @@ exports.getRulesByDecisionModel = async (req,res)=>{
     })
 
   }catch(error){
-    res.status(500).json({
-      message:error.message
-    })
+    return handleControllerError(res,error)
   }
 }
 
@@ -70,7 +67,7 @@ exports.getRuleById = async (req,res)=>{
 
     const {id} = req.params
 
-    const rule = await Rule.findByPk(id)
+    const rule = req.rule || await Rule.findByPk(id)
 
     if(!rule){
       return res.status(404).json({
@@ -83,9 +80,7 @@ exports.getRuleById = async (req,res)=>{
     })
 
   }catch(error){
-    res.status(500).json({
-      message:error.message
-    })
+    return handleControllerError(res,error)
   }
 }
 
@@ -94,7 +89,7 @@ exports.updateRule = async (req,res)=>{
 
     const {id} = req.params
 
-    const rule = await Rule.findByPk(id)
+    const rule = req.rule || await Rule.findByPk(id)
 
     if(!rule){
       return res.status(404).json({
@@ -145,9 +140,7 @@ exports.updateRule = async (req,res)=>{
     })
 
   }catch(error){
-    res.status(500).json({
-      message:error.message
-    })
+    return handleControllerError(res,error)
   }
 }
 
@@ -156,7 +149,7 @@ exports.deleteRule = async (req,res)=>{
 
     const {id} = req.params
 
-    const rule = await Rule.findByPk(id)
+    const rule = req.rule || await Rule.findByPk(id)
 
     if(!rule){
       return res.status(404).json({
@@ -171,8 +164,6 @@ exports.deleteRule = async (req,res)=>{
     })
 
   }catch(error){
-    res.status(500).json({
-      message:error.message
-    })
+    return handleControllerError(res,error)
   }
 }

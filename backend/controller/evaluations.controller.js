@@ -2,6 +2,7 @@ const Evaluation = require("../models/evaluations")
 const Alternative = require("../models/alternatives")
 const Criteria = require("../models/criteria")
 const SubCriteria = require("../models/subCriteria")
+const handleControllerError = require("../utils/controllerError")
 
 exports.createEvaluation = async (req,res)=>{
   try{
@@ -12,7 +13,7 @@ exports.createEvaluation = async (req,res)=>{
       sub_criteria_id
     } = req.body
 
-    const alternative = await Alternative.findByPk(alternative_id)
+    const alternative = req.alternative || await Alternative.findByPk(alternative_id)
     const criteria = await Criteria.findByPk(criteria_id)
     const subCriteria = await SubCriteria.findByPk(sub_criteria_id)
 
@@ -46,9 +47,7 @@ exports.createEvaluation = async (req,res)=>{
     })
 
   }catch(error){
-    res.status(500).json({
-      message:error.message
-    })
+    return handleControllerError(res,error)
   }
 }
 
@@ -56,6 +55,14 @@ exports.getEvaluationsByAlternative = async (req,res)=>{
   try{
 
     const {alternativeId} = req.params
+
+    const alternative = req.alternative || await Alternative.findByPk(alternativeId)
+
+    if(!alternative){
+      return res.status(404).json({
+        message:"Alternative not found"
+      })
+    }
 
     const evaluations = await Evaluation.findAll({
       where:{alternative_id:alternativeId},
@@ -76,9 +83,7 @@ exports.getEvaluationsByAlternative = async (req,res)=>{
     })
 
   }catch(error){
-    res.status(500).json({
-      message:error.message
-    })
+    return handleControllerError(res,error)
   }
 }
 
@@ -87,11 +92,19 @@ exports.getEvaluationById = async (req,res)=>{
 
     const {id} = req.params
 
-    const evaluation = await Evaluation.findByPk(id)
+    const evaluation = req.evaluation || await Evaluation.findByPk(id)
 
     if(!evaluation){
       return res.status(404).json({
         message:"Evaluation not found"
+      })
+    }
+
+    const alternative = req.alternative || await Alternative.findByPk(evaluation.alternative_id)
+
+    if(!alternative){
+      return res.status(404).json({
+        message:"Alternative not found"
       })
     }
 
@@ -100,9 +113,7 @@ exports.getEvaluationById = async (req,res)=>{
     })
 
   }catch(error){
-    res.status(500).json({
-      message:error.message
-    })
+    return handleControllerError(res,error)
   }
 }
 
@@ -111,11 +122,19 @@ exports.updateEvaluation = async (req,res)=>{
 
     const {id} = req.params
 
-    const evaluation = await Evaluation.findByPk(id)
+    const evaluation = req.evaluation || await Evaluation.findByPk(id)
 
     if(!evaluation){
       return res.status(404).json({
         message:"Evaluation not found"
+      })
+    }
+
+    const alternative = req.alternative || await Alternative.findByPk(evaluation.alternative_id)
+
+    if(!alternative){
+      return res.status(404).json({
+        message:"Alternative not found"
       })
     }
 
@@ -135,9 +154,7 @@ exports.updateEvaluation = async (req,res)=>{
     })
 
   }catch(error){
-    res.status(500).json({
-      message:error.message
-    })
+    return handleControllerError(res,error)
   }
 }
 
@@ -146,11 +163,19 @@ exports.deleteEvaluation = async (req,res)=>{
 
     const {id} = req.params
 
-    const evaluation = await Evaluation.findByPk(id)
+    const evaluation = req.evaluation || await Evaluation.findByPk(id)
 
     if(!evaluation){
       return res.status(404).json({
         message:"Evaluation not found"
+      })
+    }
+
+    const alternative = req.alternative || await Alternative.findByPk(evaluation.alternative_id)
+
+    if(!alternative){
+      return res.status(404).json({
+        message:"Alternative not found"
       })
     }
 
@@ -161,8 +186,6 @@ exports.deleteEvaluation = async (req,res)=>{
     })
 
   }catch(error){
-    res.status(500).json({
-      message:error.message
-    })
+    return handleControllerError(res,error)
   }
 }

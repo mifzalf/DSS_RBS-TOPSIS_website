@@ -38,7 +38,9 @@ exports.buildMatrix = async (decisionModelId)=>{
             e.criteria_id === criterion.id
          )
 
-         const value = evaluation ? evaluation.sub_criterion.value : 0
+         const value = evaluation && evaluation.sub_criterium
+            ? evaluation.sub_criterium.value
+            : 0
 
          row.push(value)
 

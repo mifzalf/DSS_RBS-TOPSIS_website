@@ -1,4 +1,5 @@
 const Criteria = require("../models/criteria")
+const handleControllerError = require("../utils/controllerError")
 
 exports.createCriteria = async (req,res)=>{
     try{
@@ -41,9 +42,7 @@ exports.createCriteria = async (req,res)=>{
         })
 
     }catch(error){
-        res.status(500).json({
-            message:error.message
-        })
+        return handleControllerError(res,error)
     }
 }
 
@@ -63,9 +62,7 @@ exports.getCriteriaByDecisionModel = async (req,res)=>{
         })
 
     }catch(error){
-        res.status(500).json({
-            message:error.message
-        })
+        return handleControllerError(res,error)
     }
 }
 
@@ -74,7 +71,7 @@ exports.getCriteriaById = async (req,res)=>{
 
         const {id} = req.params
 
-        const criteria = await Criteria.findByPk(id)
+        const criteria = req.criteria || await Criteria.findByPk(id)
 
         if(!criteria){
             return res.status(404).json({
@@ -87,9 +84,7 @@ exports.getCriteriaById = async (req,res)=>{
         })
 
     }catch(error){
-        res.status(500).json({
-            message:error.message
-        })
+        return handleControllerError(res,error)
     }
 }
 
@@ -99,7 +94,7 @@ exports.updateCriteria = async (req,res)=>{
         const {id} = req.params
         
 
-        const criteria = await Criteria.findByPk(id)
+        const criteria = req.criteria || await Criteria.findByPk(id)
 
         if(!criteria){
             return res.status(404).json({
@@ -157,9 +152,7 @@ exports.updateCriteria = async (req,res)=>{
         })
 
     }catch(error){
-        res.status(500).json({
-            message:error.message
-        })
+        return handleControllerError(res,error)
     }
 }
 
@@ -168,7 +161,7 @@ exports.deleteCriteria = async (req,res)=>{
 
         const {id} = req.params
 
-        const criteria = await Criteria.findByPk(id)
+        const criteria = req.criteria || await Criteria.findByPk(id)
 
         if(!criteria){
             return res.status(404).json({
@@ -183,8 +176,6 @@ exports.deleteCriteria = async (req,res)=>{
         })
 
     }catch(error){
-        res.status(500).json({
-            message:error.message
-        })
+        return handleControllerError(res,error)
     }
 }

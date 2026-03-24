@@ -1,12 +1,13 @@
 const RuleCondition = require("../models/ruleConditions")
 const Rule = require("../models/rules")
+const handleControllerError = require("../utils/controllerError")
 
 exports.createRuleCondition = async (req,res)=>{
     try{
 
         const {rule_id,field,operator,value} = req.body
 
-        const rule = await Rule.findByPk(rule_id)
+        const rule = req.rule || await Rule.findByPk(rule_id)
 
         if(!rule){
             return res.status(404).json({
@@ -27,9 +28,7 @@ exports.createRuleCondition = async (req,res)=>{
         })
 
     }catch(error){
-        res.status(500).json({
-            message:error.message
-        })
+        return handleControllerError(res,error)
     }
 }
 
@@ -37,6 +36,14 @@ exports.getConditionsByRule = async (req,res)=>{
     try{
 
         const {ruleId} = req.params
+
+        const rule = req.rule || await Rule.findByPk(ruleId)
+
+        if(!rule){
+            return res.status(404).json({
+                message:"Rule not found"
+            })
+        }
 
         const conditions = await RuleCondition.findAll({
             where:{rule_id:ruleId}
@@ -47,9 +54,7 @@ exports.getConditionsByRule = async (req,res)=>{
         })
 
     }catch(error){
-        res.status(500).json({
-            message:error.message
-        })
+        return handleControllerError(res,error)
     }
 }
 
@@ -58,11 +63,19 @@ exports.getRuleConditionById = async (req,res)=>{
 
         const {id} = req.params
 
-        const condition = await RuleCondition.findByPk(id)
+        const condition = req.ruleCondition || await RuleCondition.findByPk(id)
 
         if(!condition){
             return res.status(404).json({
                 message:"Rule condition not found"
+            })
+        }
+
+        const rule = req.rule || await Rule.findByPk(condition.rule_id)
+
+        if(!rule){
+            return res.status(404).json({
+                message:"Rule not found"
             })
         }
 
@@ -71,9 +84,7 @@ exports.getRuleConditionById = async (req,res)=>{
         })
 
     }catch(error){
-        res.status(500).json({
-            message:error.message
-        })
+        return handleControllerError(res,error)
     }
 }
 
@@ -82,11 +93,19 @@ exports.updateRuleCondition = async (req,res)=>{
 
         const {id} = req.params
 
-        const condition = await RuleCondition.findByPk(id)
+        const condition = req.ruleCondition || await RuleCondition.findByPk(id)
 
         if(!condition){
             return res.status(404).json({
                 message:"Rule condition not found"
+            })
+        }
+
+        const rule = req.rule || await Rule.findByPk(condition.rule_id)
+
+        if(!rule){
+            return res.status(404).json({
+                message:"Rule not found"
             })
         }
 
@@ -114,9 +133,7 @@ exports.updateRuleCondition = async (req,res)=>{
         })
 
     }catch(error){
-        res.status(500).json({
-            message:error.message
-        })
+        return handleControllerError(res,error)
     }
 }
 
@@ -125,11 +142,19 @@ exports.deleteRuleCondition = async (req,res)=>{
 
         const {id} = req.params
 
-        const condition = await RuleCondition.findByPk(id)
+        const condition = req.ruleCondition || await RuleCondition.findByPk(id)
 
         if(!condition){
             return res.status(404).json({
                 message:"Rule condition not found"
+            })
+        }
+
+        const rule = req.rule || await Rule.findByPk(condition.rule_id)
+
+        if(!rule){
+            return res.status(404).json({
+                message:"Rule not found"
             })
         }
 
@@ -140,10 +165,6 @@ exports.deleteRuleCondition = async (req,res)=>{
         })
 
     }catch(error){
-        res.status(500).json({
-            message:error.message
-        })
+        return handleControllerError(res,error)
     }
 }
-
-

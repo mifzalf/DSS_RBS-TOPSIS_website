@@ -1,5 +1,6 @@
 const Alternatives = require('../models/alternatives')
 const DecisionModel = require('../models/decisionModel')
+const handleControllerError = require('../utils/controllerError')
 
 exports.createAlternatives = async (req, res) => {
     try {
@@ -24,9 +25,7 @@ exports.createAlternatives = async (req, res) => {
             data: alternatives
         })
     } catch (error) {
-        res.status(500).json({
-            message: error.message
-        })
+        return handleControllerError(res, error)
     }
 }
 
@@ -44,31 +43,28 @@ exports.getAlternativessByDecisionModel = async (req, res) => {
             data: alternativess
         })
     } catch (error) {
-        res.status(500).json({
-            message: error.message
-        })
+        return handleControllerError(res, error)
     }
 }
 
 exports.getAlternativesById = async (req, res) => {
     try {
         const { id } = req.params
-        
-        const alternatives = await Alternatives.findByPk(id)
+
+        const alternatives = req.alternative || await Alternatives.findByPk(id)
 
         if (!alternatives) {
             return res.status(404).json({
                 message: "Alternatives not found"
             })
         }
+
         res.status(200).json({
             message: "Alternatives fetched successfully",
             data: alternatives
         })
     } catch (error) {
-        res.status(500).json({
-            message:error.message
-        })
+        return handleControllerError(res,error)
     }
 }
 
@@ -77,7 +73,7 @@ exports.updateAlternatives = async (req,res)=>{
 
     const {id} = req.params
 
-    const alternatives = await Alternatives.findByPk(id)
+    const alternatives = req.alternative || await Alternatives.findByPk(id)
 
     if(!alternatives){
         return res.status(404).json({
@@ -105,9 +101,7 @@ exports.updateAlternatives = async (req,res)=>{
     })
 
   }catch(error){
-        res.status(500).json({
-          message:error.message
-        })
+        return handleControllerError(res,error)
   }
 }
 
@@ -116,7 +110,7 @@ exports.deleteAlternatives = async (req,res)=>{
 
     const {id} = req.params
 
-    const alternatives = await Alternatives.findByPk(id)
+    const alternatives = req.alternative || await Alternatives.findByPk(id)
 
     if(!alternatives){
       return res.status(404).json({
@@ -131,8 +125,6 @@ exports.deleteAlternatives = async (req,res)=>{
     })
 
   }catch(error){
-    res.status(500).json({
-      message:error.message
-    })
+    return handleControllerError(res,error)
   }
 }

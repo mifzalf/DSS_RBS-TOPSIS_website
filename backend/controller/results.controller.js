@@ -1,6 +1,7 @@
 const Result = require("../models/results")
 const DecisionModel = require("../models/decisionModel")
 const Alternative = require("../models/alternatives")
+const handleControllerError = require("../utils/controllerError")
 
 exports.createResult = async (req,res)=>{
     try{
@@ -48,16 +49,14 @@ exports.createResult = async (req,res)=>{
         })
 
     }catch(error){
-        res.status(500).json({
-            message:error.message
-        })
+        return handleControllerError(res,error)
     }
 }
 
 exports.getResultsByDecisionModel = async (req,res)=>{
     try{
 
-        const {decisionModelId} = req.params
+        const decisionModelId = req.decisionModelId || req.params.decisionModelId || req.params.decision_model_id
 
         const results = await Result.findAll({
             where:{decision_model_id:decisionModelId},
@@ -75,9 +74,7 @@ exports.getResultsByDecisionModel = async (req,res)=>{
         })
 
     }catch(error){
-        res.status(500).json({
-            message:error.message
-        })
+        return handleControllerError(res,error)
     }
 }
 
@@ -86,7 +83,7 @@ exports.getResultById = async (req,res)=>{
 
         const {id} = req.params
 
-        const result = await Result.findByPk(id)
+        const result = req.result || await Result.findByPk(id)
 
         if(!result){
             return res.status(404).json({
@@ -99,9 +96,7 @@ exports.getResultById = async (req,res)=>{
         })
 
     }catch(error){
-        res.status(500).json({
-            message:error.message
-        })
+        return handleControllerError(res,error)
     }
 }
 
@@ -110,7 +105,7 @@ exports.updateResult = async (req,res)=>{
 
         const {id} = req.params
 
-        const result = await Result.findByPk(id)
+        const result = req.result || await Result.findByPk(id)
 
         if(!result){
             return res.status(404).json({
@@ -156,9 +151,7 @@ exports.updateResult = async (req,res)=>{
         })
 
     }catch(error){
-        res.status(500).json({
-            message:error.message
-        })
+        return handleControllerError(res,error)
     }
 }
 
@@ -167,7 +160,7 @@ exports.deleteResult = async (req,res)=>{
 
         const {id} = req.params
 
-        const result = await Result.findByPk(id)
+        const result = req.result || await Result.findByPk(id)
 
         if(!result){
             return res.status(404).json({
@@ -182,8 +175,6 @@ exports.deleteResult = async (req,res)=>{
         })
 
     }catch(error){
-        res.status(500).json({
-            message:error.message
-        })
+        return handleControllerError(res,error)
     }
 }
