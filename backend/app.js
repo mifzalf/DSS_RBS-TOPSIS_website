@@ -19,6 +19,7 @@ const alternativesRouter = require('./routes/alternatives.route')
 const evaluationRouter = require('./routes/evaluations.route')
 const ruleRouter = require('./routes/rules.route')
 const resultsRouter = require('./routes/results.route')
+const recommendationRouter = require('./routes/recommendation.route')
 
 // const verifyToken = require('./middleware/jwt')
 
@@ -65,6 +66,7 @@ app.use('/alternatives', alternativesRouter)
 app.use('/evaluations', evaluationRouter)
 app.use('/rules', ruleRouter)
 app.use('/results', resultsRouter)
+app.use('/recommendations', recommendationRouter)
 
 app.use(function(req,res,next){
   next(createError(404))

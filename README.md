@@ -60,6 +60,20 @@ Other Tools:
 - REST API
 - Git & GitHub
 
+## Recommendation Endpoint
+
+Backend kini menyediakan endpoint resmi untuk menjalankan proses RBS + TOPSIS secara sinkron:
+
+- **POST `/recommendations/decision-model/:decisionModelId`** – menjalankan rule engine dan TOPSIS untuk model keputusan tertentu. Parameter URL adalah ID decision model.
+- Tambahkan query `?clear=true` bila ingin menghapus hasil lama sebelum perhitungan baru.
+- Respons berisi ringkasan jumlah data yang diproses beserta array hasil terbaru. Data lengkap tetap dapat diambil melalui endpoint `/results/decision-model/:id`.
+
+Contoh pemanggilan:
+
+```bash
+curl -X POST http://localhost:3000/recommendations/decision-model/1
+```
+
 ## Author
 
 Muhammad Ifzal Faidurrahman  
