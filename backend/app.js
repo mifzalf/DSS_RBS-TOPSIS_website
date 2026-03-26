@@ -1,82 +1,95 @@
-require('dotenv').config()
+const createError = require("http-errors")
+const express = require("express")
+const logger = require("morgan")
+const cors = require("cors")
+const helmet = require("helmet")
 
-const createError = require('http-errors')
-const express = require('express')
-const path = require('path')
-const cookieParser = require('cookie-parser')
-const logger = require('morgan')
-const cors = require('cors')
-const helmet = require('helmet')
+const buildCorsOptions = () => {
+  const allowedOrigins = (process.env.CORS_ALLOWED_ORIGINS || "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean)
 
-const { db, configureDB } = require('./config/database')
+  if (!allowedOrigins.length) {
+    return {}
+  }
 
-require('./models/association')
+  return {
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true)
+      }
 
-const authRouter = require('./routes/auth.route')
-const decisionModelRouter = require('./routes/decisionModel.route')
-const criteriaRouter = require('./routes/criteria.route')
-const alternativesRouter = require('./routes/alternatives.route')
-const evaluationRouter = require('./routes/evaluations.route')
-const ruleRouter = require('./routes/rules.route')
-const resultsRouter = require('./routes/results.route')
-const recommendationRouter = require('./routes/recommendation.route')
-const currentUser = require('./middleware/currentUser')
-const verifyToken = require('./middleware/jwt')
+      return callback(createError(403, "Origin is not allowed by CORS"))
+    }
+  }
+}
 
-const app = express()
+const createApp = ({ includeRoutes = true } = {}) => {
+  const app = express()
+  const requestBodyLimit = process.env.REQUEST_BODY_LIMIT || "1mb"
 
-app.use(cors())
-app.use(helmet())
-app.use(logger('dev'))
+  app.disable("x-powered-by")
+  app.set("trust proxy", process.env.TRUST_PROXY === "true")
 
-app.use(express.json())
-app.use(express.urlencoded({ extended: false }))
-app.use(cookieParser())
+  app.use(cors(buildCorsOptions()))
+  app.use(helmet())
+  app.use(logger("dev"))
 
-app.use(express.static(path.join(__dirname, 'public')));
+  app.use(express.json({ limit: requestBodyLimit }))
+  app.use(express.urlencoded({ extended: false, limit: requestBodyLimit }))
 
-app.use('/auth', authRouter);
+  app.get("/health", (req, res) => {
+    res.status(200).json({
+      message: "Service is healthy",
+      data: {
+        uptime: process.uptime(),
+        timestamp: new Date().toISOString()
+      }
+    })
+  })
 
-app.use(verifyToken);
-app.use(currentUser);
+  if (includeRoutes) {
+    const authRouter = require("./routes/auth.route")
+    const decisionModelRouter = require("./routes/decisionModel.route")
+    const criteriaRouter = require("./routes/criteria.route")
+    const alternativesRouter = require("./routes/alternatives.route")
+    const evaluationRouter = require("./routes/evaluations.route")
+    const ruleRouter = require("./routes/rules.route")
+    const resultsRouter = require("./routes/results.route")
+    const recommendationRouter = require("./routes/recommendation.route")
+    const currentUser = require("./middleware/currentUser")
+    const verifyToken = require("./middleware/jwt")
 
-(async () => {
-  try {
-    await configureDB()
+    app.use("/auth", authRouter)
 
-    const RESET_DB = false
+    app.use(verifyToken)
+    app.use(currentUser)
 
-    if (RESET_DB) {
-      await db.query('SET FOREIGN_KEY_CHECKS = 0')
-      await db.sync({ force: true })
-      await db.query('SET FOREIGN_KEY_CHECKS = 1')
-      console.log("Database recreated")
-    } else {
-      await db.sync()
-      console.log("Database synced")
+    app.use("/decision-model", decisionModelRouter)
+    app.use("/criteria", criteriaRouter)
+    app.use("/alternatives", alternativesRouter)
+    app.use("/evaluations", evaluationRouter)
+    app.use("/rules", ruleRouter)
+    app.use("/results", resultsRouter)
+    app.use("/recommendations", recommendationRouter)
+  }
+
+  app.use((req, res, next) => {
+    next(createError(404))
+  })
+
+  app.use((err, req, res, next) => {
+    if (process.env.NODE_ENV !== "production") {
+      console.error(err)
     }
 
-  } catch (error) {
-    console.error(error)
-  }
-})()
-
-app.use('/decision-model', decisionModelRouter)
-app.use('/criteria', criteriaRouter)
-app.use('/alternatives', alternativesRouter)
-app.use('/evaluations', evaluationRouter)
-app.use('/rules', ruleRouter)
-app.use('/results', resultsRouter)
-app.use('/recommendations', recommendationRouter)
-
-app.use(function(req,res,next){
-  next(createError(404))
-})
-
-app.use(function(err,req,res,next){
-  res.status(err.status || 500).json({
-    message: err.message
+    res.status(err.status || 500).json({
+      message: err.message
+    })
   })
-})
 
-module.exports = app
+  return app
+}
+
+module.exports = createApp
