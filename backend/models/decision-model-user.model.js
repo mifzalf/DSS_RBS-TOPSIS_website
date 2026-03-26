@@ -1,10 +1,11 @@
 const { DataTypes } = require("sequelize")
 const { db } = require("../config/database")
+const { buildModelOptions } = require("./model-options")
 
-const DecisionModel = require("./decisionModel")
-const User = require("./users")
+const DecisionModel = require("./decision-model.model")
+const User = require("./user.model")
 
-const DecisionModelUser = db.define("decision_model_users", {
+const DecisionModelUser = db.define("DecisionModelUser", {
    id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
@@ -27,15 +28,14 @@ const DecisionModelUser = db.define("decision_model_users", {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW
    }
-}, {
-   timestamps: false,
+}, buildModelOptions("decision_model_users", {
    indexes: [
       {
          unique: true,
          fields: ["decision_model_id", "user_id"]
       }
    ]
-})
+}))
 
 DecisionModel.hasMany(DecisionModelUser, {
    foreignKey: "decision_model_id",
@@ -43,16 +43,18 @@ DecisionModel.hasMany(DecisionModelUser, {
    onDelete: "CASCADE"
 })
 DecisionModelUser.belongsTo(DecisionModel, {
-   foreignKey: "decision_model_id"
+   foreignKey: "decision_model_id",
+   as: "decisionModel"
 })
 
 User.hasMany(DecisionModelUser, {
    foreignKey: "user_id",
-   as: "decisionModels",
+   as: "memberships",
    onDelete: "CASCADE"
 })
 DecisionModelUser.belongsTo(User, {
-   foreignKey: "user_id"
+   foreignKey: "user_id",
+   as: "user"
 })
 
 module.exports = DecisionModelUser

@@ -1,47 +1,51 @@
 const express = require("express")
-const createError = require("http-errors")
 const router = express.Router()
 
 const criteriaController = require("../controller/criteria.controller")
-const subcriteriaController = require("../controller/subCriteria.controller")
-const Criteria = require("../models/criteria")
-const SubCriteria = require("../models/subCriteria")
+const subcriteriaController = require("../controller/sub-criteria.controller")
+const Criteria = require("../models/criteria.model")
+const SubCriteria = require("../models/sub-criteria.model")
 const authorizeDecisionModel = require("../middleware/authorizeDecisionModel")
+const validateRequest = require("../middleware/validateRequest")
+const schemas = require("../validation/schemas")
 const { ROLES } = require("../service/authorization.service")
+const { loadByPrimaryKey } = require("../utils/resourceLoader")
 
 const loadCriteriaByIdParam = (paramName = "id") => async (req) => {
-   const criteria = await Criteria.findByPk(req.params[paramName])
-
-   if (!criteria) {
-      throw createError(404, "Criteria not found")
-   }
-
-   req.criteria = criteria
+   const criteria = await loadByPrimaryKey({
+      req,
+      model: Criteria,
+      id: req.params[paramName],
+      requestKey: "criteria",
+      notFoundMessage: "Criteria not found"
+   })
 
    return criteria.decision_model_id
 }
 
 const loadSubCriteriaById = async (req) => {
-   const subCriteria = await SubCriteria.findByPk(req.params.id)
+   const subCriteria = await loadByPrimaryKey({
+      req,
+      model: SubCriteria,
+      id: req.params.id,
+      requestKey: "subCriteria",
+      notFoundMessage: "Sub-criteria not found"
+   })
 
-   if (!subCriteria) {
-      throw createError(404, "Sub-criteria not found")
-   }
-
-   const criteria = await Criteria.findByPk(subCriteria.criteria_id)
-
-   if (!criteria) {
-      throw createError(404, "Criteria not found")
-   }
-
-   req.subCriteria = subCriteria
-   req.criteria = criteria
+   const criteria = await loadByPrimaryKey({
+      req,
+      model: Criteria,
+      id: subCriteria.criteria_id,
+      requestKey: "criteria",
+      notFoundMessage: "Criteria not found"
+   })
 
    return criteria.decision_model_id
 }
 
 router.post(
    "/",
+   validateRequest(schemas.criteria.create),
    authorizeDecisionModel({
       source: "body",
       field: "decision_model_id",
@@ -52,6 +56,7 @@ router.post(
 
 router.get(
    "/decision-model/:decisionModelId",
+   validateRequest(schemas.criteria.byDecisionModel),
    authorizeDecisionModel({
       source: "params",
       field: "decisionModelId",
@@ -62,6 +67,7 @@ router.get(
 
 router.get(
    "/:id",
+   validateRequest(schemas.criteria.byId),
    authorizeDecisionModel({
       getId: loadCriteriaByIdParam(),
       roles: [ROLES.OWNER, ROLES.EDITOR, ROLES.VIEWER]
@@ -71,6 +77,7 @@ router.get(
 
 router.patch(
    "/:id",
+   validateRequest(schemas.criteria.update),
    authorizeDecisionModel({
       getId: loadCriteriaByIdParam(),
       roles: [ROLES.OWNER, ROLES.EDITOR]
@@ -80,6 +87,7 @@ router.patch(
 
 router.delete(
    "/:id",
+   validateRequest(schemas.criteria.byId),
    authorizeDecisionModel({
       getId: loadCriteriaByIdParam(),
       roles: [ROLES.OWNER, ROLES.EDITOR]
@@ -89,6 +97,7 @@ router.delete(
 
 router.post(
    "/:criteriaId/sub-criteria",
+   validateRequest(schemas.subCriteria.create),
    authorizeDecisionModel({
       getId: loadCriteriaByIdParam("criteriaId"),
       roles: [ROLES.OWNER, ROLES.EDITOR]
@@ -98,6 +107,7 @@ router.post(
 
 router.get(
    "/:criteriaId/sub-criteria",
+   validateRequest(schemas.subCriteria.byCriteria),
    authorizeDecisionModel({
       getId: loadCriteriaByIdParam("criteriaId"),
       roles: [ROLES.OWNER, ROLES.EDITOR, ROLES.VIEWER]
@@ -107,6 +117,7 @@ router.get(
 
 router.get(
    "/sub-criteria/:id",
+   validateRequest(schemas.subCriteria.byId),
    authorizeDecisionModel({
       getId: loadSubCriteriaById,
       roles: [ROLES.OWNER, ROLES.EDITOR, ROLES.VIEWER]
@@ -116,6 +127,7 @@ router.get(
 
 router.patch(
    "/sub-criteria/:id",
+   validateRequest(schemas.subCriteria.update),
    authorizeDecisionModel({
       getId: loadSubCriteriaById,
       roles: [ROLES.OWNER, ROLES.EDITOR]
@@ -125,6 +137,7 @@ router.patch(
 
 router.delete(
    "/sub-criteria/:id",
+   validateRequest(schemas.subCriteria.byId),
    authorizeDecisionModel({
       getId: loadSubCriteriaById,
       roles: [ROLES.OWNER, ROLES.EDITOR]

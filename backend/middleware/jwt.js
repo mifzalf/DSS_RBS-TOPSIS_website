@@ -4,7 +4,7 @@ const verifyToken = (req, res, next) => {
     try {
         if (!process.env.JWT_SECRET) {
             return res.status(500).json({
-                message: "JWT_SECRET belum dikonfigurasi"
+                message: "JWT_SECRET is not configured"
             })
         }
 
@@ -12,7 +12,7 @@ const verifyToken = (req, res, next) => {
 
         if (!authHeader || !authHeader.startsWith("Bearer ")) {
             return res.status(401).json({
-                message: "Token otorisasi diperlukan"
+                message: "Authorization token is required"
             })
         }
 
@@ -29,7 +29,7 @@ const verifyToken = (req, res, next) => {
         next()
     } catch (error) {
         return res.status(401).json({
-            message: "Token tidak valid atau sudah kedaluwarsa"
+            message: "Token is invalid or expired"
         })
     }
 }

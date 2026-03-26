@@ -1,7 +1,7 @@
 const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
 
-const User = require("../models/users")
+const User = require("../models/user.model")
 
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "1h"
 
@@ -13,7 +13,7 @@ const buildTokenPayload = (user) => ({
 
 const signAccessToken = (payload) => {
    if (!process.env.JWT_SECRET) {
-      throw new Error("JWT_SECRET belum dikonfigurasi")
+      throw new Error("JWT_SECRET is not configured")
    }
 
    return jwt.sign(payload, process.env.JWT_SECRET, {
@@ -33,7 +33,7 @@ exports.register = async (req, res) => {
 
       if (!name?.trim() || !username?.trim() || !password?.trim()) {
          return res.status(400).json({
-            message: "Nama, username, dan password wajib diisi"
+            message: "Name, username, and password are required"
          })
       }
 
@@ -41,7 +41,7 @@ exports.register = async (req, res) => {
 
       if (exists) {
          return res.status(409).json({
-            message: "Username sudah digunakan"
+            message: "Username already in use"
          })
       }
 
@@ -56,12 +56,12 @@ exports.register = async (req, res) => {
 
       const token = signAccessToken(buildTokenPayload(newUser))
 
-      return res.status(201).json({
-         message: "Registrasi berhasil",
-         data: sanitizeUser(newUser),
-         token,
-         expiresIn: JWT_EXPIRES_IN
-      })
+       return res.status(201).json({
+          message: "Registration successful",
+          data: sanitizeUser(newUser),
+          token,
+          expiresIn: JWT_EXPIRES_IN
+       })
    } catch (error) {
       return res.status(500).json({
          message: error.message
@@ -75,7 +75,7 @@ exports.login = async (req, res) => {
 
       if (!username?.trim() || !password?.trim()) {
          return res.status(400).json({
-            message: "Username dan password wajib diisi"
+            message: "Username and password are required"
          })
       }
 
@@ -83,7 +83,7 @@ exports.login = async (req, res) => {
 
       if (!user) {
          return res.status(401).json({
-            message: "Username atau password salah"
+            message: "Invalid username or password"
          })
       }
 
@@ -91,14 +91,14 @@ exports.login = async (req, res) => {
 
       if (!passwordMatch) {
          return res.status(401).json({
-            message: "Username atau password salah"
+            message: "Invalid username or password"
          })
       }
 
       const token = signAccessToken(buildTokenPayload(user))
 
       return res.json({
-         message: "Login berhasil",
+         message: "Login successful",
          data: sanitizeUser(user),
          token,
          expiresIn: JWT_EXPIRES_IN

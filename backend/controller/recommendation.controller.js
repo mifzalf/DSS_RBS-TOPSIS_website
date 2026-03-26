@@ -1,8 +1,8 @@
-const DecisionModel = require("../models/decisionModel")
-const Alternative = require("../models/alternatives")
-const Result = require("../models/results")
+const DecisionModel = require("../models/decision-model.model")
+const Alternative = require("../models/alternative.model")
 const recommendationService = require("../service/DSS/recommendation.service")
 const handleControllerError = require("../utils/controllerError")
+const { sendSuccess } = require("../utils/apiResponse")
 
 const formatResult = (result, alternativesCache) => {
    const alternative = alternativesCache.get(result.alternative_id)
@@ -21,18 +21,13 @@ const formatResult = (result, alternativesCache) => {
 exports.generateRecommendation = async (req, res) => {
    try {
       const { decisionModelId } = req.params
-      const clearPrevious = req.query.clear === "true"
 
       const decisionModel = req.decisionModel || await DecisionModel.findByPk(decisionModelId)
 
       if (!decisionModel) {
          return res.status(404).json({
-            message: "Decision model tidak ditemukan"
+            message: "Decision model not found"
          })
-      }
-
-      if (clearPrevious) {
-         await Result.destroy({ where: { decision_model_id: decisionModelId } })
       }
 
       const recommendation = await recommendationService.generateRecommendation(decisionModelId)
@@ -45,15 +40,17 @@ exports.generateRecommendation = async (req, res) => {
 
       const data = recommendation.map(item => formatResult(item, cache))
 
-      return res.status(200).json({
-         message: "Rekomendasi berhasil digenerate",
-         decisionModel: {
-            id: decisionModel.id,
-            name: decisionModel.name
-         },
-         count: data.length,
-         data
-      })
+      return sendSuccess(res, {
+         message: "Recommendation generated successfully",
+         data,
+         meta: {
+            decisionModel: {
+                id: decisionModel.id,
+                name: decisionModel.name
+             },
+             count: data.length
+          },
+       })
    } catch (error) {
       return handleControllerError(res, error)
    }

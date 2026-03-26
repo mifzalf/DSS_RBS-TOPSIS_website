@@ -1,20 +1,20 @@
 const express = require("express")
-const createError = require("http-errors")
 const router = express.Router()
 
 const recommendationController = require("../controller/recommendation.controller")
-const DecisionModel = require("../models/decisionModel")
+const DecisionModel = require("../models/decision-model.model")
 const authorizeDecisionModel = require("../middleware/authorizeDecisionModel")
 const { ROLES } = require("../service/authorization.service")
+const { loadByPrimaryKey } = require("../utils/resourceLoader")
 
 const loadDecisionModel = async (req) => {
-   const decisionModel = await DecisionModel.findByPk(req.params.decisionModelId)
-
-   if (!decisionModel) {
-      throw createError(404, "Decision model not found")
-   }
-
-   req.decisionModel = decisionModel
+   const decisionModel = await loadByPrimaryKey({
+      req,
+      model: DecisionModel,
+      id: req.params.decisionModelId,
+      requestKey: "decisionModel",
+      notFoundMessage: "Decision model not found"
+   })
 
    return decisionModel.id
 }

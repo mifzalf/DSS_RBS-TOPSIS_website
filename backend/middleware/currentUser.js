@@ -1,4 +1,4 @@
-const User = require("../models/users")
+const User = require("../models/user.model")
 
 const currentUser = async (req, res, next) => {
    try {
@@ -6,7 +6,7 @@ const currentUser = async (req, res, next) => {
 
       if (!requestUserId) {
          return res.status(401).json({
-            message: "Token tidak menyediakan informasi user"
+            message: "Token does not include user information"
          })
       }
 
@@ -14,7 +14,7 @@ const currentUser = async (req, res, next) => {
 
       if (!user) {
          return res.status(401).json({
-            message: "User tidak ditemukan"
+            message: "User not found"
          })
       }
 

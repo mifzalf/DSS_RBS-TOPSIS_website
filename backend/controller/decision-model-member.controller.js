@@ -1,10 +1,11 @@
-const DecisionModelUser = require("../models/decisionModelUser")
-const User = require("../models/users")
+const DecisionModelUser = require("../models/decision-model-user.model")
+const User = require("../models/user.model")
 const {
    AuthorizationError,
    ROLES
 } = require("../service/authorization.service")
 const handleControllerError = require("../utils/controllerError")
+const { sendSuccess } = require("../utils/apiResponse")
 
 const ensureOwnerCountAfterChange = async (decisionModelId, isRemoval = false) => {
    const ownerCount = await DecisionModelUser.count({
@@ -15,7 +16,7 @@ const ensureOwnerCountAfterChange = async (decisionModelId, isRemoval = false) =
    })
 
    if (ownerCount <= 1 && isRemoval) {
-      throw new AuthorizationError("Decision model harus memiliki minimal satu owner", 400)
+      throw new AuthorizationError("Decision model must have at least one owner", 400)
    }
 
    return ownerCount
@@ -27,12 +28,12 @@ exports.listMembers = async (req, res) => {
 
       const members = await DecisionModelUser.findAll({
          where: { decision_model_id: decisionModelId },
-         include: [
-            {
-               model: User,
-               attributes: ["id", "name", "username"]
-            }
-         ],
+          include: [
+             {
+                association: "user",
+                attributes: ["id", "name", "username"]
+             }
+          ],
          order: [["role", "ASC"], ["created_at", "ASC"]]
       })
 
@@ -42,7 +43,8 @@ exports.listMembers = async (req, res) => {
          user: member.user
       }))
 
-      return res.json({
+      return sendSuccess(res, {
+         message: "Member list retrieved successfully",
          data
       })
    } catch (error) {
@@ -56,14 +58,14 @@ exports.addMember = async (req, res) => {
       const { user_id, role } = req.body
 
       if (!Object.values(ROLES).includes(role)) {
-         throw new AuthorizationError("Role tidak valid", 400)
+         throw new AuthorizationError("Invalid role", 400)
       }
 
       const targetUser = await User.findByPk(user_id)
 
       if (!targetUser) {
          return res.status(404).json({
-            message: "User tidak ditemukan"
+            message: "User not found"
          })
       }
 
@@ -76,7 +78,7 @@ exports.addMember = async (req, res) => {
 
       if (existing) {
          return res.status(400).json({
-            message: "User sudah terdaftar pada decision model ini"
+            message: "User is already a member of this decision model"
          })
       }
 
@@ -87,11 +89,12 @@ exports.addMember = async (req, res) => {
          created_at: new Date()
       })
 
-      return res.status(201).json({
-         message: "User berhasil ditambahkan",
+      return sendSuccess(res, {
+         status: 201,
+         message: "Member added successfully",
          data: {
-            id: membership.id,
-            role: membership.role,
+             id: membership.id,
+             role: membership.role,
             user: {
                id: targetUser.id,
                name: targetUser.name,
@@ -111,7 +114,7 @@ exports.updateMemberRole = async (req, res) => {
       const { role } = req.body
 
       if (!Object.values(ROLES).includes(role)) {
-         throw new AuthorizationError("Role tidak valid", 400)
+         throw new AuthorizationError("Invalid role", 400)
       }
 
       const membership = await DecisionModelUser.findOne({
@@ -122,9 +125,9 @@ exports.updateMemberRole = async (req, res) => {
       })
 
       if (!membership) {
-          return res.status(404).json({
-             message: "Member tidak ditemukan"
-          })
+           return res.status(404).json({
+              message: "Member not found"
+           })
       }
 
       if (membership.role === ROLES.OWNER && role !== ROLES.OWNER) {
@@ -134,8 +137,8 @@ exports.updateMemberRole = async (req, res) => {
       membership.role = role
       await membership.save()
 
-      return res.json({
-         message: "Role member diperbarui",
+      return sendSuccess(res, {
+         message: "Member role updated successfully",
          data: membership
       })
    } catch (error) {
@@ -157,7 +160,7 @@ exports.removeMember = async (req, res) => {
 
       if (!membership) {
          return res.status(404).json({
-            message: "Member tidak ditemukan"
+            message: "Member not found"
          })
       }
 
@@ -167,8 +170,8 @@ exports.removeMember = async (req, res) => {
 
       await membership.destroy()
 
-      return res.json({
-         message: "Member berhasil dihapus"
+      return sendSuccess(res, {
+         message: "Member removed successfully"
       })
    } catch (error) {
       return handleControllerError(res, error)

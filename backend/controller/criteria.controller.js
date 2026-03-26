@@ -1,5 +1,8 @@
-const Criteria = require("../models/criteria")
+const Criteria = require("../models/criteria.model")
+const criteriaService = require("../service/criteria.service")
 const handleControllerError = require("../utils/controllerError")
+const { sendSuccess } = require("../utils/apiResponse")
+const { getRequestResource } = require("../utils/requestResource")
 
 exports.createCriteria = async (req,res)=>{
     try{
@@ -12,33 +15,18 @@ exports.createCriteria = async (req,res)=>{
             weight
         } = req.body
 
-        const existingCriteria = await Criteria.findAll({
-            where:{ decision_model_id }
-        })
-
-        const totalWeight = existingCriteria.reduce((sum,item)=>{
-            return sum + item.weight
-        },0)
-
-        if(totalWeight + Number(weight) > 1){
-            return res.status(400).json({
-                message:"Total weight cannot exceed 1"
-            })
-        }
-
-        const criteria = await Criteria.create({
+        const criteria = await criteriaService.createCriteria({
             decision_model_id,
             code,
             name,
             type,
-            weight,
-            status_active:true,
-            created_at:new Date()
+            weight
         })
 
-        res.status(201).json({
+        return sendSuccess(res, {
+            status: 201,
             message:"Criteria created successfully",
-            data:criteria
+            data: criteria
         })
 
     }catch(error){
@@ -57,8 +45,9 @@ exports.getCriteriaByDecisionModel = async (req,res)=>{
             }
         })
 
-        res.json({
-            data:criteria
+        return sendSuccess(res, {
+            message: "Criteria list retrieved successfully",
+            data: criteria
         })
 
     }catch(error){
@@ -71,16 +60,17 @@ exports.getCriteriaById = async (req,res)=>{
 
         const {id} = req.params
 
-        const criteria = req.criteria || await Criteria.findByPk(id)
+        const criteria = await getRequestResource({
+            req,
+            key: "criteria",
+            model: Criteria,
+            id,
+            notFoundMessage: "Criteria not found"
+        })
 
-        if(!criteria){
-            return res.status(404).json({
-                message:"Criteria not found"
-            })
-        }
-
-        res.json({
-            data:criteria
+        return sendSuccess(res, {
+            message: "Criteria details retrieved successfully",
+            data: criteria
         })
 
     }catch(error){
@@ -94,13 +84,13 @@ exports.updateCriteria = async (req,res)=>{
         const {id} = req.params
         
 
-        const criteria = req.criteria || await Criteria.findByPk(id)
-
-        if(!criteria){
-            return res.status(404).json({
-                message:"Criteria not found"
-            })
-        }
+        const criteria = await getRequestResource({
+            req,
+            key: "criteria",
+            model: Criteria,
+            id,
+            notFoundMessage: "Criteria not found"
+        })
 
         const updateData = {}
 
@@ -119,24 +109,6 @@ exports.updateCriteria = async (req,res)=>{
         }
 
         if(weight !== undefined && weight !== ""){
-
-            const allCriteria = await Criteria.findAll({
-                where:{
-                    decision_model_id:criteria.decision_model_id
-                }
-            })
-
-            const totalWeight = allCriteria.reduce((sum,item)=>{
-                return sum + item.weight
-            },0)
-
-            const newTotal = totalWeight - criteria.weight + Number(weight)
-
-            if(newTotal > 1){
-                return res.status(400).json({
-                    message:"Total weight cannot exceed 1"
-                })
-            }
             updateData.weight = weight
         }
 
@@ -144,11 +116,11 @@ exports.updateCriteria = async (req,res)=>{
             updateData.status_active = status_active
         }
 
-        await criteria.update(updateData)
+        await criteriaService.updateCriteria(criteria, updateData)
 
-        res.json({
+        return sendSuccess(res, {
             message:"Criteria updated successfully",
-            data:criteria
+            data: criteria
         })
 
     }catch(error){
@@ -161,17 +133,17 @@ exports.deleteCriteria = async (req,res)=>{
 
         const {id} = req.params
 
-        const criteria = req.criteria || await Criteria.findByPk(id)
-
-        if(!criteria){
-            return res.status(404).json({
-                message:"Criteria not found"
-            })
-        }
+        const criteria = await getRequestResource({
+            req,
+            key: "criteria",
+            model: Criteria,
+            id,
+            notFoundMessage: "Criteria not found"
+        })
 
         await criteria.destroy()
 
-        res.json({
+        return sendSuccess(res, {
             message:"Criteria deleted successfully"
         })
 

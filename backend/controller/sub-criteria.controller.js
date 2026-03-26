@@ -1,6 +1,9 @@
-const SubCriteria = require("../models/subCriteria")
-const Criteria = require("../models/criteria")
+const SubCriteria = require("../models/sub-criteria.model")
+const Criteria = require("../models/criteria.model")
+const subCriteriaService = require("../service/sub-criteria.service")
 const handleControllerError = require("../utils/controllerError")
+const { sendSuccess } = require("../utils/apiResponse")
+const { getRequestResource } = require("../utils/requestResource")
 
 const resolveCriteria = async (req, criteriaId) => {
    if (req.criteria) {
@@ -11,7 +14,13 @@ const resolveCriteria = async (req, criteriaId) => {
       return null
    }
 
-   return Criteria.findByPk(criteriaId)
+    return getRequestResource({
+       req,
+       key: "criteria",
+       model: Criteria,
+       id: criteriaId,
+       notFoundMessage: "Criteria not found"
+    })
 }
 
 const resolveSubCriteria = async (req, id) => {
@@ -23,7 +32,13 @@ const resolveSubCriteria = async (req, id) => {
       return null
    }
 
-   return SubCriteria.findByPk(id)
+    return getRequestResource({
+       req,
+       key: "subCriteria",
+       model: SubCriteria,
+       id,
+       notFoundMessage: "Sub-criteria not found"
+    })
 }
 
 exports.createSubCriteria = async (req,res)=>{
@@ -39,15 +54,17 @@ exports.createSubCriteria = async (req,res)=>{
             })
         }
 
-        const subCriteria = await SubCriteria.create({
-            criteria_id: criteria.id,
+        const subCriteria = await subCriteriaService.createSubCriteria({
+            criteria,
+            criteriaIdFromBody: criteria_id,
             label,
             value
         })
 
-        res.status(201).json({
+        return sendSuccess(res, {
+            status: 201,
             message:"Sub-criteria created successfully",
-            data:subCriteria
+            data: subCriteria
         })
     }catch(error){
         return handleControllerError(res,error)
@@ -71,8 +88,9 @@ exports.getSubCriteriaByCriteria = async (req,res)=>{
                 criteria_id:criteria.id
             }
         })
-        res.json({
-            data:subCriteria
+        return sendSuccess(res, {
+            message: "Sub-criteria list retrieved successfully",
+            data: subCriteria
         })
     }catch(error){
         return handleControllerError(res,error)
@@ -90,8 +108,9 @@ exports.getSubCriteriaById = async (req,res)=>{
             })
         }
 
-        res.json({
-            data:subCriteria
+        return sendSuccess(res, {
+            message: "Sub-criteria details retrieved successfully",
+            data: subCriteria
         })
     }catch(error){
         return handleControllerError(res,error)
@@ -107,7 +126,7 @@ exports.updateSubCriteria = async (req,res)=>{
 
         if(!subCriteria){
             return res.status(404).json({
-                message:"Sub criteria not found"
+                message:"Sub-criteria not found"
             })
         }
 
@@ -123,11 +142,11 @@ exports.updateSubCriteria = async (req,res)=>{
             updateData.value = value
         }
 
-        await subCriteria.update(updateData)
+        await subCriteriaService.updateSubCriteria(subCriteria, updateData)
 
-        res.json({
-            message:"Sub criteria updated successfully",
-            data:subCriteria
+        return sendSuccess(res, {
+            message:"Sub-criteria updated successfully",
+            data: subCriteria
         })
 
     }catch(error){
@@ -144,14 +163,14 @@ exports.deleteSubCriteria = async (req,res)=>{
 
         if(!subCriteria){
             return res.status(404).json({
-                message:"Sub criteria not found"
+                message:"Sub-criteria not found"
             })
         }
 
         await subCriteria.destroy()
 
-        res.json({
-            message:"Sub criteria deleted successfully"
+        return sendSuccess(res, {
+            message:"Sub-criteria deleted successfully"
         })
 
     }catch(error){

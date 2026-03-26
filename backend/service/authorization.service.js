@@ -1,5 +1,5 @@
-const DecisionModelUser = require("../models/decisionModelUser")
-const DecisionModel = require("../models/decisionModel")
+const DecisionModelUser = require("../models/decision-model-user.model")
+const DecisionModel = require("../models/decision-model.model")
 
 const ROLES = Object.freeze({
    OWNER: "owner",
@@ -19,7 +19,7 @@ const ensureDecisionModelExists = async (decisionModelId) => {
    const decisionModel = await DecisionModel.findByPk(decisionModelId)
 
    if (!decisionModel) {
-      throw new AuthorizationError("Decision model tidak ditemukan", 404)
+      throw new AuthorizationError("Decision model not found", 404)
    }
 
    return decisionModel
@@ -27,7 +27,7 @@ const ensureDecisionModelExists = async (decisionModelId) => {
 
 const ensureDecisionModelAccess = async ({ userId, decisionModelId, roles = [ROLES.OWNER, ROLES.EDITOR, ROLES.VIEWER] }) => {
    if (!decisionModelId) {
-      throw new AuthorizationError("Decision model tidak valid", 400)
+      throw new AuthorizationError("Invalid decision model", 400)
    }
 
    const membership = await DecisionModelUser.findOne({
@@ -38,11 +38,11 @@ const ensureDecisionModelAccess = async ({ userId, decisionModelId, roles = [ROL
    })
 
    if (!membership) {
-      throw new AuthorizationError("Pengguna tidak memiliki akses ke decision model ini", 403)
+      throw new AuthorizationError("User does not have access to this decision model", 403)
    }
 
    if (roles?.length && !roles.includes(membership.role)) {
-      throw new AuthorizationError("Peran pengguna tidak memiliki izin untuk aksi ini", 403)
+      throw new AuthorizationError("User role is not permitted for this action", 403)
    }
 
    return membership
@@ -53,7 +53,7 @@ const listDecisionModelsForUser = async (userId) => {
       where: { user_id: userId },
       include: [
          {
-            model: DecisionModel,
+            association: "decisionModel",
             attributes: ["id", "name", "descriptions", "created_at"]
          }
       ],

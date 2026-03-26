@@ -1,6 +1,8 @@
-const Rule = require("../models/rules")
-const DecisionModel = require("../models/decisionModel")
+const Rule = require("../models/rule.model")
+const DecisionModel = require("../models/decision-model.model")
 const handleControllerError = require("../utils/controllerError")
+const { sendSuccess } = require("../utils/apiResponse")
+const { getRequestResource } = require("../utils/requestResource")
 
 exports.createRule = async (req,res)=>{
   try{
@@ -33,9 +35,10 @@ exports.createRule = async (req,res)=>{
       created_at:new Date()
     })
 
-    res.status(201).json({
+    return sendSuccess(res, {
+      status: 201,
       message:"Rule created successfully",
-      data:rule
+      data: rule
     })
 
   }catch(error){
@@ -53,8 +56,9 @@ exports.getRulesByDecisionModel = async (req,res)=>{
       order:[["priority","ASC"]]
     })
 
-    res.json({
-      data:rules
+    return sendSuccess(res, {
+      message: "Rule list retrieved successfully",
+      data: rules
     })
 
   }catch(error){
@@ -67,16 +71,17 @@ exports.getRuleById = async (req,res)=>{
 
     const {id} = req.params
 
-    const rule = req.rule || await Rule.findByPk(id)
+    const rule = await getRequestResource({
+      req,
+      key: "rule",
+      model: Rule,
+      id,
+      notFoundMessage: "Rule not found"
+    })
 
-    if(!rule){
-      return res.status(404).json({
-        message:"Rule not found"
-      })
-    }
-
-    res.json({
-      data:rule
+    return sendSuccess(res, {
+      message: "Rule details retrieved successfully",
+      data: rule
     })
 
   }catch(error){
@@ -89,13 +94,13 @@ exports.updateRule = async (req,res)=>{
 
     const {id} = req.params
 
-    const rule = req.rule || await Rule.findByPk(id)
-
-    if(!rule){
-      return res.status(404).json({
-        message:"Rule not found"
-      })
-    }
+    const rule = await getRequestResource({
+      req,
+      key: "rule",
+      model: Rule,
+      id,
+      notFoundMessage: "Rule not found"
+    })
 
     const updateData = {}
 
@@ -134,9 +139,9 @@ exports.updateRule = async (req,res)=>{
 
     await rule.update(updateData)
 
-    res.json({
+    return sendSuccess(res, {
       message:"Rule updated successfully",
-      data:rule
+      data: rule
     })
 
   }catch(error){
@@ -149,17 +154,17 @@ exports.deleteRule = async (req,res)=>{
 
     const {id} = req.params
 
-    const rule = req.rule || await Rule.findByPk(id)
-
-    if(!rule){
-      return res.status(404).json({
-        message:"Rule not found"
-      })
-    }
+    const rule = await getRequestResource({
+      req,
+      key: "rule",
+      model: Rule,
+      id,
+      notFoundMessage: "Rule not found"
+    })
 
     await rule.destroy()
 
-    res.json({
+    return sendSuccess(res, {
       message:"Rule deleted successfully"
     })
 

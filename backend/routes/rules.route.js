@@ -1,22 +1,22 @@
 const express = require("express")
-const createError = require("http-errors")
 const router = express.Router()
 
-const ruleController = require("../controller/rules.controller")
-const ruleconditionController = require("../controller/ruleConditions.controller")
-const Rule = require("../models/rules")
-const RuleCondition = require("../models/ruleConditions")
+const ruleController = require("../controller/rule.controller")
+const ruleconditionController = require("../controller/rule-condition.controller")
+const Rule = require("../models/rule.model")
+const RuleCondition = require("../models/rule-condition.model")
 const authorizeDecisionModel = require("../middleware/authorizeDecisionModel")
 const { ROLES } = require("../service/authorization.service")
+const { loadByPrimaryKey } = require("../utils/resourceLoader")
 
 const loadRuleByIdParam = (param = "id") => async (req) => {
-   const rule = await Rule.findByPk(req.params[param] || req.body?.[param])
-
-   if (!rule) {
-      throw createError(404, "Rule not found")
-   }
-
-   req.rule = rule
+   const rule = await loadByPrimaryKey({
+      req,
+      model: Rule,
+      id: req.params[param] || req.body?.[param],
+      requestKey: "rule",
+      notFoundMessage: "Rule not found"
+   })
 
    return rule.decision_model_id
 }
@@ -24,33 +24,33 @@ const loadRuleByIdParam = (param = "id") => async (req) => {
 const loadRuleFromBody = async (req) => {
    const ruleId = req.body?.rule_id
 
-   const rule = await Rule.findByPk(ruleId)
-
-   if (!rule) {
-      throw createError(404, "Rule not found")
-   }
-
-   req.rule = rule
+   const rule = await loadByPrimaryKey({
+      req,
+      model: Rule,
+      id: ruleId,
+      requestKey: "rule",
+      notFoundMessage: "Rule not found"
+   })
 
    return rule.decision_model_id
 }
 
 const loadRuleCondition = async (req) => {
-   const condition = await RuleCondition.findByPk(req.params.id)
+   const condition = await loadByPrimaryKey({
+      req,
+      model: RuleCondition,
+      id: req.params.id,
+      requestKey: "ruleCondition",
+      notFoundMessage: "Rule condition not found"
+   })
 
-   if (!condition) {
-      throw createError(404, "Rule condition not found")
-   }
-
-   req.ruleCondition = condition
-
-   const rule = await Rule.findByPk(condition.rule_id)
-
-   if (!rule) {
-      throw createError(404, "Rule not found")
-   }
-
-   req.rule = rule
+   const rule = await loadByPrimaryKey({
+      req,
+      model: Rule,
+      id: condition.rule_id,
+      requestKey: "rule",
+      notFoundMessage: "Rule not found"
+   })
 
    return rule.decision_model_id
 }
@@ -63,6 +63,16 @@ router.post(
       roles: [ROLES.OWNER, ROLES.EDITOR]
    }),
    ruleController.createRule
+)
+
+router.get(
+   "/decision-model/:decisionModelId",
+   authorizeDecisionModel({
+      source: "params",
+      field: "decisionModelId",
+      roles: [ROLES.OWNER, ROLES.EDITOR, ROLES.VIEWER]
+   }),
+   ruleController.getRulesByDecisionModel
 )
 
 router.get(

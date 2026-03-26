@@ -22,7 +22,7 @@ const authorizeDecisionModel = ({
          }
 
          if (!decisionModelId) {
-            throw new AuthorizationError("Decision model tidak valid", 400)
+            throw new AuthorizationError("Invalid decision model", 400)
          }
 
          const access = await ensureDecisionModelAccess({

@@ -1,7 +1,9 @@
-const Result = require("../models/results")
-const DecisionModel = require("../models/decisionModel")
-const Alternative = require("../models/alternatives")
+const Result = require("../models/result.model")
+const DecisionModel = require("../models/decision-model.model")
+const Alternative = require("../models/alternative.model")
 const handleControllerError = require("../utils/controllerError")
+const { sendSuccess } = require("../utils/apiResponse")
+const { getRequestResource } = require("../utils/requestResource")
 
 exports.createResult = async (req,res)=>{
     try{
@@ -43,9 +45,10 @@ exports.createResult = async (req,res)=>{
             created_at:new Date()
         })
 
-        res.status(201).json({
+        return sendSuccess(res, {
+            status: 201,
             message:"Result created successfully",
-            data:result
+            data: result
         })
 
     }catch(error){
@@ -62,15 +65,16 @@ exports.getResultsByDecisionModel = async (req,res)=>{
             where:{decision_model_id:decisionModelId},
             include:[
                 {
-                    model:Alternative,
+                    association: "alternative",
                     attributes:["id","name"]
                 }
             ],
             order:[["rank","ASC"]]
         })
 
-        res.json({
-            data:results
+        return sendSuccess(res, {
+            message: "Result list retrieved successfully",
+            data: results
         })
 
     }catch(error){
@@ -83,16 +87,17 @@ exports.getResultById = async (req,res)=>{
 
         const {id} = req.params
 
-        const result = req.result || await Result.findByPk(id)
+        const result = await getRequestResource({
+            req,
+            key: "result",
+            model: Result,
+            id,
+            notFoundMessage: "Result not found"
+        })
 
-        if(!result){
-            return res.status(404).json({
-                message:"Result not found"
-            })
-        }
-
-        res.json({
-            data:result
+        return sendSuccess(res, {
+            message: "Result details retrieved successfully",
+            data: result
         })
 
     }catch(error){
@@ -105,13 +110,13 @@ exports.updateResult = async (req,res)=>{
 
         const {id} = req.params
 
-        const result = req.result || await Result.findByPk(id)
-
-        if(!result){
-            return res.status(404).json({
-                message:"Result not found"
-            })
-        }
+        const result = await getRequestResource({
+            req,
+            key: "result",
+            model: Result,
+            id,
+            notFoundMessage: "Result not found"
+        })
 
         const updateData = {}
 
@@ -145,9 +150,9 @@ exports.updateResult = async (req,res)=>{
 
         await result.update(updateData)
 
-        res.json({
+        return sendSuccess(res, {
             message:"Result updated successfully",
-            data:result
+            data: result
         })
 
     }catch(error){
@@ -160,17 +165,17 @@ exports.deleteResult = async (req,res)=>{
 
         const {id} = req.params
 
-        const result = req.result || await Result.findByPk(id)
-
-        if(!result){
-            return res.status(404).json({
-                message:"Result not found"
-            })
-        }
+        const result = await getRequestResource({
+            req,
+            key: "result",
+            model: Result,
+            id,
+            notFoundMessage: "Result not found"
+        })
 
         await result.destroy()
 
-        res.json({
+        return sendSuccess(res, {
             message:"Result deleted successfully"
         })
 

@@ -1,28 +1,23 @@
-const DecisionModel = require("../models/decisionModel")
-const DecisionModelUser = require("../models/decisionModelUser")
-const { ROLES } = require("../service/authorization.service")
+const DecisionModel = require("../models/decision-model.model")
+const decisionModelService = require("../service/decision-model.service")
 const handleControllerError = require("../utils/controllerError")
+const { sendSuccess } = require("../utils/apiResponse")
+const { getRequestResource } = require("../utils/requestResource")
 
 exports.createDecisionModel = async (req, res) => {
     try {
         const { name, descriptions } = req.body
         const userId = req.currentUser?.id
 
-        const newDecisionModel = await DecisionModel.create({
+        const newDecisionModel = await decisionModelService.createDecisionModelWithOwner({
             name,
             descriptions,
-            created_at: new Date(),
+            userId
         })
 
-        await DecisionModelUser.create({
-            decision_model_id: newDecisionModel.id,
-            user_id: userId,
-            role: ROLES.OWNER,
-            created_at: new Date()
-        })
-
-        res.status(201).json({
-            message:"Decision Model created successfully",
+        return sendSuccess(res, {
+            status: 201,
+            message:"Decision model created successfully",
             data: newDecisionModel
         })
         
@@ -55,8 +50,8 @@ exports.getAllDecisionModels = async (req, res) => {
             }
         })
 
-        res.json({
-            message: "Decision Models retrieved successfully",
+        return sendSuccess(res, {
+            message: "Decision model list retrieved successfully",
             data
         })
     } catch (error) {
@@ -67,9 +62,17 @@ exports.getAllDecisionModels = async (req, res) => {
 exports.getDecisionModelById = async (req, res) => {
     try {
         const { id } = req.params
-        res.json({
-            message: "Decision Model retrieved successfully",
-            data: req.decisionModel || await DecisionModel.findByPk(id)
+        const decisionModel = await getRequestResource({
+            req,
+            key: "decisionModel",
+            model: DecisionModel,
+            id,
+            notFoundMessage: "Decision model not found"
+        })
+
+        return sendSuccess(res, {
+            message: "Decision model details retrieved successfully",
+            data: decisionModel
         })
     } catch (error) {
         return handleControllerError(res,error)
@@ -81,13 +84,13 @@ exports.updateDecisionModel = async (req, res) => {
         const { id } = req.params
         const { name, descriptions } = req.body
 
-        const decisionModel = req.decisionModel || await DecisionModel.findByPk(id)
-
-        if (!decisionModel) {
-            return res.status(404).json({
-                message: "Decision Model not found"
-            })
-        }
+        const decisionModel = await getRequestResource({
+            req,
+            key: "decisionModel",
+            model: DecisionModel,
+            id,
+            notFoundMessage: "Decision model not found"
+        })
 
         const updateData = {}
 
@@ -101,8 +104,8 @@ exports.updateDecisionModel = async (req, res) => {
 
         await decisionModel.update(updateData)
 
-        res.json({
-            message: "Decision Model updated successfully",
+        return sendSuccess(res, {
+            message: "Decision model updated successfully",
             data: decisionModel
         })
     } catch (error) {
@@ -114,17 +117,17 @@ exports.deleteDecisionModel = async (req, res) => {
     try {
         const { id } = req.params
 
-        const decisionModel = req.decisionModel || await DecisionModel.findByPk(id)
-
-        if (!decisionModel) {
-            return res.status(404).json({
-                message: "Decision Model not found"
-            })
-        }
+        const decisionModel = await getRequestResource({
+            req,
+            key: "decisionModel",
+            model: DecisionModel,
+            id,
+            notFoundMessage: "Decision model not found"
+        })
 
         await decisionModel.destroy()
-        res.json({
-            message: "Decision Model deleted successfully"
+        return sendSuccess(res, {
+            message: "Decision model deleted successfully"
         })
     } catch (error) {
         return handleControllerError(res,error)
