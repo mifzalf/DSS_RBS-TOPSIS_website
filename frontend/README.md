@@ -1,16 +1,32 @@
-# React + Vite
+# Frontend DSS RBS-TOPSIS
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend ini dibangun sebagai dashboard internal untuk workflow DSS, bukan landing page atau kumpulan CRUD yang terpisah.
 
-Currently, two official plugins are available:
+## Fokus Arsitektur
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- `src/app/` - shell aplikasi, router, provider, layout global
+- `src/pages/` - entry screen tiap route
+- `src/features/` - logic server-state dan domain behavior
+- `src/components/` - UI primitives, form, feedback, navigation, data display
+- `src/services/` - HTTP client dan wrapper API backend
+- `src/styles/` - global styles dan token visual
 
-## React Compiler
+## Dokumen Desain
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- `docs/phase-1-visual-direction.md` - hasil Fase 1: visual direction lock dan UX rules
+- `docs/frontend-build-plan.md` - rencana implementasi step by step setelah Fase 1
 
-## Expanding the ESLint configuration
+## Perintah Utama
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+npm install
+npm run dev
+npm run lint
+npm run build
+```
+
+## Catatan
+
+- Base API menggunakan `VITE_API_BASE_URL`
+- Session auth memakai token bearer yang disimpan di local storage
+- Fokus fase berikutnya adalah merapikan shell, density, responsive behavior, dan domain page design
