@@ -29,19 +29,19 @@ This system is designed as a **generic Decision Support System framework**, allo
 ### Decision Flow
 
 Input Data  
-→ Rule-Based System (Filtering / Classification)  
-→ Candidate Alternatives  
-→ TOPSIS Calculation  
-→ Ranking Results  
+→ Rule-Based System (Classification / Eligibility Decision)  
+→ Grouped Alternatives by Assistance Category  
+→ TOPSIS per Ranked Category Only  
+→ Grouped Ranking Results  
 → Stored Recommendations  
 
 ### Core Concept
 
 - **Rule-Based System (RBS)**  
-  Used for filtering or classifying alternatives based on logical conditions.
+  Used to classify each alternative into a final assistance category such as `PKH`, `Sembako`, or `Not eligible`.
 
 - **TOPSIS Method**  
-  Used for ranking alternatives based on their distance to ideal solutions.
+  Used only for categories that are eligible for ranking. Rejected categories do not go through TOPSIS.
 
 ---
 
@@ -97,7 +97,7 @@ Located in the service layer:
 
 - Recommendation Service  
   Executes full pipeline:  
-  RBS → TOPSIS → Result Storage  
+  RBS → Category Grouping → TOPSIS per Eligible Group → Result Storage  
 
 ---
 
@@ -163,11 +163,12 @@ Authorization: Bearer <TOKEN>
 
 POST /recommendations/decision-model/:decisionModelId  
 
-Optional query:
+This endpoint now uses a grouped recommendation contract.
 
-?clear=true  
-
-Clears previous results before recalculation.
+- RBS runs first and classifies each alternative into a category
+- categories with `action_type = assign_benefit` are ranked with TOPSIS
+- categories with `action_type = reject` are returned as rejected and do not receive TOPSIS scores or ranks
+- previous stored results for the same decision model are replaced automatically in one transaction
 
 ---
 
@@ -176,6 +177,103 @@ Clears previous results before recalculation.
 curl -X POST \
   -H "Authorization: Bearer <TOKEN>" \
   http://localhost:3000/recommendations/decision-model/1
+
+---
+
+### Response Contract
+
+The primary payload is grouped by category.
+
+```json
+{
+  "message": "Recommendation generated successfully",
+  "data": {
+    "ranked_groups": [
+      {
+        "category": "PKH",
+        "action_type": "assign_benefit",
+        "status": "ranked",
+        "items": [
+          {
+            "alternative": {
+              "id": 1,
+              "name": "Citizen A"
+            },
+            "preference_score": 0.91,
+            "rank": 1,
+            "status": "ranked"
+          }
+        ]
+      }
+    ],
+    "rejected_groups": [
+      {
+        "category": "Not eligible",
+        "action_type": "reject",
+        "status": "rejected",
+        "items": [
+          {
+            "alternative": {
+              "id": 2,
+              "name": "Citizen B"
+            },
+            "preference_score": null,
+            "rank": null,
+            "status": "rejected"
+          }
+        ]
+      }
+    ]
+  },
+  "meta": {
+    "decisionModel": {
+      "id": 1,
+      "name": "Social Aid Model"
+    },
+    "count": 2,
+    "flat_results": [
+      {
+        "decision_model_id": 1,
+        "alternative_id": 1,
+        "category": "PKH",
+        "preference_score": 0.91,
+        "rank": 1,
+        "status": "ranked"
+      },
+      {
+        "decision_model_id": 1,
+        "alternative_id": 2,
+        "category": "Not eligible",
+        "preference_score": null,
+        "rank": null,
+        "status": "rejected"
+      }
+    ]
+  }
+}
+```
+
+#### Meaning of the response
+
+- `data.ranked_groups` contains only categories that go through TOPSIS
+- `data.rejected_groups` contains categories that are rejected directly by RBS
+- `meta.flat_results` is included for debugging, export, or compatibility use cases
+- `rank` is local to each ranked category, not global across the whole decision model
+
+#### Rule action types
+
+- `assign_benefit` → category is eligible for TOPSIS ranking
+- `reject` → category is final and does not go through TOPSIS
+
+#### Fallback behavior
+
+If an alternative does not match any rule, the backend assigns:
+
+- `category = "Not eligible"`
+- `action_type = "reject"`
+- `status = "rejected"`
+
+This guarantees deterministic recommendation output.
 
 ---
 
@@ -189,12 +287,13 @@ GET /results/decision-model/:decisionModelId
 
 backend/  
 │  
-├── controllers/        # Business logic  
+├── controller/         # HTTP controllers  
 ├── routes/             # API endpoints  
-├── middleware/         # Authentication & authorization  
-├── services/           # RBS, TOPSIS, recommendation logic  
+├── middleware/         # Authentication, authorization, validation  
+├── service/            # RBS, TOPSIS, recommendation logic  
 ├── models/             # Sequelize models & relations  
-├── utils/              # Helper utilities  
+├── utils/              # Shared utilities  
+├── validation/         # Request schemas  
 └── config/             # Configuration files  
 
 ---
