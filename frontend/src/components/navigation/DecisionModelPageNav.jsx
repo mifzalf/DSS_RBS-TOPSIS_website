@@ -10,7 +10,6 @@ const links = [
   { label: 'Rule Variables', getHref: (id) => `/decision-models/${id}/rule-variables` },
   { label: 'Rule Evaluations', getHref: (id) => `/decision-models/${id}/rule-evaluations` },
   { label: 'Rules', getHref: (id) => `/decision-models/${id}/rules` },
-  { label: 'Results', getHref: (id) => `/decision-models/${id}/results` },
   { label: 'Recommendations', getHref: (id) => `/decision-models/${id}/recommendation` },
 ]
 

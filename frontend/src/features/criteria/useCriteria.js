@@ -1,4 +1,4 @@
-import { useQueries, useQuery } from '@tanstack/react-query'
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '../../constants/queryKeys'
 import { criteriaApi } from '../../services/api/criteria.api'
 
@@ -32,4 +32,52 @@ export function useCriteriaWithSubCriteria(decisionModelId) {
     data,
     isLoading: criteriaQuery.isLoading || subCriteriaQueries.some((query) => query.isLoading),
   }
+}
+
+export function useCreateCriteria(decisionModelId) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: criteriaApi.create,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.criteria(decisionModelId) }),
+  })
+}
+
+export function useUpdateCriteria(decisionModelId) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, payload }) => criteriaApi.update(id, payload),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.criteria(decisionModelId) }),
+  })
+}
+
+export function useDeleteCriteria(decisionModelId) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: criteriaApi.remove,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.criteria(decisionModelId) }),
+  })
+}
+
+export function useCreateSubCriteria(decisionModelId) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ criteriaId, payload }) => criteriaApi.createSubCriteria(criteriaId, payload),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.criteria(decisionModelId) }),
+  })
+}
+
+export function useUpdateSubCriteria(decisionModelId) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, payload }) => criteriaApi.updateSubCriteria(id, payload),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.criteria(decisionModelId) }),
+  })
+}
+
+export function useDeleteSubCriteria(decisionModelId) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: criteriaApi.removeSubCriteria,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.criteria(decisionModelId) }),
+  })
 }

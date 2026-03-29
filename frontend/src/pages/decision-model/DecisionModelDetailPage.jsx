@@ -83,7 +83,7 @@ export function DecisionModelDetailPage() {
     { label: 'Rule Variables', href: `/decision-models/${decisionModelId}/rule-variables`, count: ruleVariables.length, status: ruleVariables.length ? 'ready' : 'pending' },
     { label: 'Rule Evaluations', href: `/decision-models/${decisionModelId}/rule-evaluations`, count: `${ruleEvaluations.length}/${ruleVariables.length || 0}`, status: ruleVariables.length && ruleEvaluations.length >= ruleVariables.length ? 'ready' : ruleEvaluations.length ? 'warning' : 'pending' },
     { label: 'Rules', href: `/decision-models/${decisionModelId}/rules`, count: rules.length, status: rules.length ? 'ready' : 'pending' },
-    { label: 'Results', href: `/decision-models/${decisionModelId}/results`, count: results.length, status: results.length ? 'ready' : 'pending' },
+    { label: 'Recommendation', href: `/decision-models/${decisionModelId}/recommendation`, count: results.length, status: results.length ? 'ready' : 'pending' },
   ]
 
   const openEditModal = () => {

@@ -1,6 +1,8 @@
+import { useMemo } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useFeedback } from '../../app/providers/useFeedback'
 import { DataTable } from '../../components/data-display/DataTable'
+import { LoadingState } from '../../components/feedback/LoadingState'
 import { DecisionModelPageNav } from '../../components/navigation/DecisionModelPageNav'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
@@ -9,20 +11,65 @@ import { PageHeader } from '../../components/ui/PageHeader'
 import { SectionCard } from '../../components/ui/SectionCard'
 import { queryKeys } from '../../constants/queryKeys'
 import { useGenerateRecommendation } from '../../features/recommendation/useGenerateRecommendation'
+import { useResults } from '../../features/result/useResults'
 import { useDecisionModelId } from '../../hooks/useDecisionModelId'
 import { formatDecimal } from '../../utils/format'
+
+function groupResultsFromFlat(results) {
+  const grouped = new Map()
+
+  results.forEach((item) => {
+    const category = item.category || 'Not eligible'
+    if (!grouped.has(category)) {
+      grouped.set(category, [])
+    }
+    grouped.get(category).push(item)
+  })
+
+  const groups = Array.from(grouped.entries()).map(([category, items]) => ({ category, items }))
+
+  return {
+    ranked_groups: groups.filter((group) => group.items.some((item) => item.preference_score != null || item.rank != null)),
+    rejected_groups: groups.filter((group) => group.items.every((item) => item.preference_score == null && item.rank == null)),
+  }
+}
 
 export function RecommendationPage() {
   const decisionModelId = useDecisionModelId()
   const queryClient = useQueryClient()
   const { pushToast } = useFeedback()
   const generateMutation = useGenerateRecommendation(decisionModelId)
-  const recommendation = queryClient.getQueryData(queryKeys.recommendation(decisionModelId))
+  const resultsQuery = useResults(decisionModelId)
+  const cachedRecommendation = queryClient.getQueryData(queryKeys.recommendation(decisionModelId))
+
+  const recommendation = useMemo(() => {
+    if (cachedRecommendation) {
+      return cachedRecommendation
+    }
+
+    if (!resultsQuery.data?.length) {
+      return null
+    }
+
+    const grouped = groupResultsFromFlat(resultsQuery.data)
+
+    return {
+      data: grouped,
+      meta: {
+        count: resultsQuery.data.length,
+        flat_results: resultsQuery.data,
+      },
+    }
+  }, [cachedRecommendation, resultsQuery.data])
+
+  if (resultsQuery.isLoading) {
+    return <LoadingState title="Loading recommendation view" description="Checking saved result data and grouped recommendation output." />
+  }
 
   const onGenerate = async () => {
     try {
       await generateMutation.mutateAsync()
-      pushToast({ title: 'Recommendation generated', description: 'Ranked and rejected groups have been refreshed.', tone: 'success' })
+      pushToast({ title: 'DSS calculation completed', description: 'Grouped ranked and rejected recommendation output has been refreshed.', tone: 'success' })
     } catch (error) {
       pushToast({ title: 'Generation failed', description: error.message, tone: 'error' })
     }
@@ -41,7 +88,7 @@ export function RecommendationPage() {
         description="The layout prioritizes loading clarity, ranked outcomes, and a clean presentation block for stakeholder review."
         actions={
           <Button type="button" onClick={onGenerate} disabled={generateMutation.isPending}>
-            {generateMutation.isPending ? 'Generating...' : 'Generate recommendation'}
+            {generateMutation.isPending ? 'Running DSS calculation...' : 'Run DSS calculation'}
           </Button>
         }
       />

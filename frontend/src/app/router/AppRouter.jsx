@@ -15,7 +15,6 @@ import { EvaluationsPage } from '../../pages/evaluation/EvaluationsPage'
 import { RuleEvaluationsPage } from '../../pages/evaluation/RuleEvaluationsPage'
 import { RulesPage } from '../../pages/rule/RulesPage'
 import { RuleVariablesPage } from '../../pages/rule/RuleVariablesPage'
-import { ResultsPage } from '../../pages/result/ResultsPage'
 import { RecommendationPage } from '../../pages/recommendation/RecommendationPage'
 import { NotFoundPage } from '../../pages/NotFoundPage'
 import { ROUTES } from '../../constants/routes'
@@ -42,7 +41,6 @@ export function AppRouter() {
           <Route path={`${ROUTES.decisionModels}/:id/rule-variables`} element={<RuleVariablesPage />} />
           <Route path={`${ROUTES.decisionModels}/:id/rule-evaluations`} element={<RuleEvaluationsPage />} />
           <Route path={`${ROUTES.decisionModels}/:id/rules`} element={<RulesPage />} />
-          <Route path={`${ROUTES.decisionModels}/:id/results`} element={<ResultsPage />} />
           <Route path={`${ROUTES.decisionModels}/:id/recommendation`} element={<RecommendationPage />} />
         </Route>
       </Route>
