@@ -8,18 +8,40 @@ const { RULE_VARIABLE_TYPES } = require("../../constants/rule-variable-types")
 const NON_RANKED_ACTIONS = new Set([RULE_ACTION_TYPES.REJECT, "disqualify", "not_eligible"])
 const NON_RANKED_CATEGORY_KEYWORDS = ["tidak lulus", "not eligible", "rejected", "reject"]
 
+const normalizeConditionValue = (fieldValue, conditionValue) => {
+   if (typeof fieldValue === "boolean") {
+      if (typeof conditionValue === "string") {
+         const normalized = conditionValue.trim().toLowerCase()
+
+         if (normalized === "true" || normalized === "1") {
+            return true
+         }
+
+         if (normalized === "false" || normalized === "0") {
+            return false
+         }
+      }
+
+      return Boolean(conditionValue)
+   }
+
+   return conditionValue
+}
+
 const evaluateCondition = (fieldValue, operator, conditionValue) => {
+   const comparableValue = normalizeConditionValue(fieldValue, conditionValue)
+
    switch (operator) {
       case "=":
-         return fieldValue == conditionValue
+         return fieldValue == comparableValue
       case ">":
-         return Number(fieldValue) > Number(conditionValue)
+         return Number(fieldValue) > Number(comparableValue)
       case "<":
-         return Number(fieldValue) < Number(conditionValue)
+         return Number(fieldValue) < Number(comparableValue)
       case ">=":
-         return Number(fieldValue) >= Number(conditionValue)
+         return Number(fieldValue) >= Number(comparableValue)
       case "<=":
-         return Number(fieldValue) <= Number(conditionValue)
+         return Number(fieldValue) <= Number(comparableValue)
       default:
          return false
    }
