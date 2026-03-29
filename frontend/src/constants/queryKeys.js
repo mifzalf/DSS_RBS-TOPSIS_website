@@ -6,7 +6,10 @@ export const queryKeys = {
   criteria: (decisionModelId) => ['criteria', decisionModelId],
   alternatives: (decisionModelId) => ['alternatives', decisionModelId],
   evaluations: (alternativeId) => ['evaluations', alternativeId],
+  ruleVariables: (decisionModelId) => ['rule-variables', decisionModelId],
+  ruleEvaluations: (alternativeId) => ['rule-evaluations', alternativeId],
   rules: (decisionModelId) => ['rules', decisionModelId],
   ruleConditions: (ruleId) => ['rules', ruleId, 'conditions'],
   results: (decisionModelId) => ['results', decisionModelId],
+  recommendation: (decisionModelId) => ['recommendation', decisionModelId],
 }

@@ -20,6 +20,8 @@ import { useCriteriaWithSubCriteria } from '../../features/criteria/useCriteria'
 import { decisionModelSchema } from '../../features/decision-model/decisionModel.schema'
 import { useDeleteDecisionModel, useDecisionModel, useUpdateDecisionModel } from '../../features/decision-model/useDecisionModels'
 import { useEvaluationOverview } from '../../features/evaluation/useEvaluationOverview'
+import { useRuleEvaluations } from '../../features/rule-evaluation/useRuleEvaluations'
+import { useRuleVariables } from '../../features/rule-variable/useRuleVariables'
 import { useRulesWithConditions } from '../../features/rule/useRules'
 import { useResults } from '../../features/result/useResults'
 import { useDecisionModelId } from '../../hooks/useDecisionModelId'
@@ -38,9 +40,12 @@ export function DecisionModelDetailPage() {
   const deleteMutation = useDeleteDecisionModel()
   const criteriaQuery = useCriteriaWithSubCriteria(decisionModelId)
   const alternativesQuery = useAlternatives(decisionModelId)
+  const ruleVariablesQuery = useRuleVariables(decisionModelId)
   const rulesQuery = useRulesWithConditions(decisionModelId)
   const resultsQuery = useResults(decisionModelId)
   const evaluationOverview = useEvaluationOverview(alternativesQuery.data || [], criteriaQuery.data || [])
+  const firstAlternativeId = alternativesQuery.data?.[0]?.id
+  const firstRuleEvaluationsQuery = useRuleEvaluations(firstAlternativeId)
   const {
     register,
     handleSubmit,
@@ -51,7 +56,7 @@ export function DecisionModelDetailPage() {
     defaultValues: { name: '', descriptions: '' },
   })
 
-  if (modelQuery.isLoading || criteriaQuery.isLoading || alternativesQuery.isLoading || rulesQuery.isLoading || resultsQuery.isLoading || evaluationOverview.isLoading) {
+  if (modelQuery.isLoading || criteriaQuery.isLoading || alternativesQuery.isLoading || ruleVariablesQuery.isLoading || rulesQuery.isLoading || resultsQuery.isLoading || evaluationOverview.isLoading || firstRuleEvaluationsQuery.isLoading) {
     return <LoadingState title="Loading model overview" description="Mapping the current workflow readiness for this decision model." />
   }
 
@@ -62,6 +67,7 @@ export function DecisionModelDetailPage() {
   const model = modelQuery.data
   const criteria = criteriaQuery.data || []
   const alternatives = alternativesQuery.data || []
+  const ruleVariables = ruleVariablesQuery.data || []
   const rules = rulesQuery.data || []
   const results = resultsQuery.data || []
   const evaluations = evaluationOverview.data || []
@@ -69,10 +75,13 @@ export function DecisionModelDetailPage() {
   const expectedEvaluationCells = evaluations.reduce((sum, row) => sum + row.expected, 0)
   const evaluationProgress = expectedEvaluationCells ? Math.round((completedEvaluationCells / expectedEvaluationCells) * 100) : 0
   const totalWeight = criteria.reduce((sum, item) => sum + Number(item.weight || 0), 0)
+  const ruleEvaluations = firstRuleEvaluationsQuery.data || []
   const sections = [
     { label: 'Criteria', href: `/decision-models/${decisionModelId}/criteria`, count: criteria.length, status: criteria.length ? 'ready' : 'pending' },
     { label: 'Alternatives', href: `/decision-models/${decisionModelId}/alternatives`, count: alternatives.length, status: alternatives.length ? 'ready' : 'pending' },
-    { label: 'Evaluations', href: `/decision-models/${decisionModelId}/evaluations`, count: `${completedEvaluationCells}/${expectedEvaluationCells}`, status: evaluationProgress === 100 ? 'ready' : evaluationProgress > 0 ? 'warning' : 'pending' },
+    { label: 'TOPSIS Evaluations', href: `/decision-models/${decisionModelId}/evaluations`, count: `${completedEvaluationCells}/${expectedEvaluationCells}`, status: evaluationProgress === 100 ? 'ready' : evaluationProgress > 0 ? 'warning' : 'pending' },
+    { label: 'Rule Variables', href: `/decision-models/${decisionModelId}/rule-variables`, count: ruleVariables.length, status: ruleVariables.length ? 'ready' : 'pending' },
+    { label: 'Rule Evaluations', href: `/decision-models/${decisionModelId}/rule-evaluations`, count: `${ruleEvaluations.length}/${ruleVariables.length || 0}`, status: ruleVariables.length && ruleEvaluations.length >= ruleVariables.length ? 'ready' : ruleEvaluations.length ? 'warning' : 'pending' },
     { label: 'Rules', href: `/decision-models/${decisionModelId}/rules`, count: rules.length, status: rules.length ? 'ready' : 'pending' },
     { label: 'Results', href: `/decision-models/${decisionModelId}/results`, count: results.length, status: results.length ? 'ready' : 'pending' },
   ]

@@ -6,10 +6,12 @@ const links = [
   { label: 'Members', getHref: (id) => `/decision-models/${id}/members` },
   { label: 'Criteria', getHref: (id) => `/decision-models/${id}/criteria` },
   { label: 'Alternatives', getHref: (id) => `/decision-models/${id}/alternatives` },
-  { label: 'Evaluations', getHref: (id) => `/decision-models/${id}/evaluations` },
+  { label: 'TOPSIS Evaluations', getHref: (id) => `/decision-models/${id}/evaluations` },
+  { label: 'Rule Variables', getHref: (id) => `/decision-models/${id}/rule-variables` },
+  { label: 'Rule Evaluations', getHref: (id) => `/decision-models/${id}/rule-evaluations` },
   { label: 'Rules', getHref: (id) => `/decision-models/${id}/rules` },
   { label: 'Results', getHref: (id) => `/decision-models/${id}/results` },
-  { label: 'Recommendation', getHref: (id) => `/decision-models/${id}/recommendation` },
+  { label: 'Recommendations', getHref: (id) => `/decision-models/${id}/recommendation` },
 ]
 
 export function DecisionModelPageNav({ currentLabel }) {
