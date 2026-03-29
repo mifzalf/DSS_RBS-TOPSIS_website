@@ -1,7 +1,9 @@
 const Rule = require("../../models/rule.model")
 const RuleCondition = require("../../models/rule-condition.model")
 const Alternative = require("../../models/alternative.model")
+const RuleEvaluation = require("../../models/rule-evaluation.model")
 const { DEFAULT_REJECTED_CATEGORY, RULE_ACTION_TYPES } = require("../../constants/rule-actions")
+const { RULE_VARIABLE_TYPES } = require("../../constants/rule-variable-types")
 
 const NON_RANKED_ACTIONS = new Set([RULE_ACTION_TYPES.REJECT, "disqualify", "not_eligible"])
 const NON_RANKED_CATEGORY_KEYWORDS = ["tidak lulus", "not eligible", "rejected", "reject"]
@@ -37,6 +39,39 @@ const matchesRule = (rule, evaluations) => {
 
 const normalizeActionType = (actionType) => String(actionType || RULE_ACTION_TYPES.ASSIGN_BENEFIT).trim().toLowerCase()
 
+const getRuleEvaluationValue = (ruleEvaluation) => {
+   if (!ruleEvaluation?.ruleVariable) {
+      return undefined
+   }
+
+   switch (ruleEvaluation.ruleVariable.value_type) {
+      case RULE_VARIABLE_TYPES.BOOLEAN:
+         return ruleEvaluation.value_boolean
+      case RULE_VARIABLE_TYPES.NUMBER:
+         return ruleEvaluation.value_number
+      case RULE_VARIABLE_TYPES.STRING:
+         return ruleEvaluation.value_string
+      default:
+         return undefined
+   }
+}
+
+const buildRuleFactMap = (ruleEvaluations) => {
+   const factMap = new Map()
+
+   for (const item of ruleEvaluations) {
+      const code = item.ruleVariable?.code
+
+      if (!code) {
+         continue
+      }
+
+      factMap.set(code, getRuleEvaluationValue(item))
+   }
+
+   return factMap
+}
+
 const isRankedCategory = ({ actionType, category }) => {
    if (NON_RANKED_ACTIONS.has(normalizeActionType(actionType))) {
       return false
@@ -57,26 +92,55 @@ exports.runRuleEngine = async (decisionModelId) => {
          decision_model_id: decisionModelId,
          status_active: true
        },
-       include: [
+        include: [
          {
-            association: "conditions"
-         }
-       ],
+            association: "conditions",
+            include: [
+               {
+                  association: "ruleVariable",
+                  attributes: ["id", "code", "value_type"]
+               }
+            ]
+          }
+        ],
        order: [["priority", "ASC"], [{ model: RuleCondition, as: "conditions" }, "id", "ASC"]]
     })
 
    const results = []
 
+   const alternativeIds = alternatives.map(item => item.id)
+   const ruleEvaluations = alternativeIds.length
+      ? await RuleEvaluation.findAll({
+         where: { alternative_id: alternativeIds },
+         include: [
+            {
+               association: "ruleVariable",
+               attributes: ["id", "code", "value_type"]
+            }
+         ]
+      })
+      : []
+
+   const factMaps = new Map()
+
+   for (const alternative of alternatives) {
+      const facts = ruleEvaluations.filter(item => item.alternative_id === alternative.id)
+      factMaps.set(alternative.id, buildRuleFactMap(facts))
+   }
+
    for (const alternative of alternatives) {
       let category = null
       let actionType = RULE_ACTION_TYPES.REJECT
       let isRanked = false
+      const factMap = factMaps.get(alternative.id) || new Map()
 
       for (const rule of rules) {
          const conditions = rule.conditions || []
 
-         const evaluations = conditions.map(condition => {
-            const fieldValue = alternative[condition.field]
+          const evaluations = conditions.map(condition => {
+            const fieldValue = condition.ruleVariable?.code
+               ? factMap.get(condition.ruleVariable.code)
+               : alternative[condition.field]
 
             return evaluateCondition(
                fieldValue,
@@ -114,3 +178,4 @@ module.exports.NON_RANKED_ACTIONS = NON_RANKED_ACTIONS
 module.exports.isRankedCategory = isRankedCategory
 module.exports.normalizeActionType = normalizeActionType
 module.exports.DEFAULT_REJECTED_CATEGORY = DEFAULT_REJECTED_CATEGORY
+module.exports.getRuleEvaluationValue = getRuleEvaluationValue

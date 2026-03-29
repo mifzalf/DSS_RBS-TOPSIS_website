@@ -1,5 +1,6 @@
 const positiveId = { type: "integer", required: true, min: 1 }
 const { RULE_ACTION_TYPE_VALUES } = require("../constants/rule-actions")
+const { RULE_VARIABLE_TYPE_VALUES } = require("../constants/rule-variable-types")
 
 module.exports = {
    auth: {
@@ -188,7 +189,8 @@ module.exports = {
       create: {
          body: {
             rule_id: positiveId,
-            field: { type: "string", required: true, minLength: 1, maxLength: 100 },
+            rule_variable_id: { type: "integer", required: false, min: 1 },
+            field: { type: "string", required: false, minLength: 1, maxLength: 100 },
             operator: { type: "enum", required: true, values: ["=", ">", "<", ">=", "<="] },
             value: { type: "string", required: true, minLength: 1, maxLength: 255 }
          }
@@ -202,10 +204,64 @@ module.exports = {
       update: {
          params: { id: positiveId },
          body: {
+            rule_variable_id: { type: "integer", required: false, min: 1 },
             field: { type: "string", required: false, minLength: 1, maxLength: 100 },
             operator: { type: "enum", required: false, values: ["=", ">", "<", ">=", "<="] },
             value: { type: "string", required: false, minLength: 1, maxLength: 255 }
          }
+      }
+   },
+   ruleVariable: {
+      create: {
+         body: {
+            decision_model_id: positiveId,
+            code: { type: "string", required: true, minLength: 1, maxLength: 30 },
+            name: { type: "string", required: true, minLength: 1, maxLength: 150 },
+            value_type: { type: "enum", required: true, values: RULE_VARIABLE_TYPE_VALUES },
+            description: { type: "string", required: false, allowEmpty: true, maxLength: 5000 },
+            status_active: { type: "boolean", required: false }
+         }
+      },
+      update: {
+         params: { id: positiveId },
+         body: {
+            code: { type: "string", required: false, minLength: 1, maxLength: 30 },
+            name: { type: "string", required: false, minLength: 1, maxLength: 150 },
+            value_type: { type: "enum", required: false, values: RULE_VARIABLE_TYPE_VALUES },
+            description: { type: "string", required: false, allowEmpty: true, maxLength: 5000 },
+            status_active: { type: "boolean", required: false }
+         }
+      },
+      byDecisionModel: {
+         params: { decisionModelId: positiveId }
+      },
+      byId: {
+         params: { id: positiveId }
+      }
+   },
+   ruleEvaluation: {
+      create: {
+         body: {
+            alternative_id: positiveId,
+            rule_variable_id: positiveId,
+            value_boolean: { type: "boolean", required: false },
+            value_number: { type: "number", required: false },
+            value_string: { type: "string", required: false, allowEmpty: true, maxLength: 255 }
+         }
+      },
+      update: {
+         params: { id: positiveId },
+         body: {
+            value_boolean: { type: "boolean", required: false },
+            value_number: { type: "number", required: false },
+            value_string: { type: "string", required: false, allowEmpty: true, maxLength: 255 }
+         }
+      },
+      byAlternative: {
+         params: { alternativeId: positiveId }
+      },
+      byId: {
+         params: { id: positiveId }
       }
    }
 }

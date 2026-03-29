@@ -1,15 +1,44 @@
 const RuleCondition = require("../models/rule-condition.model")
 const Rule = require("../models/rule.model")
+const RuleVariable = require("../models/rule-variable.model")
 const handleControllerError = require("../utils/controllerError")
 const { sendSuccess } = require("../utils/apiResponse")
 const { getRequestResource } = require("../utils/requestResource")
+const { ValidationError } = require("../utils/appError")
+
+const ensureConditionTarget = async ({ req, rule, ruleVariableId, field }) => {
+    if (!ruleVariableId && !field?.trim()) {
+        throw new ValidationError("rule_variable_id or field is required")
+    }
+
+    if (!ruleVariableId) {
+        return { ruleVariable: null, field: field.trim() }
+    }
+
+    const ruleVariable = await getRequestResource({
+        req,
+        key: "ruleVariable",
+        model: RuleVariable,
+        id: ruleVariableId,
+        notFoundMessage: "Rule variable not found"
+    })
+
+    if (ruleVariable.decision_model_id !== rule.decision_model_id) {
+        throw new ValidationError("Rule variable must belong to the same decision model as the rule")
+    }
+
+    return {
+        ruleVariable,
+        field: field?.trim() || ruleVariable.code
+    }
+}
 
 exports.createRuleCondition = async (req,res)=>{
     try{
 
-        const {rule_id,field,operator,value} = req.body
+        const {rule_id, rule_variable_id, field, operator, value} = req.body
 
-        await getRequestResource({
+        const rule = await getRequestResource({
             req,
             key: "rule",
             model: Rule,
@@ -17,9 +46,17 @@ exports.createRuleCondition = async (req,res)=>{
             notFoundMessage: "Rule not found"
         })
 
+        const target = await ensureConditionTarget({
+            req,
+            rule,
+            ruleVariableId: rule_variable_id,
+            field
+        })
+
         const condition = await RuleCondition.create({
             rule_id,
-            field,
+            rule_variable_id: target.ruleVariable?.id || null,
+            field: target.field,
             operator,
             value
         })
@@ -116,10 +153,25 @@ exports.updateRuleCondition = async (req,res)=>{
 
         const updateData = {}
 
-        const {field,operator,value} = req.body
+        const {rule_variable_id, field, operator, value} = req.body
 
-        if(field?.trim()){
-            updateData.field = field
+        const rule = await getRequestResource({
+            req,
+            key: "rule",
+            model: Rule,
+            id: condition.rule_id,
+            notFoundMessage: "Rule not found"
+        })
+
+        if(rule_variable_id !== undefined || field?.trim()){
+            const target = await ensureConditionTarget({
+                req,
+                rule,
+                ruleVariableId: rule_variable_id,
+                field: field ?? condition.field
+            })
+            updateData.rule_variable_id = target.ruleVariable?.id || null
+            updateData.field = target.field
         }
 
         if(operator?.trim()){

@@ -56,6 +56,8 @@ const createApp = ({ includeRoutes = true } = {}) => {
     const alternativesRouter = require("./routes/alternatives.route")
     const evaluationRouter = require("./routes/evaluations.route")
     const ruleRouter = require("./routes/rules.route")
+    const ruleVariableRouter = require("./routes/rule-variables.route")
+    const ruleEvaluationRouter = require("./routes/rule-evaluations.route")
     const resultsRouter = require("./routes/results.route")
     const recommendationRouter = require("./routes/recommendation.route")
     const currentUser = require("./middleware/currentUser")
@@ -71,6 +73,8 @@ const createApp = ({ includeRoutes = true } = {}) => {
     app.use("/alternatives", alternativesRouter)
     app.use("/evaluations", evaluationRouter)
     app.use("/rules", ruleRouter)
+    app.use("/rule-variables", ruleVariableRouter)
+    app.use("/rule-evaluations", ruleEvaluationRouter)
     app.use("/results", resultsRouter)
     app.use("/recommendations", recommendationRouter)
   }

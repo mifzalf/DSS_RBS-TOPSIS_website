@@ -1,6 +1,7 @@
 const { DataTypes } = require("sequelize")
 const { db } = require("../config/database")
 const Rule = require("./rule.model")
+const RuleVariable = require("./rule-variable.model")
 const { buildModelOptions } = require("./model-options")
 
 const RuleCondition = db.define("RuleCondition", {
@@ -13,11 +14,14 @@ const RuleCondition = db.define("RuleCondition", {
     type: DataTypes.INTEGER,
     allowNull: false,
   },
+  rule_variable_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
   field: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
     validate: {
-      notEmpty: true,
       len: [1, 100]
     }
   },
@@ -46,6 +50,16 @@ Rule.hasMany(RuleCondition, {
 RuleCondition.belongsTo(Rule, {
   foreignKey: "rule_id",
   as: "rule"
+})
+
+RuleVariable.hasMany(RuleCondition, {
+  foreignKey: "rule_variable_id",
+  as: "conditions",
+  onDelete: "SET NULL"
+})
+RuleCondition.belongsTo(RuleVariable, {
+  foreignKey: "rule_variable_id",
+  as: "ruleVariable"
 })
 
 module.exports = RuleCondition
