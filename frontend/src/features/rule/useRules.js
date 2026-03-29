@@ -1,6 +1,7 @@
 import { useQueries, useQuery } from '@tanstack/react-query'
 import { queryKeys } from '../../constants/queryKeys'
 import { ruleApi } from '../../services/api/rule.api'
+import { ruleVariableApi } from '../../services/api/rule-variable.api'
 
 export function useRules(decisionModelId) {
   return useQuery({
@@ -12,7 +13,13 @@ export function useRules(decisionModelId) {
 
 export function useRulesWithConditions(decisionModelId) {
   const rulesQuery = useRules(decisionModelId)
+  const variablesQuery = useQuery({
+    queryKey: queryKeys.ruleVariables(decisionModelId),
+    queryFn: () => ruleVariableApi.list(decisionModelId),
+    enabled: Boolean(decisionModelId),
+  })
   const rules = rulesQuery.data || []
+  const variablesById = new Map((variablesQuery.data || []).map((item) => [item.id, item]))
 
   const conditionsQueries = useQueries({
     queries: rules.map((rule) => ({
@@ -26,8 +33,11 @@ export function useRulesWithConditions(decisionModelId) {
     ...rulesQuery,
     data: rules.map((rule, index) => ({
       ...rule,
-      conditions: conditionsQueries[index]?.data || [],
+      conditions: (conditionsQueries[index]?.data || []).map((condition) => ({
+        ...condition,
+        ruleVariable: condition.rule_variable_id ? variablesById.get(condition.rule_variable_id) || null : null,
+      })),
     })),
-    isLoading: rulesQuery.isLoading || conditionsQueries.some((query) => query.isLoading),
+    isLoading: rulesQuery.isLoading || variablesQuery.isLoading || conditionsQueries.some((query) => query.isLoading),
   }
 }

@@ -7,7 +7,8 @@ export function useGenerateRecommendation(decisionModelId) {
 
   return useMutation({
     mutationFn: () => recommendationApi.generate(decisionModelId),
-    onSuccess: () => {
+    onSuccess: (response) => {
+      queryClient.setQueryData(queryKeys.recommendation(decisionModelId), response)
       queryClient.invalidateQueries({ queryKey: queryKeys.results(decisionModelId) })
     },
   })
