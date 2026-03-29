@@ -6,6 +6,8 @@ const ruleconditionController = require("../controller/rule-condition.controller
 const Rule = require("../models/rule.model")
 const RuleCondition = require("../models/rule-condition.model")
 const authorizeDecisionModel = require("../middleware/authorizeDecisionModel")
+const validateRequest = require("../middleware/validateRequest")
+const schemas = require("../validation/schemas")
 const { ROLES } = require("../service/authorization.service")
 const { loadByPrimaryKey } = require("../utils/resourceLoader")
 
@@ -57,6 +59,7 @@ const loadRuleCondition = async (req) => {
 
 router.post(
    "/",
+   validateRequest(schemas.rule.create),
    authorizeDecisionModel({
       source: "body",
       field: "decision_model_id",
@@ -67,6 +70,7 @@ router.post(
 
 router.get(
    "/decision-model/:decisionModelId",
+   validateRequest(schemas.rule.byDecisionModel),
    authorizeDecisionModel({
       source: "params",
       field: "decisionModelId",
@@ -77,6 +81,7 @@ router.get(
 
 router.get(
    "/decision-model/:decision_model_id",
+   validateRequest(schemas.rule.byDecisionModelLegacy),
    authorizeDecisionModel({
       source: "params",
       field: "decision_model_id",
@@ -87,6 +92,7 @@ router.get(
 
 router.get(
    "/:id",
+   validateRequest(schemas.rule.byId),
    authorizeDecisionModel({
       getId: loadRuleByIdParam(),
       roles: [ROLES.OWNER, ROLES.EDITOR, ROLES.VIEWER]
@@ -96,6 +102,7 @@ router.get(
 
 router.patch(
    "/:id",
+   validateRequest(schemas.rule.update),
    authorizeDecisionModel({
       getId: loadRuleByIdParam(),
       roles: [ROLES.OWNER, ROLES.EDITOR]
@@ -105,6 +112,7 @@ router.patch(
 
 router.delete(
    "/:id",
+   validateRequest(schemas.rule.byId),
    authorizeDecisionModel({
       getId: loadRuleByIdParam(),
       roles: [ROLES.OWNER, ROLES.EDITOR]
@@ -114,6 +122,7 @@ router.delete(
 
 router.post(
    "/conditions",
+   validateRequest(schemas.ruleCondition.create),
    authorizeDecisionModel({
       getId: loadRuleFromBody,
       roles: [ROLES.OWNER, ROLES.EDITOR]
@@ -123,6 +132,7 @@ router.post(
 
 router.get(
    "/:ruleId/conditions",
+   validateRequest(schemas.ruleCondition.byRule),
    authorizeDecisionModel({
       getId: loadRuleByIdParam("ruleId"),
       roles: [ROLES.OWNER, ROLES.EDITOR, ROLES.VIEWER]
@@ -132,6 +142,7 @@ router.get(
 
 router.get(
    "/conditions/:id",
+   validateRequest(schemas.ruleCondition.byId),
    authorizeDecisionModel({
       getId: loadRuleCondition,
       roles: [ROLES.OWNER, ROLES.EDITOR, ROLES.VIEWER]
@@ -141,6 +152,7 @@ router.get(
 
 router.patch(
    "/conditions/:id",
+   validateRequest(schemas.ruleCondition.update),
    authorizeDecisionModel({
       getId: loadRuleCondition,
       roles: [ROLES.OWNER, ROLES.EDITOR]
@@ -150,6 +162,7 @@ router.patch(
 
 router.delete(
    "/conditions/:id",
+   validateRequest(schemas.ruleCondition.byId),
    authorizeDecisionModel({
       getId: loadRuleCondition,
       roles: [ROLES.OWNER, ROLES.EDITOR]

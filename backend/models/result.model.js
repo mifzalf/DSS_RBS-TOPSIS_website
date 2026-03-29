@@ -27,7 +27,7 @@ const Result = db.define("Result", {
   },
   preference_score: {
     type: DataTypes.FLOAT,
-    allowNull: false,
+    allowNull: true,
     validate: {
       min: 0,
       max: 1
@@ -35,7 +35,7 @@ const Result = db.define("Result", {
   },
   rank: {
     type: DataTypes.INTEGER,
-    allowNull: false,
+    allowNull: true,
     validate: {
       min: 1
     }

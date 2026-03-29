@@ -3,6 +3,7 @@ const DecisionModel = require("../models/decision-model.model")
 const handleControllerError = require("../utils/controllerError")
 const { sendSuccess } = require("../utils/apiResponse")
 const { getRequestResource } = require("../utils/requestResource")
+const { RULE_ACTION_TYPES } = require("../constants/rule-actions")
 
 exports.createRule = async (req,res)=>{
   try{
@@ -125,7 +126,7 @@ exports.updateRule = async (req,res)=>{
       updateData.logic_type = logic_type
     }
 
-    if(action_type?.trim()){
+    if(action_type === RULE_ACTION_TYPES.ASSIGN_BENEFIT || action_type === RULE_ACTION_TYPES.REJECT){
       updateData.action_type = action_type
     }
 

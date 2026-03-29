@@ -4,18 +4,22 @@ const recommendationService = require("../service/DSS/recommendation.service")
 const handleControllerError = require("../utils/controllerError")
 const { sendSuccess } = require("../utils/apiResponse")
 
-const formatResult = (result, alternativesCache) => {
-   const alternative = alternativesCache.get(result.alternative_id)
+const formatGroupItems = (groups, alternativesCache) => {
+   return groups.map((group) => ({
+      ...group,
+      items: group.items.map((item) => {
+         const alternative = alternativesCache.get(item.alternative_id)
 
-   return {
-      id: result.id || null,
-      alternative: alternative
-         ? { id: alternative.id, name: alternative.name }
-         : { id: result.alternative_id },
-      category: result.category,
-      preference_score: result.preference_score,
-      rank: result.rank
-   }
+         return {
+            alternative: alternative
+               ? { id: alternative.id, name: alternative.name }
+               : { id: item.alternative_id },
+            preference_score: item.preference_score,
+            rank: item.rank,
+            status: item.status
+         }
+      })
+   }))
 }
 
 exports.generateRecommendation = async (req, res) => {
@@ -38,19 +42,23 @@ exports.generateRecommendation = async (req, res) => {
 
       const cache = new Map(alternatives.map(item => [item.id, item]))
 
-      const data = recommendation.map(item => formatResult(item, cache))
+      const data = {
+         ranked_groups: formatGroupItems(recommendation.grouped.ranked_groups, cache),
+         rejected_groups: formatGroupItems(recommendation.grouped.rejected_groups, cache)
+      }
 
       return sendSuccess(res, {
          message: "Recommendation generated successfully",
          data,
-         meta: {
+          meta: {
             decisionModel: {
                 id: decisionModel.id,
                 name: decisionModel.name
-             },
-             count: data.length
-          },
-       })
+              },
+              count: recommendation.results.length,
+              flat_results: recommendation.results
+           },
+        })
    } catch (error) {
       return handleControllerError(res, error)
    }

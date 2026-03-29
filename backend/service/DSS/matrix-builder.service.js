@@ -7,9 +7,15 @@ const getSubCriteriaValue = (evaluation) => {
    return Number(evaluation?.subCriteria?.value || 0)
 }
 
-exports.buildMatrix = async (decisionModelId) => {
+const buildMatrixForAlternatives = async ({ decisionModelId, alternativeIds: scopedAlternativeIds }) => {
+   const alternativeWhere = { decision_model_id: decisionModelId }
+
+   if (Array.isArray(scopedAlternativeIds)) {
+      alternativeWhere.id = scopedAlternativeIds
+   }
+
    const alternatives = await Alternative.findAll({
-      where: { decision_model_id: decisionModelId },
+      where: alternativeWhere,
       order: [["id", "ASC"]]
    })
 
@@ -57,4 +63,13 @@ exports.buildMatrix = async (decisionModelId) => {
       alternatives,
       criteria
    }
+}
+
+const buildMatrix = async (decisionModelId) => {
+   return buildMatrixForAlternatives({ decisionModelId })
+}
+
+module.exports = {
+   buildMatrix,
+   buildMatrixForAlternatives
 }

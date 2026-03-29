@@ -2,6 +2,7 @@ const { DataTypes } = require("sequelize")
 const { db } = require("../config/database")
 const DecisionModel = require("./decision-model.model")
 const { buildModelOptions } = require("./model-options")
+const { RULE_ACTION_TYPE_VALUES } = require("../constants/rule-actions")
 
 const Rule = db.define("Rule", {
   id: {
@@ -33,7 +34,7 @@ const Rule = db.define("Rule", {
     allowNull: false,
     validate: {
       notEmpty: true,
-      len: [1, 50]
+      isIn: [RULE_ACTION_TYPE_VALUES]
     }
   },
   target_category: {

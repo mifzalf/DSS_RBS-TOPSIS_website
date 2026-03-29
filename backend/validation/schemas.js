@@ -1,4 +1,5 @@
 const positiveId = { type: "integer", required: true, min: 1 }
+const { RULE_ACTION_TYPE_VALUES } = require("../constants/rule-actions")
 
 module.exports = {
    auth: {
@@ -149,6 +150,62 @@ module.exports = {
       },
       byId: {
          params: { id: positiveId }
+      }
+   },
+   rule: {
+      create: {
+         body: {
+            decision_model_id: positiveId,
+            name: { type: "string", required: true, minLength: 1, maxLength: 150 },
+            priority: { type: "integer", required: true, min: 1 },
+            logic_type: { type: "enum", required: true, values: ["AND", "OR"] },
+            action_type: { type: "enum", required: true, values: RULE_ACTION_TYPE_VALUES },
+            target_category: { type: "string", required: true, minLength: 1, maxLength: 100 }
+         }
+      },
+      update: {
+         params: { id: positiveId },
+         body: {
+            name: { type: "string", required: false, minLength: 1, maxLength: 150 },
+            priority: { type: "integer", required: false, min: 1 },
+            logic_type: { type: "enum", required: false, values: ["AND", "OR"] },
+            action_type: { type: "enum", required: false, values: RULE_ACTION_TYPE_VALUES },
+            target_category: { type: "string", required: false, minLength: 1, maxLength: 100 },
+            status_active: { type: "boolean", required: false }
+         }
+      },
+      byDecisionModel: {
+         params: { decisionModelId: positiveId }
+      },
+      byDecisionModelLegacy: {
+         params: { decision_model_id: positiveId }
+      },
+      byId: {
+         params: { id: positiveId }
+      }
+   },
+   ruleCondition: {
+      create: {
+         body: {
+            rule_id: positiveId,
+            field: { type: "string", required: true, minLength: 1, maxLength: 100 },
+            operator: { type: "enum", required: true, values: ["=", ">", "<", ">=", "<="] },
+            value: { type: "string", required: true, minLength: 1, maxLength: 255 }
+         }
+      },
+      byRule: {
+         params: { ruleId: positiveId }
+      },
+      byId: {
+         params: { id: positiveId }
+      },
+      update: {
+         params: { id: positiveId },
+         body: {
+            field: { type: "string", required: false, minLength: 1, maxLength: 100 },
+            operator: { type: "enum", required: false, values: ["=", ">", "<", ">=", "<="] },
+            value: { type: "string", required: false, minLength: 1, maxLength: 255 }
+         }
       }
    }
 }

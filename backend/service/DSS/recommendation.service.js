@@ -13,41 +13,150 @@ class RecommendationGenerationError extends Error {
    }
 }
 
-const validateRecommendationInput = (matrixData) => {
+const validateAlternativeAvailability = (matrixData) => {
    if (!matrixData.alternatives.length) {
       throw new RecommendationGenerationError("No active alternatives found for this decision model")
    }
+}
 
-   if (!matrixData.criteria.length) {
-      throw new RecommendationGenerationError("No active criteria found for this decision model")
+const validateRankedGroupInput = (matrixData, category) => {
+    if (!matrixData.criteria.length) {
+      throw new RecommendationGenerationError(`No active criteria found for category ${category}`)
+    }
+}
+
+const groupRuleResultsByCategory = (ruleResults) => {
+   return ruleResults.reduce((groups, item) => {
+      const category = item.category || "Unclassified"
+
+      if (!groups[category]) {
+         groups[category] = {
+            category,
+            isRanked: item.is_ranked !== false,
+            actionType: item.action_type || null,
+            items: []
+         }
+      }
+
+      groups[category].items.push(item)
+
+      return groups
+   }, {})
+}
+
+const buildAlternativeLookup = (alternatives) => {
+   return new Map(alternatives.map(item => [item.id, item]))
+}
+
+const generateRankedGroupResults = async ({ decisionModelId, categoryGroup }) => {
+   const alternativeIds = categoryGroup.items.map(item => item.alternative_id)
+   const matrixData = await matrixBuilder.buildMatrixForAlternatives({
+      decisionModelId,
+      alternativeIds
+   })
+
+   validateRankedGroupInput(matrixData, categoryGroup.category)
+
+   const ranking = topsis.calculateTopsis(matrixData.matrix, matrixData.criteria)
+
+   return ranking.map((item) => {
+      const alternative = matrixData.alternatives[item.alternative]
+
+      return {
+         decision_model_id: decisionModelId,
+         alternative_id: alternative.id,
+         category: categoryGroup.category,
+         action_type: categoryGroup.actionType,
+         preference_score: item.score,
+         rank: item.rank,
+         status: "ranked"
+      }
+   })
+}
+
+const generateRejectedGroupResults = ({ decisionModelId, categoryGroup }) => {
+   return categoryGroup.items.map((item) => ({
+      decision_model_id: decisionModelId,
+      alternative_id: item.alternative_id,
+      category: categoryGroup.category,
+      action_type: categoryGroup.actionType,
+      preference_score: null,
+      rank: null,
+      status: "rejected"
+   }))
+}
+
+const serializeGroupedResponse = (results, alternatives) => {
+   const alternativeLookup = buildAlternativeLookup(alternatives)
+   const grouped = results.reduce((accumulator, result) => {
+      const key = result.category || "Unclassified"
+
+      if (!accumulator[key]) {
+         accumulator[key] = {
+            category: key,
+            action_type: result.action_type || null,
+            status: result.status,
+            items: []
+         }
+      }
+
+      accumulator[key].items.push({
+         alternative_id: result.alternative_id,
+         alternative: alternativeLookup.get(result.alternative_id) || null,
+         preference_score: result.preference_score,
+         rank: result.rank,
+         status: result.status
+      })
+
+      return accumulator
+   }, {})
+
+   const groups = Object.values(grouped).map((group) => {
+      const items = [...group.items].sort((left, right) => {
+         if (left.rank === null && right.rank === null) return left.alternative_id - right.alternative_id
+         if (left.rank === null) return 1
+         if (right.rank === null) return -1
+         return left.rank - right.rank
+      })
+
+      return {
+         ...group,
+         items
+      }
+   })
+
+   return {
+      ranked_groups: groups.filter(group => group.status === "ranked"),
+      rejected_groups: groups.filter(group => group.status === "rejected")
    }
 }
 
 exports.generateRecommendation = async (decisionModelId) => {
    const ruleResult = await ruleEngine.runRuleEngine(decisionModelId)
-   const matrixData = await matrixBuilder.buildMatrix(decisionModelId)
-   validateRecommendationInput(matrixData)
+   const baseMatrixData = await matrixBuilder.buildMatrix(decisionModelId)
+   validateAlternativeAvailability(baseMatrixData)
 
-   const ranking = topsis.calculateTopsis(
-      matrixData.matrix,
-      matrixData.criteria
-    )
+   const groupedRuleResults = Object.values(groupRuleResultsByCategory(ruleResult))
+   const rankedGroups = groupedRuleResults.filter(group => group.isRanked)
+   const rejectedGroups = groupedRuleResults.filter(group => !group.isRanked)
 
-   const results = ranking.map(r => {
-      const alternative = matrixData.alternatives[r.alternative]
+   const rankedResults = []
+   for (const group of rankedGroups) {
+      const groupResults = await generateRankedGroupResults({
+         decisionModelId,
+         categoryGroup: group
+      })
+      rankedResults.push(...groupResults)
+   }
 
-      const rule = ruleResult.find(
-         item => item.alternative_id === alternative.id
-      )
+   const rejectedResults = rejectedGroups.flatMap(group => (
+      generateRejectedGroupResults({
+         decisionModelId,
+         categoryGroup: group
+      })
+   ))
 
-      return {
-         decision_model_id: decisionModelId,
-         alternative_id: alternative.id,
-         category: rule ? rule.category : null,
-         preference_score: r.score,
-         rank: r.rank
-      }
-    })
+   const results = [...rankedResults, ...rejectedResults]
 
    await db.transaction(async (transaction) => {
       await Result.destroy({
@@ -64,7 +173,7 @@ exports.generateRecommendation = async (decisionModelId) => {
                preference_score: result.preference_score,
                rank: result.rank,
                iteration: 1,
-               status: "generated",
+               status: result.status,
                created_at: new Date()
             })),
             { transaction }
@@ -72,7 +181,13 @@ exports.generateRecommendation = async (decisionModelId) => {
       }
    })
 
-   return results
+   return {
+      results,
+      grouped: serializeGroupedResponse(results, baseMatrixData.alternatives)
+   }
 }
 
 module.exports.RecommendationGenerationError = RecommendationGenerationError
+module.exports.groupRuleResultsByCategory = groupRuleResultsByCategory
+module.exports.generateRejectedGroupResults = generateRejectedGroupResults
+module.exports.serializeGroupedResponse = serializeGroupedResponse
