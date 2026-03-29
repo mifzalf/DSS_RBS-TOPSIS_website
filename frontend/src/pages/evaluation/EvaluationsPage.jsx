@@ -4,6 +4,7 @@ import { ErrorState } from '../../components/feedback/ErrorState'
 import { LoadingState } from '../../components/feedback/LoadingState'
 import { DecisionModelPageNav } from '../../components/navigation/DecisionModelPageNav'
 import { Button } from '../../components/ui/Button'
+import { DropdownSelect } from '../../components/ui/DropdownSelect'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { ProgressIndicator } from '../../components/ui/ProgressIndicator'
 import { SectionCard } from '../../components/ui/SectionCard'
@@ -111,12 +112,18 @@ export function EvaluationsPage() {
                   <strong>{criteriaItem.code || 'C'} - {criteriaItem.name}</strong>
                   <p>{criteriaItem.type} · weight {criteriaItem.weight}</p>
                 </div>
-                <select className="input" value={selectedValue} onChange={(event) => handleSelectSubCriteria(criteriaItem, event.target.value)}>
-                  <option value="">Select sub-criteria</option>
-                  {criteriaItem.subCriteria.map((subCriteria) => (
-                    <option key={subCriteria.id} value={subCriteria.id}>{subCriteria.label} (value {subCriteria.value})</option>
-                  ))}
-                </select>
+                <DropdownSelect
+                  value={selectedValue}
+                  onChange={(nextValue) => handleSelectSubCriteria(criteriaItem, nextValue)}
+                  placeholder="Select sub-criteria"
+                  options={[
+                    { value: '', label: 'Select sub-criteria' },
+                    ...criteriaItem.subCriteria.map((subCriteria) => ({
+                      value: String(subCriteria.id),
+                      label: `${subCriteria.label} (value ${subCriteria.value})`,
+                    })),
+                  ]}
+                />
                 <div className="rule-evaluation-card-actions">
                   <span className={`badge ${existing ? 'badge-success' : 'badge-neutral'}`}>{existing ? 'filled' : 'empty'}</span>
                   <Button type="button" variant="ghost" disabled={!existing || deleteMutation.isPending} onClick={() => handleSelectSubCriteria(criteriaItem, '')}>Clear</Button>

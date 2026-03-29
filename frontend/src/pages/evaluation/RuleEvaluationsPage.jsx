@@ -5,6 +5,7 @@ import { ErrorState } from '../../components/feedback/ErrorState'
 import { LoadingState } from '../../components/feedback/LoadingState'
 import { DecisionModelPageNav } from '../../components/navigation/DecisionModelPageNav'
 import { Button } from '../../components/ui/Button'
+import { DropdownSelect } from '../../components/ui/DropdownSelect'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { SectionCard } from '../../components/ui/SectionCard'
 import { useAlternatives } from '../../features/alternative/useAlternatives'
@@ -123,10 +124,15 @@ export function RuleEvaluationsPage() {
                   </div>
                   <span className="badge badge-info">{variable.value_type}</span>
                   {variable.value_type === 'boolean' ? (
-                    <select className="input" value={currentValue} onChange={(event) => setDrafts((state) => ({ ...state, [variable.id]: event.target.value }))}>
-                      <option value="false">False</option>
-                      <option value="true">True</option>
-                    </select>
+                    <DropdownSelect
+                      value={currentValue}
+                      onChange={(nextValue) => setDrafts((state) => ({ ...state, [variable.id]: nextValue }))}
+                      placeholder="Select boolean value"
+                      options={[
+                        { value: 'false', label: 'False' },
+                        { value: 'true', label: 'True' },
+                      ]}
+                    />
                   ) : variable.value_type === 'number' ? (
                     <input className="input" type="number" value={currentValue} onChange={(event) => setDrafts((state) => ({ ...state, [variable.id]: event.target.value }))} placeholder="Enter number value" />
                   ) : (
