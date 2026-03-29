@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
+import { useDecisionModel } from '../../features/decision-model/useDecisionModels'
 import { useDecisionModelId } from '../../hooks/useDecisionModelId'
 
 const links = [
@@ -16,12 +17,15 @@ const links = [
 export function DecisionModelPageNav({ currentLabel }) {
   const decisionModelId = useDecisionModelId()
   const { pathname } = useLocation()
+  const decisionModelQuery = useDecisionModel(decisionModelId)
+  const decisionModelName = decisionModelQuery.data?.name || 'Current model'
 
   return (
     <div className="decision-model-page-nav surface-panel">
       <div className="decision-model-page-nav-head">
         <div className="decision-model-breadcrumbs">
           <Link to="/decision-models">Decision models</Link>
+          <span>{decisionModelName}</span>
           <span>{currentLabel}</span>
         </div>
       </div>

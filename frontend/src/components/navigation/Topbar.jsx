@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../app/providers/useAuth'
 import { Button } from '../ui/Button'
@@ -13,6 +14,27 @@ function MenuIcon() {
 export function Topbar({ onMenuToggle }) {
   const navigate = useNavigate()
   const { user, logout } = useAuth()
+  const [mobileProfileOpen, setMobileProfileOpen] = useState(false)
+  const mobileProfileRef = useRef(null)
+
+  useEffect(() => {
+    const handleOutside = (event) => {
+      if (!mobileProfileRef.current?.contains(event.target)) {
+        setMobileProfileOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleOutside)
+
+    return () => {
+      document.removeEventListener('mousedown', handleOutside)
+    }
+  }, [])
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
+  }
 
   return (
     <header className="topbar surface-panel">
@@ -36,8 +58,8 @@ export function Topbar({ onMenuToggle }) {
 
       <div className="topbar-actions">
         <div className="user-chip">
-          <span>{user?.name?.[0] || 'U'}</span>
-          <div>
+          <span>{user?.name?.[0]?.toUpperCase() || 'U'}</span>
+          <div className="user-chip-copy">
             <strong>{user?.name || 'User'}</strong>
             <small>@{user?.username || 'session'}</small>
           </div>
@@ -45,13 +67,38 @@ export function Topbar({ onMenuToggle }) {
         <Button
           type="button"
           variant="ghost"
-          onClick={() => {
-            logout()
-            navigate('/login')
-          }}
+          className="topbar-logout-button"
+          onClick={handleLogout}
         >
           Logout
         </Button>
+        <div ref={mobileProfileRef} className="mobile-profile-menu">
+          <button
+            type="button"
+            className="mobile-profile-trigger"
+            aria-label="Open profile menu"
+            aria-expanded={mobileProfileOpen}
+            onClick={() => setMobileProfileOpen((current) => !current)}
+          >
+            {user?.name?.[0]?.toUpperCase() || 'U'}
+          </button>
+          {mobileProfileOpen ? (
+            <div className="mobile-profile-popover">
+              <div className="mobile-profile-summary">
+                <strong>{user?.name || 'User'}</strong>
+                <small>@{user?.username || 'session'}</small>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                className="mobile-profile-logout"
+                onClick={handleLogout}
+              >
+                Logout
+              </Button>
+            </div>
+          ) : null}
+        </div>
       </div>
     </header>
   )

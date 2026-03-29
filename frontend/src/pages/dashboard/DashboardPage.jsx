@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom'
 import { EmptyState } from '../../components/feedback/EmptyState'
 import { ErrorState } from '../../components/feedback/ErrorState'
 import { LoadingState } from '../../components/feedback/LoadingState'
@@ -7,7 +6,7 @@ import { RoleBadge } from '../../components/navigation/RoleBadge'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { SectionCard } from '../../components/ui/SectionCard'
 import { StatCard } from '../../components/ui/StatCard'
-import { ROUTES, WORKFLOW_STEPS } from '../../constants/routes'
+import { WORKFLOW_STEPS } from '../../constants/routes'
 import { useDecisionModels } from '../../features/decision-model/useDecisionModels'
 import { formatDate, truncateText } from '../../utils/format'
 
@@ -29,7 +28,6 @@ export function DashboardPage() {
         eyebrow="Dashboard"
         title="Track the full DSS workflow without losing the next step."
         description="This shell keeps model status, team access, and recommendation readiness visible from one overview."
-        actions={<Link className="button button-primary" to={ROUTES.decisionModels}>Open models</Link>}
       />
 
       <div className="dashboard-layout-grid">
