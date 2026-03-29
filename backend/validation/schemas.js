@@ -18,7 +18,15 @@ module.exports = {
          }
       }
    },
-   decisionModel: {
+   user: {
+      search: {
+         query: {
+            q: { type: "string", required: false, minLength: 1, maxLength: 100 },
+            decisionModelId: { type: "integer", required: false, min: 1 }
+         }
+      }
+   },
+    decisionModel: {
       create: {
          body: {
             name: { type: "string", required: true, minLength: 1, maxLength: 150 },

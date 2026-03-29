@@ -51,6 +51,7 @@ const createApp = ({ includeRoutes = true } = {}) => {
 
   if (includeRoutes) {
     const authRouter = require("./routes/auth.route")
+    const userRouter = require("./routes/users.route")
     const decisionModelRouter = require("./routes/decisionModel.route")
     const criteriaRouter = require("./routes/criteria.route")
     const alternativesRouter = require("./routes/alternatives.route")
@@ -68,6 +69,7 @@ const createApp = ({ includeRoutes = true } = {}) => {
     app.use(verifyToken)
     app.use(currentUser)
 
+    app.use("/users", userRouter)
     app.use("/decision-model", decisionModelRouter)
     app.use("/criteria", criteriaRouter)
     app.use("/alternatives", alternativesRouter)
