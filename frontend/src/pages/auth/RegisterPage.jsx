@@ -42,8 +42,7 @@ export function RegisterPage() {
     <div className="auth-card surface-panel">
       <div className="auth-card-header">
         <span className="page-header-eyebrow">New workspace</span>
-        <h2>Create an internal account for DSS operations.</h2>
-        <p>Registration immediately opens a protected session so teams can start building a model without extra steps.</p>
+        <h2>Create an account and start preparing assistance decisions.</h2>
       </div>
 
       <form className="stack-md" onSubmit={onSubmit}>
@@ -67,6 +66,11 @@ export function RegisterPage() {
           {isSubmitting ? 'Creating account...' : 'Register'}
         </Button>
       </form>
+
+      <div className="auth-card-note">
+        <strong>Built for collaborative review</strong>
+        <p>Prepare assessment factors, household answers, and final recommendations together in one connected experience.</p>
+      </div>
 
       <p className="auth-switch">
         Sudah punya akun? <Link to={ROUTES.login}>Login</Link>

@@ -15,7 +15,7 @@ export function DashboardPage() {
   const latestModels = data.slice(0, 3)
 
   if (isLoading) {
-    return <LoadingState title="Loading dashboard" description="Collecting decision model statistics and recent activity." />
+    return <LoadingState title="Preparing your home view" description="Gathering the latest program updates and review progress." />
   }
 
   if (error) {
@@ -25,23 +25,23 @@ export function DashboardPage() {
   return (
     <div className="page-stack">
       <PageHeader
-        eyebrow="Dashboard"
-        title="Track the full DSS workflow without losing the next step."
-        description="This shell keeps model status, team access, and recommendation readiness visible from one overview."
+        eyebrow="Home"
+        title="See the full assistance review journey from one place."
+        description="Keep track of active programs, team access, and recommendation progress without jumping between pages." 
       />
 
       <div className="dashboard-layout-grid">
         <div className="dashboard-main-stack">
           <section className="dashboard-metrics-grid">
-            <StatCard label="Decision models" value={data.length} hint="Active models linked to your current membership." />
-            <StatCard label="Workflow steps" value={WORKFLOW_STEPS.length} hint="A shared sequence from setup to recommendation." tone="accent" />
+            <StatCard label="Active programs" value={data.length} hint="Programs currently available in your account." />
+            <StatCard label="Review stages" value={WORKFLOW_STEPS.length} hint="A clear path from setup to final recommendation." tone="accent" />
           </section>
 
-          <SectionCard title="Recent models" description="Quick return point for the latest decision spaces.">
+          <SectionCard title="Recent programs" description="Return quickly to the assistance programs you worked on most recently.">
             {latestModels.length ? (
               <DataTable
                 columns={[
-                  { key: 'name', header: 'Model' },
+                  { key: 'name', header: 'Program' },
                   { key: 'descriptions', header: 'Description', render: (row) => truncateText(row.descriptions, 72) },
                   { key: 'role', header: 'Role', render: (row) => <RoleBadge role={row.role} /> },
                   { key: 'created_at', header: 'Created', render: (row) => formatDate(row.created_at) },
@@ -49,13 +49,13 @@ export function DashboardPage() {
                 rows={latestModels}
               />
             ) : (
-              <EmptyState title="No decision model yet" description="Create the first model so the rest of the DSS workflow can be activated." actionLabel="Create model" onAction={() => {}} />
+              <EmptyState title="No program yet" description="Create the first assistance program to begin reviewing households and recommendations." actionLabel="Create program" onAction={() => {}} />
             )}
           </SectionCard>
         </div>
 
         <div className="dashboard-side-stack">
-          <SectionCard title="Recommended workflow" description="Keep the team aligned on what should happen next." className="dashboard-workflow-card">
+          <SectionCard title="Suggested journey" description="Follow these steps to keep every program review orderly and easy to follow." className="dashboard-workflow-card">
             <div className="workflow-list">
               {WORKFLOW_STEPS.map((step, index) => (
                 <article key={step.key} className="workflow-item">

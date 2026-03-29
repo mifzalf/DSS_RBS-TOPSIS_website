@@ -63,15 +63,15 @@ export function RecommendationPage() {
   }, [cachedRecommendation, resultsQuery.data])
 
   if (resultsQuery.isLoading) {
-    return <LoadingState title="Loading recommendation view" description="Checking saved result data and grouped recommendation output." />
+    return <LoadingState title="Preparing recommendations" description="Collecting the latest grouped outcomes for this program." />
   }
 
   const onGenerate = async () => {
     try {
       await generateMutation.mutateAsync()
-      pushToast({ title: 'DSS calculation completed', description: 'Grouped ranked and rejected recommendation output has been refreshed.', tone: 'success' })
+      pushToast({ title: 'Recommendations updated', description: 'The latest grouped outcomes are now ready to review.', tone: 'success' })
     } catch (error) {
-      pushToast({ title: 'Generation failed', description: error.message, tone: 'error' })
+      pushToast({ title: 'Unable to update recommendations', description: error.message, tone: 'error' })
     }
   }
 
@@ -84,39 +84,39 @@ export function RecommendationPage() {
       <DecisionModelPageNav currentLabel="Recommendations" />
       <PageHeader
         eyebrow="Recommendation"
-        title="Generate a final view that is easy to compare, explain, and screenshot."
-        description="The layout prioritizes loading clarity, ranked outcomes, and a clean presentation block for stakeholder review."
+        title="Review the final recommendation for each assistance group."
+        description="See which households are prioritized in each group and which households are not recommended for assistance."
         actions={
           <Button type="button" onClick={onGenerate} disabled={generateMutation.isPending}>
-            {generateMutation.isPending ? 'Running DSS calculation...' : 'Run DSS calculation'}
+            {generateMutation.isPending ? 'Updating recommendations...' : 'Refresh recommendations'}
           </Button>
         }
       />
-      <SectionCard title="Recommendation summary" description="RBS now classifies and groups alternatives before TOPSIS ranks the eligible groups.">
+      <SectionCard title="Recommendation summary" description="Households are grouped first, then eligible groups are prioritized automatically.">
         {recommendation ? (
           <div className="recommendation-summary-grid">
-            <article className="mini-card"><strong>Decision model</strong><p>{meta?.decisionModel?.name || '-'}</p></article>
-            <article className="mini-card"><strong>Total grouped results</strong><p>{meta?.count || 0}</p></article>
-            <article className="mini-card"><strong>Ranked groups</strong><p>{rankedGroups.length}</p></article>
-            <article className="mini-card"><strong>Rejected groups</strong><p>{rejectedGroups.length}</p></article>
+            <article className="mini-card"><strong>Program</strong><p>{meta?.decisionModel?.name || '-'}</p></article>
+            <article className="mini-card"><strong>Total households reviewed</strong><p>{meta?.count || 0}</p></article>
+            <article className="mini-card"><strong>Priority groups</strong><p>{rankedGroups.length}</p></article>
+            <article className="mini-card"><strong>Not recommended groups</strong><p>{rejectedGroups.length}</p></article>
           </div>
         ) : (
-          <EmptyState title="No recommendation snapshot yet" description="Generate a recommendation to load ranked and rejected groups from the latest backend flow." />
+          <EmptyState title="No recommendation yet" description="Refresh the recommendation to see the latest grouped outcome for this program." />
         )}
       </SectionCard>
 
       {rankedGroups.map((group) => (
-        <SectionCard key={`ranked-${group.category}`} title={group.category} description="Eligible group ranked by TOPSIS preference score.">
+        <SectionCard key={`ranked-${group.category}`} title={group.category} description="This assistance group shows households in priority order.">
           <div className="recommendation-group-head">
-            <Badge tone="success">ranked</Badge>
-            <span>{group.items.length} alternatives</span>
+            <Badge tone="success">priority list</Badge>
+            <span>{group.items.length} households</span>
           </div>
           <DataTable
             columns={[
               { key: 'rank', header: 'Rank' },
-              { key: 'alternative', header: 'Alternative', render: (row) => row.alternative?.name || `Alternative ${row.alternative?.id}` },
+              { key: 'alternative', header: 'Household', render: (row) => row.alternative?.name || `Household ${row.alternative?.id}` },
               { key: 'status', header: 'Status', render: (row) => <Badge tone="success">{row.status || 'ranked'}</Badge> },
-              { key: 'preference_score', header: 'Score', render: (row) => formatDecimal(row.preference_score) },
+              { key: 'preference_score', header: 'Priority score', render: (row) => formatDecimal(row.preference_score) },
             ]}
             rows={group.items}
           />
@@ -124,15 +124,15 @@ export function RecommendationPage() {
       ))}
 
       {rejectedGroups.map((group) => (
-        <SectionCard key={`rejected-${group.category}`} title={group.category} description="Rejected group stays outside TOPSIS ranking and does not receive a score.">
+        <SectionCard key={`rejected-${group.category}`} title={group.category} description="Households in this group are not included in priority ranking.">
           <div className="recommendation-group-head">
-            <Badge tone="warning">rejected</Badge>
-            <span>{group.items.length} alternatives</span>
+            <Badge tone="warning">not recommended</Badge>
+            <span>{group.items.length} households</span>
           </div>
           <div className="recommendation-rejected-list">
             {group.items.map((item) => (
               <article key={`${group.category}-${item.alternative?.id}`} className="mini-card recommendation-rejected-item">
-                <strong>{item.alternative?.name || `Alternative ${item.alternative?.id}`}</strong>
+                <strong>{item.alternative?.name || `Household ${item.alternative?.id}`}</strong>
                 <Badge tone="warning">{item.status || 'reject'}</Badge>
               </article>
             ))}

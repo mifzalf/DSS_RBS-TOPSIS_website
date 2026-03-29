@@ -6,14 +6,14 @@ export const ROUTES = {
 }
 
 export const WORKFLOW_STEPS = [
-  { key: 'model', label: 'Create model', description: 'Define the decision context and ownership.' },
-  { key: 'criteria', label: 'Define criteria', description: 'Set weighted benefit and cost criteria.' },
-  { key: 'alternatives', label: 'Add alternatives', description: 'List the options that will be evaluated.' },
-  { key: 'evaluations', label: 'Fill TOPSIS evaluations', description: 'Complete the matrix with relevant sub-criteria.' },
-  { key: 'rule-variables', label: 'Define rule variables', description: 'Declare typed RBS facts used by rule conditions.' },
-  { key: 'rule-evaluations', label: 'Fill rule evaluations', description: 'Assign typed fact values per alternative.' },
-  { key: 'rules', label: 'Configure rules', description: 'Add business logic, actions, and prioritization rules.' },
-  { key: 'recommendation', label: 'Generate recommendation', description: 'Review final ranking and share it.' },
+  { key: 'model', label: 'Set the program', description: 'Name the assistance program and prepare the review space.' },
+  { key: 'criteria', label: 'Set the assessment factors', description: 'Arrange the factors and their importance levels.' },
+  { key: 'alternatives', label: 'Add households', description: 'List the households or candidates to be reviewed.' },
+  { key: 'evaluations', label: 'Fill assessment answers', description: 'Choose the most suitable answer for each factor.' },
+  { key: 'rule-variables', label: 'Set eligibility indicators', description: 'Prepare the indicators used to determine assistance eligibility.' },
+  { key: 'rule-evaluations', label: 'Fill eligibility answers', description: 'Record the factual answers for each household.' },
+  { key: 'rules', label: 'Set assistance rules', description: 'Define how households are grouped into assistance categories.' },
+  { key: 'recommendation', label: 'See final recommendations', description: 'Review grouped outcomes and priority order for each category.' },
 ]
 
 export const ROLE_OPTIONS = [

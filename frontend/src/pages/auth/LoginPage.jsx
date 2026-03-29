@@ -40,8 +40,7 @@ export function LoginPage() {
     <div className="auth-card surface-panel">
       <div className="auth-card-header">
         <span className="page-header-eyebrow">Welcome back</span>
-        <h2>Login to continue your decision workflow.</h2>
-        <p>Use the same backend account to access decision models, evaluations, rules, and recommendation results.</p>
+        <h2>Continue reviewing and prioritizing assistance recipients.</h2>
       </div>
 
       <form className="stack-md" onSubmit={onSubmit}>
@@ -57,6 +56,11 @@ export function LoginPage() {
           {isSubmitting ? 'Signing in...' : 'Login'}
         </Button>
       </form>
+
+      <div className="auth-card-note">
+        <strong>What you can do here</strong>
+        <p>Review household eligibility, organize assistance groups, and see the final priority order for each program.</p>
+      </div>
 
       <p className="auth-switch">
         Belum punya akun? <Link to={ROUTES.register}>Register</Link>

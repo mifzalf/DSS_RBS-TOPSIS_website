@@ -51,7 +51,7 @@ export function Topbar({ onMenuToggle }) {
         <div className="topbar-context">
           <div className="topbar-heading">
             <strong className="topbar-title">DSS RBS-TOPSIS</strong>
-            <p>Internal decision support workspace</p>
+            <p>Social assistance review space</p>
           </div>
         </div>
       </div>
