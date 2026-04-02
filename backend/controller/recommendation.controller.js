@@ -14,6 +14,9 @@ const formatGroupItems = (groups, alternativesCache) => {
             alternative: alternative
                ? { id: alternative.id, name: alternative.name }
                : { id: item.alternative_id },
+            category_id: item.category_id,
+            grade_code: item.grade_code,
+            grade_label: item.grade_label,
             preference_score: item.preference_score,
             rank: item.rank,
             status: item.status

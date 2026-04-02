@@ -5,6 +5,8 @@ const topsis = require("../service/DSS/topsis.service")
 const recommendationService = require("../service/DSS/recommendation.service")
 const ruleEngineService = require("../service/DSS/rule-engine.service")
 const { DEFAULT_REJECTED_CATEGORY, RULE_ACTION_TYPES } = require("../constants/rule-actions")
+const gradingService = require("../service/grading.service")
+const { RESULT_GRADE_CODES } = require("../constants/result-grades")
 
 test("calculateTopsis ranks alternatives by descending score", () => {
    const matrix = [
@@ -60,8 +62,11 @@ test("rejected groups skip TOPSIS fields", () => {
       {
          decision_model_id: 9,
          alternative_id: 4,
+         category_id: undefined,
          category: "Tidak lulus",
          action_type: RULE_ACTION_TYPES.REJECT,
+         grade_code: null,
+         grade_label: null,
          preference_score: null,
          rank: null,
          status: "rejected"
@@ -69,8 +74,11 @@ test("rejected groups skip TOPSIS fields", () => {
       {
          decision_model_id: 9,
          alternative_id: 8,
+         category_id: undefined,
          category: "Tidak lulus",
          action_type: RULE_ACTION_TYPES.REJECT,
+         grade_code: null,
+         grade_label: null,
          preference_score: null,
          rank: null,
          status: "rejected"
@@ -105,6 +113,8 @@ test("serializeGroupedResponse separates ranked and rejected groups", () => {
             alternative_id: 1,
             category: "PKH",
             action_type: RULE_ACTION_TYPES.ASSIGN_BENEFIT,
+            grade_code: RESULT_GRADE_CODES.HIGH_PRIORITY,
+            grade_label: "High priority",
             preference_score: 0.88,
             rank: 1,
             status: "ranked"
@@ -113,6 +123,8 @@ test("serializeGroupedResponse separates ranked and rejected groups", () => {
             alternative_id: 2,
             category: "Tidak lulus",
             action_type: RULE_ACTION_TYPES.REJECT,
+            grade_code: RESULT_GRADE_CODES.NOT_ELIGIBLE,
+            grade_label: "Not eligible",
             preference_score: null,
             rank: null,
             status: "rejected"
@@ -128,4 +140,26 @@ test("serializeGroupedResponse separates ranked and rejected groups", () => {
    assert.equal(grouped.rejected_groups.length, 1)
    assert.equal(grouped.ranked_groups[0].items[0].alternative.name, "Citizen A")
    assert.equal(grouped.rejected_groups[0].items[0].alternative.name, "Citizen B")
+   assert.equal(grouped.ranked_groups[0].items[0].grade_label, "High priority")
+   assert.equal(grouped.rejected_groups[0].items[0].grade_label, "Not eligible")
+})
+
+test("grading fallback returns not eligible for rejected results", async () => {
+   const policiesByCategory = new Map()
+
+   const graded = await gradingService.applyGrades({
+      decisionModelId: 99,
+      policiesByCategory,
+      results: [
+         {
+            category: "Not eligible",
+            preference_score: null,
+            rank: null,
+            status: "rejected"
+         }
+      ]
+   })
+
+   assert.equal(graded[0].grade_code, RESULT_GRADE_CODES.NOT_ELIGIBLE)
+   assert.equal(graded[0].grade_label, "Not eligible")
 })

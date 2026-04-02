@@ -4,6 +4,7 @@ const { buildModelOptions } = require("./model-options")
 
 const DecisionModel = require("./decision-model.model")
 const Alternative = require("./alternative.model")
+const AssistanceCategory = require("./assistance-category.model")
 
 const Result = db.define("Result", {
   id: {
@@ -19,10 +20,24 @@ const Result = db.define("Result", {
     type: DataTypes.INTEGER,
     allowNull: false,
   },
-  category: {
+  category_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  grade_code: {
     type: DataTypes.STRING,
+    allowNull: false,
     validate: {
-      len: [0, 100]
+      notEmpty: true,
+      len: [1, 50]
+    }
+  },
+  grade_label: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: true,
+      len: [1, 100]
     }
   },
   preference_score: {
@@ -78,6 +93,16 @@ Alternative.hasMany(Result, {
 Result.belongsTo(Alternative, {
   foreignKey: "alternative_id",
   as: "alternative"
+})
+
+AssistanceCategory.hasMany(Result, {
+  foreignKey: "category_id",
+  as: "results",
+  onDelete: "SET NULL"
+})
+Result.belongsTo(AssistanceCategory, {
+  foreignKey: "category_id",
+  as: "categoryRef"
 })
 
 module.exports = Result

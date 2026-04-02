@@ -26,7 +26,7 @@ module.exports = {
          }
       }
    },
-    decisionModel: {
+   decisionModel: {
       create: {
          body: {
             name: { type: "string", required: true, minLength: 1, maxLength: 150 },
@@ -41,6 +41,34 @@ module.exports = {
          }
       },
       idParam: {
+         params: { id: positiveId }
+      }
+   },
+   assistanceCategory: {
+      create: {
+         body: {
+            decision_model_id: positiveId,
+            code: { type: "string", required: true, minLength: 1, maxLength: 50 },
+            name: { type: "string", required: true, minLength: 1, maxLength: 100 },
+            description: { type: "string", required: false, allowEmpty: true, maxLength: 5000 },
+            is_ranked: { type: "boolean", required: false },
+            status_active: { type: "boolean", required: false }
+         }
+      },
+      update: {
+         params: { id: positiveId },
+         body: {
+            code: { type: "string", required: false, minLength: 1, maxLength: 50 },
+            name: { type: "string", required: false, minLength: 1, maxLength: 100 },
+            description: { type: "string", required: false, allowEmpty: true, maxLength: 5000 },
+            is_ranked: { type: "boolean", required: false },
+            status_active: { type: "boolean", required: false }
+         }
+      },
+      byDecisionModel: {
+         params: { decisionModelId: positiveId }
+      },
+      byId: {
          params: { id: positiveId }
       }
    },
@@ -169,7 +197,7 @@ module.exports = {
             priority: { type: "integer", required: true, min: 1 },
             logic_type: { type: "enum", required: true, values: ["AND", "OR"] },
             action_type: { type: "enum", required: true, values: RULE_ACTION_TYPE_VALUES },
-            target_category: { type: "string", required: true, minLength: 1, maxLength: 100 }
+            category_id: positiveId
          }
       },
       update: {
@@ -179,7 +207,7 @@ module.exports = {
             priority: { type: "integer", required: false, min: 1 },
             logic_type: { type: "enum", required: false, values: ["AND", "OR"] },
             action_type: { type: "enum", required: false, values: RULE_ACTION_TYPE_VALUES },
-            target_category: { type: "string", required: false, minLength: 1, maxLength: 100 },
+            category_id: { type: "integer", required: false, min: 1 },
             status_active: { type: "boolean", required: false }
          }
       },
@@ -267,6 +295,56 @@ module.exports = {
       },
       byAlternative: {
          params: { alternativeId: positiveId }
+      },
+      byId: {
+         params: { id: positiveId }
+      }
+   },
+   resultGradePolicy: {
+      create: {
+         body: {
+            decision_model_id: positiveId,
+            category_id: positiveId,
+            applies_to_status: { type: "enum", required: true, values: ["ranked", "rejected"] }
+         }
+      },
+      update: {
+         params: { id: positiveId },
+         body: {
+            category_id: { type: "integer", required: false, min: 1 },
+            applies_to_status: { type: "enum", required: false, values: ["ranked", "rejected"] }
+         }
+      },
+      byDecisionModel: {
+         params: { decisionModelId: positiveId }
+      },
+      byId: {
+         params: { id: positiveId }
+      }
+   },
+   resultGradeRange: {
+      create: {
+         body: {
+            result_grade_policy_id: positiveId,
+            label: { type: "string", required: true, minLength: 1, maxLength: 100 },
+            code: { type: "string", required: true, minLength: 1, maxLength: 50 },
+            min_score: { type: "number", required: false, min: 0, max: 1 },
+            max_score: { type: "number", required: false, min: 0, max: 1 },
+            sort_order: { type: "integer", required: true, min: 1 }
+         }
+      },
+      update: {
+         params: { id: positiveId },
+         body: {
+            label: { type: "string", required: false, minLength: 1, maxLength: 100 },
+            code: { type: "string", required: false, minLength: 1, maxLength: 50 },
+            min_score: { type: "number", required: false, min: 0, max: 1 },
+            max_score: { type: "number", required: false, min: 0, max: 1 },
+            sort_order: { type: "integer", required: false, min: 1 }
+         }
+      },
+      byPolicy: {
+         params: { policyId: positiveId }
       },
       byId: {
          params: { id: positiveId }

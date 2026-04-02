@@ -2,6 +2,7 @@ const Rule = require("../../models/rule.model")
 const RuleCondition = require("../../models/rule-condition.model")
 const Alternative = require("../../models/alternative.model")
 const RuleEvaluation = require("../../models/rule-evaluation.model")
+const AssistanceCategory = require("../../models/assistance-category.model")
 const { DEFAULT_REJECTED_CATEGORY, RULE_ACTION_TYPES } = require("../../constants/rule-actions")
 const { RULE_VARIABLE_TYPES } = require("../../constants/rule-variable-types")
 
@@ -109,7 +110,8 @@ exports.runRuleEngine = async (decisionModelId) => {
       order: [["id", "ASC"]]
    })
 
-   const rules = await Rule.findAll({
+   const [rules, fallbackCategory] = await Promise.all([
+      Rule.findAll({
       where: {
          decision_model_id: decisionModelId,
          status_active: true
@@ -123,10 +125,21 @@ exports.runRuleEngine = async (decisionModelId) => {
                   attributes: ["id", "code", "value_type"]
                }
             ]
+         },
+         {
+            association: "categoryRef",
+            attributes: ["id", "code", "name", "is_ranked"]
           }
         ],
        order: [["priority", "ASC"], [{ model: RuleCondition, as: "conditions" }, "id", "ASC"]]
-    })
+    }),
+      AssistanceCategory.findOne({
+         where: {
+            decision_model_id: decisionModelId,
+            code: "not_eligible"
+         }
+      })
+   ])
 
    const results = []
 
@@ -152,6 +165,7 @@ exports.runRuleEngine = async (decisionModelId) => {
 
    for (const alternative of alternatives) {
       let category = null
+      let categoryId = null
       let actionType = RULE_ACTION_TYPES.REJECT
       let isRanked = false
       const factMap = factMaps.get(alternative.id) || new Map()
@@ -173,7 +187,8 @@ exports.runRuleEngine = async (decisionModelId) => {
          })
 
          if (matchesRule(rule, evaluations)) {
-            category = rule.target_category
+            category = rule.categoryRef?.name || null
+            categoryId = rule.categoryRef?.id || null
             actionType = normalizeActionType(rule.action_type)
             isRanked = isRankedCategory({ actionType, category })
             break
@@ -181,11 +196,13 @@ exports.runRuleEngine = async (decisionModelId) => {
       }
 
       if (!category) {
-         category = DEFAULT_REJECTED_CATEGORY
+         category = fallbackCategory?.name || DEFAULT_REJECTED_CATEGORY
+         categoryId = fallbackCategory?.id || null
       }
 
       results.push({
          alternative_id: alternative.id,
+         category_id: categoryId,
          category,
          action_type: actionType,
          is_ranked: isRanked

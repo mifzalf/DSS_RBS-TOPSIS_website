@@ -1,6 +1,7 @@
 const { DataTypes } = require("sequelize")
 const { db } = require("../config/database")
 const DecisionModel = require("./decision-model.model")
+const AssistanceCategory = require("./assistance-category.model")
 const { buildModelOptions } = require("./model-options")
 const { RULE_ACTION_TYPE_VALUES } = require("../constants/rule-actions")
 
@@ -9,6 +10,10 @@ const Rule = db.define("Rule", {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true,
+  },
+  category_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false
   },
   name: {
     type: DataTypes.STRING,
@@ -37,14 +42,6 @@ const Rule = db.define("Rule", {
       isIn: [RULE_ACTION_TYPE_VALUES]
     }
   },
-  target_category: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    validate: {
-      notEmpty: true,
-      len: [1, 100]
-    }
-  },
   status_active: {
     type: DataTypes.BOOLEAN,
     defaultValue: true
@@ -62,6 +59,16 @@ DecisionModel.hasMany(Rule, {
 Rule.belongsTo(DecisionModel, {
   foreignKey: "decision_model_id",
   as: "decisionModel"
+})
+
+AssistanceCategory.hasMany(Rule, {
+  foreignKey: "category_id",
+  as: "rules",
+  onDelete: "SET NULL"
+})
+Rule.belongsTo(AssistanceCategory, {
+  foreignKey: "category_id",
+  as: "categoryRef"
 })
 
 module.exports = Rule

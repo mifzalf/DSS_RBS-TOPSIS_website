@@ -52,6 +52,7 @@ const createApp = ({ includeRoutes = true } = {}) => {
   if (includeRoutes) {
     const authRouter = require("./routes/auth.route")
     const userRouter = require("./routes/users.route")
+    const assistanceCategoryRouter = require("./routes/assistance-categories.route")
     const decisionModelRouter = require("./routes/decisionModel.route")
     const criteriaRouter = require("./routes/criteria.route")
     const alternativesRouter = require("./routes/alternatives.route")
@@ -59,6 +60,8 @@ const createApp = ({ includeRoutes = true } = {}) => {
     const ruleRouter = require("./routes/rules.route")
     const ruleVariableRouter = require("./routes/rule-variables.route")
     const ruleEvaluationRouter = require("./routes/rule-evaluations.route")
+    const resultGradePolicyRouter = require("./routes/result-grade-policies.route")
+    const resultGradeRangeRouter = require("./routes/result-grade-ranges.route")
     const resultsRouter = require("./routes/results.route")
     const recommendationRouter = require("./routes/recommendation.route")
     const currentUser = require("./middleware/currentUser")
@@ -70,6 +73,7 @@ const createApp = ({ includeRoutes = true } = {}) => {
     app.use(currentUser)
 
     app.use("/users", userRouter)
+    app.use("/assistance-categories", assistanceCategoryRouter)
     app.use("/decision-model", decisionModelRouter)
     app.use("/criteria", criteriaRouter)
     app.use("/alternatives", alternativesRouter)
@@ -77,6 +81,8 @@ const createApp = ({ includeRoutes = true } = {}) => {
     app.use("/rules", ruleRouter)
     app.use("/rule-variables", ruleVariableRouter)
     app.use("/rule-evaluations", ruleEvaluationRouter)
+    app.use("/result-grade-policies", resultGradePolicyRouter)
+    app.use("/result-grade-ranges", resultGradeRangeRouter)
     app.use("/results", resultsRouter)
     app.use("/recommendations", recommendationRouter)
   }

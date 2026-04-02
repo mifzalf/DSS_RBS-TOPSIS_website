@@ -1,6 +1,7 @@
 const ruleEngine = require("./rule-engine.service")
 const matrixBuilder = require("./matrix-builder.service")
 const topsis = require("./topsis.service")
+const gradingService = require("../grading.service")
 
 const { db } = require("../../config/database")
 const Result = require("../../models/result.model")
@@ -31,6 +32,7 @@ const groupRuleResultsByCategory = (ruleResults) => {
 
       if (!groups[category]) {
          groups[category] = {
+            categoryId: item.category_id || null,
             category,
             isRanked: item.is_ranked !== false,
             actionType: item.action_type || null,
@@ -65,8 +67,11 @@ const generateRankedGroupResults = async ({ decisionModelId, categoryGroup }) =>
       return {
          decision_model_id: decisionModelId,
          alternative_id: alternative.id,
+         category_id: categoryGroup.categoryId,
          category: categoryGroup.category,
          action_type: categoryGroup.actionType,
+         grade_code: null,
+         grade_label: null,
          preference_score: item.score,
          rank: item.rank,
          status: "ranked"
@@ -78,8 +83,11 @@ const generateRejectedGroupResults = ({ decisionModelId, categoryGroup }) => {
    return categoryGroup.items.map((item) => ({
       decision_model_id: decisionModelId,
       alternative_id: item.alternative_id,
+      category_id: categoryGroup.categoryId,
       category: categoryGroup.category,
       action_type: categoryGroup.actionType,
+      grade_code: null,
+      grade_label: null,
       preference_score: null,
       rank: null,
       status: "rejected"
@@ -89,11 +97,13 @@ const generateRejectedGroupResults = ({ decisionModelId, categoryGroup }) => {
 const serializeGroupedResponse = (results, alternatives) => {
    const alternativeLookup = buildAlternativeLookup(alternatives)
    const grouped = results.reduce((accumulator, result) => {
-      const key = result.category || "Unclassified"
+      const categoryKey = result.category || "Unclassified"
+      const key = `${result.status}:${categoryKey}`
 
       if (!accumulator[key]) {
          accumulator[key] = {
-            category: key,
+            category_id: result.category_id,
+            category: categoryKey,
             action_type: result.action_type || null,
             status: result.status,
             items: []
@@ -102,7 +112,10 @@ const serializeGroupedResponse = (results, alternatives) => {
 
       accumulator[key].items.push({
          alternative_id: result.alternative_id,
+         category_id: result.category_id,
          alternative: alternativeLookup.get(result.alternative_id) || null,
+         grade_code: result.grade_code,
+         grade_label: result.grade_label,
          preference_score: result.preference_score,
          rank: result.rank,
          status: result.status
@@ -156,7 +169,10 @@ exports.generateRecommendation = async (decisionModelId) => {
       })
    ))
 
-   const results = [...rankedResults, ...rejectedResults]
+   const results = await gradingService.applyGrades({
+      decisionModelId,
+      results: [...rankedResults, ...rejectedResults]
+   })
 
    await db.transaction(async (transaction) => {
       await Result.destroy({
@@ -167,9 +183,12 @@ exports.generateRecommendation = async (decisionModelId) => {
       if (results.length) {
          await Result.bulkCreate(
             results.map(result => ({
-               decision_model_id: result.decision_model_id,
-               alternative_id: result.alternative_id,
-               category: result.category,
+                decision_model_id: result.decision_model_id,
+                alternative_id: result.alternative_id,
+                category_id: result.category_id,
+                category: result.category,
+                grade_code: result.grade_code,
+               grade_label: result.grade_label,
                preference_score: result.preference_score,
                rank: result.rank,
                iteration: 1,

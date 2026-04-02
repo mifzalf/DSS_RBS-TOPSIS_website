@@ -1,9 +1,16 @@
 const Rule = require("../models/rule.model")
 const DecisionModel = require("../models/decision-model.model")
+const AssistanceCategory = require("../models/assistance-category.model")
 const handleControllerError = require("../utils/controllerError")
 const { sendSuccess } = require("../utils/apiResponse")
 const { getRequestResource } = require("../utils/requestResource")
 const { RULE_ACTION_TYPES } = require("../constants/rule-actions")
+
+const loadRuleWithCategory = async (ruleId) => {
+  return Rule.findByPk(ruleId, {
+    include: [{ association: "categoryRef", attributes: ["id", "code", "name", "is_ranked"] }]
+  })
+}
 
 exports.createRule = async (req,res)=>{
   try{
@@ -14,7 +21,7 @@ exports.createRule = async (req,res)=>{
       priority,
       logic_type,
       action_type,
-      target_category
+      category_id
     } = req.body
 
     const decisionModel = await DecisionModel.findByPk(decision_model_id)
@@ -25,21 +32,31 @@ exports.createRule = async (req,res)=>{
       })
     }
 
+    const category = await AssistanceCategory.findByPk(category_id)
+
+    if(!category || category.decision_model_id !== decision_model_id){
+      return res.status(404).json({
+        message:"Assistance category not found"
+      })
+    }
+
     const rule = await Rule.create({
       decision_model_id,
+      category_id,
       name,
       priority,
       logic_type,
       action_type,
-      target_category,
       status_active:true,
       created_at:new Date()
     })
 
+    const hydratedRule = await loadRuleWithCategory(rule.id)
+
     return sendSuccess(res, {
       status: 201,
       message:"Rule created successfully",
-      data: rule
+      data: hydratedRule
     })
 
   }catch(error){
@@ -54,6 +71,7 @@ exports.getRulesByDecisionModel = async (req,res)=>{
 
     const rules = await Rule.findAll({
       where:{decision_model_id:decisionModelId},
+      include:[{ association: "categoryRef", attributes:["id","code","name","is_ranked"] }],
       order:[["priority","ASC"]]
     })
 
@@ -72,13 +90,15 @@ exports.getRuleById = async (req,res)=>{
 
     const {id} = req.params
 
-    const rule = await getRequestResource({
-      req,
-      key: "rule",
-      model: Rule,
-      id,
-      notFoundMessage: "Rule not found"
-    })
+    const rule = await loadRuleWithCategory(id)
+
+    if(!rule){
+      return res.status(404).json({
+        message:"Rule not found"
+      })
+    }
+
+    req.rule = rule
 
     return sendSuccess(res, {
       message: "Rule details retrieved successfully",
@@ -110,7 +130,7 @@ exports.updateRule = async (req,res)=>{
       priority,
       logic_type,
       action_type,
-      target_category,
+      category_id,
       status_active
     } = req.body
 
@@ -130,8 +150,16 @@ exports.updateRule = async (req,res)=>{
       updateData.action_type = action_type
     }
 
-    if(target_category?.trim()){
-      updateData.target_category = target_category
+    if(category_id !== undefined){
+      const category = await AssistanceCategory.findByPk(category_id)
+
+      if(!category || category.decision_model_id !== rule.decision_model_id){
+        return res.status(404).json({
+          message:"Assistance category not found"
+        })
+      }
+
+      updateData.category_id = category_id
     }
 
     if(status_active !== undefined){
@@ -140,9 +168,11 @@ exports.updateRule = async (req,res)=>{
 
     await rule.update(updateData)
 
+    const hydratedRule = await loadRuleWithCategory(rule.id)
+
     return sendSuccess(res, {
       message:"Rule updated successfully",
-      data: rule
+      data: hydratedRule
     })
 
   }catch(error){
