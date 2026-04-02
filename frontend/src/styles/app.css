@@ -1409,6 +1409,56 @@
   gap: 12px;
 }
 
+.decision-model-hero-grid,
+.decision-model-workspace-grid,
+.decision-model-hero-stats,
+.decision-model-hero-progress,
+.decision-model-snapshot-list,
+.decision-model-workspace-links {
+  display: grid;
+  gap: 16px;
+}
+
+.decision-model-hero-grid {
+  grid-template-columns: minmax(0, 1.4fr) minmax(320px, 0.9fr);
+}
+
+.decision-model-hero-stats {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.decision-model-workspace-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.decision-model-workspace-card {
+  min-height: 100%;
+}
+
+.decision-model-snapshot-list {
+  gap: 12px;
+}
+
+.decision-model-snapshot-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-2);
+}
+
+.decision-model-snapshot-item span {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.decision-model-snapshot-item strong {
+  font-size: var(--text-sm);
+}
+
 .decision-model-page-nav {
   border-radius: var(--radius-xl);
   padding: 18px 22px;
@@ -1419,6 +1469,45 @@
 .decision-model-page-nav-head {
   display: grid;
   gap: 6px;
+}
+
+.decision-model-group-switcher {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.decision-model-group-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-2);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.decision-model-group-tab.active {
+  background: var(--primary-soft);
+  border-color: #bfdbfe;
+  color: var(--primary);
+}
+
+.decision-model-subnav-wrap {
+  display: grid;
+  gap: 10px;
+}
+
+.decision-model-subnav-label {
+  color: var(--text-tertiary);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .decision-model-breadcrumbs {
@@ -1445,7 +1534,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .decision-model-tab {
@@ -1472,7 +1561,8 @@
 
 .rule-card-list,
 .rule-evaluation-grid,
-.recommendation-rejected-list {
+.recommendation-rejected-list,
+.grade-policy-list {
   display: grid;
   gap: 14px;
 }
@@ -1652,6 +1742,47 @@
 }
 
 .recommendation-group-head span {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.recommendation-rejected-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.recommendation-rejected-item p {
+  margin-top: 4px;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.grade-range-list {
+  display: grid;
+  gap: 10px;
+}
+
+.grade-range-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-1);
+}
+
+.grade-range-item p {
+  margin-top: 4px;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.grade-range-meta {
+  display: grid;
+  gap: 4px;
   color: var(--text-secondary);
   font-size: var(--text-sm);
 }
@@ -1970,6 +2101,12 @@
     grid-template-columns: 1fr;
   }
 
+  .decision-model-hero-grid,
+  .decision-model-workspace-grid,
+  .decision-model-hero-stats {
+    grid-template-columns: 1fr;
+  }
+
   .dashboard-metrics-grid {
     grid-template-columns: 1fr;
   }
@@ -2000,6 +2137,7 @@
   .decision-model-card-header,
   .decision-model-card-meta,
   .decision-model-card-actions,
+  .decision-model-snapshot-item,
   .rule-card-head,
   .rule-card-badges,
   .rule-card-meta-row,
@@ -2010,6 +2148,8 @@
   .rule-evaluation-card-actions,
   .rule-condition-item,
   .recommendation-rejected-item,
+  .recommendation-rejected-badges,
+  .grade-range-item,
   .rule-card-target {
     flex-direction: column;
     align-items: flex-start;
@@ -2022,6 +2162,10 @@
 
   .decision-model-page-nav {
     padding: 16px;
+  }
+
+  .decision-model-group-switcher {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .page-header p {

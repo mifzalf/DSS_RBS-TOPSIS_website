@@ -1,33 +1,51 @@
 import { useState } from 'react'
+import { useQueries } from '@tanstack/react-query'
 import { Link, useNavigate } from 'react-router-dom'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm } from 'react-hook-form'
 import { useFeedback } from '../../app/providers/useFeedback'
 import { ErrorState } from '../../components/feedback/ErrorState'
 import { LoadingState } from '../../components/feedback/LoadingState'
 import { DecisionModelPageNav } from '../../components/navigation/DecisionModelPageNav'
 import { StatusBadge } from '../../components/navigation/StatusBadge'
-import { ActionMenu } from '../../components/ui/ActionMenu'
-import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { FormField } from '../../components/form/FormField'
 import { TextField } from '../../components/form/TextField'
+import { ActionMenu } from '../../components/ui/ActionMenu'
 import { Button } from '../../components/ui/Button'
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { Modal } from '../../components/ui/Modal'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { ProgressIndicator } from '../../components/ui/ProgressIndicator'
 import { SectionCard } from '../../components/ui/SectionCard'
 import { StatCard } from '../../components/ui/StatCard'
 import { useAlternatives } from '../../features/alternative/useAlternatives'
+import { useAssistanceCategories } from '../../features/assistance-category/useAssistanceCategories'
 import { useCriteriaWithSubCriteria } from '../../features/criteria/useCriteria'
 import { decisionModelSchema } from '../../features/decision-model/decisionModel.schema'
 import { useDeleteDecisionModel, useDecisionModel, useUpdateDecisionModel } from '../../features/decision-model/useDecisionModels'
 import { useEvaluationOverview } from '../../features/evaluation/useEvaluationOverview'
-import { useRuleEvaluations } from '../../features/rule-evaluation/useRuleEvaluations'
 import { useRuleVariables } from '../../features/rule-variable/useRuleVariables'
 import { useRulesWithConditions } from '../../features/rule/useRules'
 import { useResults } from '../../features/result/useResults'
+import { useResultGradePolicies } from '../../features/result-grade/useResultGradePolicies'
 import { useDecisionModelId } from '../../hooks/useDecisionModelId'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
+import { ruleEvaluationApi } from '../../services/api/rule-evaluation.api'
 import { formatPercent } from '../../utils/format'
+
+const WEIGHT_TOLERANCE = 0.0001
+
+function buildReadinessStatus(value, expected = 1) {
+  if (value >= expected && expected > 0) return 'ready'
+  if (value > 0) return 'warning'
+  return 'pending'
+}
+
+function toProgress(checks) {
+  const normalizedChecks = checks.filter((check) => check !== null)
+  const total = normalizedChecks.length || 1
+  const completed = normalizedChecks.filter(Boolean).length
+  return Math.round((completed / total) * 100)
+}
 
 export function DecisionModelDetailPage() {
   const decisionModelId = useDecisionModelId()
@@ -39,13 +57,21 @@ export function DecisionModelDetailPage() {
   const updateMutation = useUpdateDecisionModel()
   const deleteMutation = useDeleteDecisionModel()
   const criteriaQuery = useCriteriaWithSubCriteria(decisionModelId)
+  const categoriesQuery = useAssistanceCategories(decisionModelId)
   const alternativesQuery = useAlternatives(decisionModelId)
   const ruleVariablesQuery = useRuleVariables(decisionModelId)
+  const gradePoliciesQuery = useResultGradePolicies(decisionModelId)
   const rulesQuery = useRulesWithConditions(decisionModelId)
   const resultsQuery = useResults(decisionModelId)
   const evaluationOverview = useEvaluationOverview(alternativesQuery.data || [], criteriaQuery.data || [])
-  const firstAlternativeId = alternativesQuery.data?.[0]?.id
-  const firstRuleEvaluationsQuery = useRuleEvaluations(firstAlternativeId)
+  const alternatives = alternativesQuery.data || []
+  const ruleEvaluationQueries = useQueries({
+    queries: alternatives.map((alternative) => ({
+      queryKey: ['rule-evaluations-overview', alternative.id],
+      queryFn: () => ruleEvaluationApi.listByAlternative(alternative.id),
+      enabled: Boolean(alternative.id),
+    })),
+  })
   const {
     register,
     handleSubmit,
@@ -56,7 +82,18 @@ export function DecisionModelDetailPage() {
     defaultValues: { name: '', descriptions: '' },
   })
 
-  if (modelQuery.isLoading || criteriaQuery.isLoading || alternativesQuery.isLoading || ruleVariablesQuery.isLoading || rulesQuery.isLoading || resultsQuery.isLoading || evaluationOverview.isLoading || firstRuleEvaluationsQuery.isLoading) {
+  if (
+    modelQuery.isLoading ||
+    criteriaQuery.isLoading ||
+    categoriesQuery.isLoading ||
+    alternativesQuery.isLoading ||
+    ruleVariablesQuery.isLoading ||
+    gradePoliciesQuery.isLoading ||
+    rulesQuery.isLoading ||
+    resultsQuery.isLoading ||
+    evaluationOverview.isLoading ||
+    ruleEvaluationQueries.some((query) => query.isLoading)
+  ) {
     return <LoadingState title="Loading model overview" description="Mapping the current workflow readiness for this decision model." />
   }
 
@@ -66,8 +103,10 @@ export function DecisionModelDetailPage() {
 
   const model = modelQuery.data
   const criteria = criteriaQuery.data || []
-  const alternatives = alternativesQuery.data || []
+  const categories = categoriesQuery.data || []
+
   const ruleVariables = ruleVariablesQuery.data || []
+  const gradePolicies = gradePoliciesQuery.data || []
   const rules = rulesQuery.data || []
   const results = resultsQuery.data || []
   const evaluations = evaluationOverview.data || []
@@ -75,15 +114,82 @@ export function DecisionModelDetailPage() {
   const expectedEvaluationCells = evaluations.reduce((sum, row) => sum + row.expected, 0)
   const evaluationProgress = expectedEvaluationCells ? Math.round((completedEvaluationCells / expectedEvaluationCells) * 100) : 0
   const totalWeight = criteria.reduce((sum, item) => sum + Number(item.weight || 0), 0)
-  const ruleEvaluations = firstRuleEvaluationsQuery.data || []
-  const sections = [
-    { label: 'Criteria', href: `/decision-models/${decisionModelId}/criteria`, count: criteria.length, status: criteria.length ? 'ready' : 'pending' },
-    { label: 'Alternatives', href: `/decision-models/${decisionModelId}/alternatives`, count: alternatives.length, status: alternatives.length ? 'ready' : 'pending' },
-    { label: 'TOPSIS Evaluations', href: `/decision-models/${decisionModelId}/evaluations`, count: `${completedEvaluationCells}/${expectedEvaluationCells}`, status: evaluationProgress === 100 ? 'ready' : evaluationProgress > 0 ? 'warning' : 'pending' },
-    { label: 'Rule Variables', href: `/decision-models/${decisionModelId}/rule-variables`, count: ruleVariables.length, status: ruleVariables.length ? 'ready' : 'pending' },
-    { label: 'Rule Evaluations', href: `/decision-models/${decisionModelId}/rule-evaluations`, count: `${ruleEvaluations.length}/${ruleVariables.length || 0}`, status: ruleVariables.length && ruleEvaluations.length >= ruleVariables.length ? 'ready' : ruleEvaluations.length ? 'warning' : 'pending' },
-    { label: 'Rules', href: `/decision-models/${decisionModelId}/rules`, count: rules.length, status: rules.length ? 'ready' : 'pending' },
-    { label: 'Recommendation', href: `/decision-models/${decisionModelId}/recommendation`, count: results.length, status: results.length ? 'ready' : 'pending' },
+  const isWeightBalanced = Math.abs(totalWeight - 1) <= WEIGHT_TOLERANCE
+  const totalRuleEvaluations = ruleEvaluationQueries.reduce((sum, query) => sum + (query.data?.length || 0), 0)
+  const expectedRuleEvaluations = alternatives.length * ruleVariables.length
+  const rankedCategories = categories.filter((item) => item.is_ranked).length
+  const rejectedCategories = categories.filter((item) => !item.is_ranked).length
+  const gradeRangeCount = gradePolicies.reduce((sum, policy) => sum + (policy.ranges?.length || 0), 0)
+  const hasCategories = categories.length > 0
+  const hasGradePolicies = gradePolicies.length > 0
+  const hasValidGradeRanges = gradePolicies.length > 0 && gradePolicies.every((policy) => (policy.ranges?.length || 0) > 0)
+  const hasCriteria = criteria.length > 0
+  const hasBalancedWeights = isWeightBalanced
+  const hasRuleVariables = ruleVariables.length > 0
+  const hasRules = rules.length > 0
+  const hasAlternatives = alternatives.length > 0
+  const hasCompleteTopsisEvaluations = alternatives.length > 0 && expectedEvaluationCells > 0 && evaluationProgress === 100
+  const hasRuleEvaluations = alternatives.length > 0 && ruleVariables.length > 0 && totalRuleEvaluations >= expectedRuleEvaluations
+  const hasRecommendations = results.length > 0
+
+  const generalChecks = [hasCategories, hasGradePolicies, hasValidGradeRanges, hasRecommendations]
+  const topsisChecks = [hasCriteria, hasBalancedWeights]
+  const ruleBaseChecks = [hasRuleVariables, hasRules]
+  const alternativesChecks = [
+    hasAlternatives,
+    alternatives.length > 0 ? hasCompleteTopsisEvaluations : null,
+    alternatives.length > 0 && ruleVariables.length > 0 ? hasRuleEvaluations : null,
+  ]
+  const overallChecks = [...generalChecks, ...topsisChecks, ...ruleBaseChecks, ...alternativesChecks]
+
+  const generalProgress = toProgress(generalChecks)
+  const topsisProgress = toProgress(topsisChecks)
+  const ruleBaseProgress = toProgress(ruleBaseChecks)
+  const alternativesProgress = toProgress(alternativesChecks)
+  const overallProgress = toProgress(overallChecks)
+  const workspaceGroups = [
+    {
+      key: 'general',
+      title: 'General workspace',
+      description: 'Program context, category master, grading, and final DSS outputs.',
+      progress: generalProgress,
+      items: [
+        { label: 'Assistance categories', href: `/decision-models/${decisionModelId}/assistance-categories`, count: categories.length, status: buildReadinessStatus(categories.length) },
+        { label: 'Grade policies', href: `/decision-models/${decisionModelId}/grade-policies`, count: `${gradePolicies.length} policies / ${gradeRangeCount} ranges`, status: gradePolicies.length === 0 ? 'pending' : hasValidGradeRanges ? 'ready' : 'warning' },
+        { label: 'Recommendations', href: `/decision-models/${decisionModelId}/recommendation`, count: results.length ? 'Available' : 'Pending', status: hasRecommendations ? 'ready' : 'pending' },
+      ],
+    },
+    {
+      key: 'topsis',
+      title: 'TOPSIS builder',
+      description: 'Weight the criteria framework that drives preference scoring.',
+      progress: topsisProgress,
+      items: [
+        { label: 'Criteria', href: `/decision-models/${decisionModelId}/criteria`, count: criteria.length, status: buildReadinessStatus(criteria.length) },
+        { label: 'Weight balance', href: `/decision-models/${decisionModelId}/criteria`, count: formatPercent(totalWeight), status: isWeightBalanced ? 'ready' : totalWeight > 0 ? 'warning' : 'pending' },
+      ],
+    },
+    {
+      key: 'rule-base',
+      title: 'Rule base engine',
+      description: 'Define typed facts and business rules that assign categories before ranking.',
+      progress: ruleBaseProgress,
+      items: [
+        { label: 'Rule variables', href: `/decision-models/${decisionModelId}/rules`, count: ruleVariables.length, status: buildReadinessStatus(ruleVariables.length) },
+        { label: 'Rules', href: `/decision-models/${decisionModelId}/rules`, count: rules.length, status: buildReadinessStatus(rules.length) },
+      ],
+    },
+    {
+      key: 'alternatives',
+      title: 'Alternatives workspace',
+      description: 'Manage households and complete both TOPSIS and rule-based answers.',
+      progress: alternativesProgress,
+      items: [
+        { label: 'Alternatives', href: `/decision-models/${decisionModelId}/alternatives`, count: alternatives.length, status: buildReadinessStatus(alternatives.length) },
+        { label: 'TOPSIS evaluations', href: `/decision-models/${decisionModelId}/evaluations`, count: `${completedEvaluationCells}/${expectedEvaluationCells}`, status: hasCompleteTopsisEvaluations ? 'ready' : evaluationProgress > 0 ? 'warning' : 'pending' },
+        { label: 'Rule evaluations', href: `/decision-models/${decisionModelId}/rule-evaluations`, count: `${totalRuleEvaluations}/${expectedRuleEvaluations || 0}`, status: hasRuleEvaluations ? 'ready' : totalRuleEvaluations > 0 ? 'warning' : 'pending' },
+      ],
+    },
   ]
 
   const openEditModal = () => {
@@ -114,6 +220,7 @@ export function DecisionModelDetailPage() {
   return (
     <div className="page-stack">
       <DecisionModelPageNav currentLabel="Overview" />
+
       <PageHeader
         eyebrow="Decision Model"
         title={model.name}
@@ -134,36 +241,50 @@ export function DecisionModelDetailPage() {
         }
       />
 
-      <section className="stats-grid">
-        <StatCard label="Criteria count" value={criteria.length} hint={`Weight total ${formatPercent(totalWeight)}`} />
-        <StatCard label="Alternative count" value={alternatives.length} hint="Evaluation candidates in this model." />
-        <StatCard label="Rule count" value={rules.length} hint="Business conditions currently applied." />
-        <StatCard label="Recommendation status" value={results.length ? 'Generated' : 'Pending'} hint="Final result availability." tone={results.length ? 'accent' : 'default'} />
+      <section className="decision-model-hero-grid">
+        <SectionCard title="Workspace command center" description="Use this overview to see whether the model is ready by general setup, TOPSIS design, rule base, and alternative answers.">
+          <div className="decision-model-hero-stats">
+            <StatCard label="Assistance categories" value={categories.length} hint={`${rankedCategories} ranked / ${rejectedCategories} rejected`} />
+            <StatCard label="Households" value={alternatives.length} hint="Alternatives ready for scoring and rule answers." />
+            <StatCard label="Rule variables" value={ruleVariables.length} hint="Typed facts available for rule conditions." />
+            <StatCard label="Grade policies" value={gradePolicies.length} hint={`${gradeRangeCount} total grade ranges configured.`} />
+          </div>
+          <div className="decision-model-hero-progress">
+            <ProgressIndicator value={overallProgress} label="Overall workspace readiness" hint="Calculated from category setup, grade rules, TOPSIS setup, rule base, alternative answers, and recommendation availability." tone="accent" />
+            <ProgressIndicator value={evaluationProgress} label="TOPSIS answer coverage" hint={`${completedEvaluationCells} of ${expectedEvaluationCells} expected TOPSIS answers are filled.`} tone={evaluationProgress === 100 ? 'success' : 'warning'} />
+            <ProgressIndicator value={Math.round(Math.min(totalWeight, 1) * 100)} label="Criteria weight balance" hint={isWeightBalanced ? 'The TOPSIS weight total is balanced.' : `Current weight total is ${formatPercent(totalWeight)} and should reach 100%.`} tone={isWeightBalanced ? 'success' : 'warning'} />
+          </div>
+        </SectionCard>
+
+        <SectionCard title="Latest system snapshot" description="A quick reading of the current decision model state before your team moves to the next group.">
+          <div className="decision-model-snapshot-list">
+            <div className="decision-model-snapshot-item"><span>Rule engine status</span><StatusBadge status={rules.length && ruleVariables.length ? 'ready' : ruleVariables.length || rules.length ? 'warning' : 'pending'} /></div>
+            <div className="decision-model-snapshot-item"><span>Recommendation output</span><StatusBadge status={results.length ? 'ready' : 'pending'} /></div>
+            <div className="decision-model-snapshot-item"><span>TOPSIS coverage</span><strong>{completedEvaluationCells}/{expectedEvaluationCells || 0}</strong></div>
+            <div className="decision-model-snapshot-item"><span>Rule answer coverage</span><strong>{totalRuleEvaluations}/{expectedRuleEvaluations || 0}</strong></div>
+            <div className="decision-model-snapshot-item"><span>Open recommendation view</span><Link to={`/decision-models/${decisionModelId}/recommendation`} className="button button-ghost">Open</Link></div>
+          </div>
+        </SectionCard>
       </section>
 
-      <div className="content-grid two-column">
-        <SectionCard title="Progress panel" description="Shows where the team should continue next in the workflow.">
-          <div className="stack-lg">
-            <ProgressIndicator value={Math.min(100, Math.round(((criteria.length > 0) + (alternatives.length > 0) + (rules.length > 0) + (results.length > 0)) * 25 + evaluationProgress * 0.25))} label="Overall model readiness" hint="Combines foundational setup and evaluation completeness." tone="accent" />
-            <ProgressIndicator value={evaluationProgress} label="Evaluation completeness" hint={`${completedEvaluationCells} of ${expectedEvaluationCells} expected cells are filled.`} tone={evaluationProgress === 100 ? 'success' : 'warning'} />
-            <ProgressIndicator value={Math.round(Math.min(totalWeight, 1) * 100)} label="Criteria weight balance" hint={totalWeight === 1 ? 'Total weight is ideal.' : 'Weight total should reach exactly 100%.'} tone={totalWeight === 1 ? 'success' : 'warning'} />
-          </div>
-        </SectionCard>
-
-        <SectionCard title="Workflow links" description="Navigate by domain, not by disconnected forms.">
-          <div className="link-list">
-            {sections.map((section) => (
-              <Link key={section.label} to={section.href} className="workflow-link">
-                <div>
-                  <strong>{section.label}</strong>
-                  <p>{section.count}</p>
-                </div>
-                <StatusBadge status={section.status} />
-              </Link>
-            ))}
-          </div>
-        </SectionCard>
-      </div>
+      <section className="decision-model-workspace-grid">
+        {workspaceGroups.map((group) => (
+          <SectionCard key={group.key} title={group.title} description={group.description} className="decision-model-workspace-card">
+            <ProgressIndicator value={group.progress} label="Group readiness" hint="Use this to decide which workspace area still needs work." tone={group.progress === 100 ? 'success' : group.progress > 0 ? 'warning' : 'default'} />
+            <div className="decision-model-workspace-links">
+              {group.items.map((item) => (
+                <Link key={item.label} to={item.href} className="workflow-link">
+                  <div>
+                    <strong>{item.label}</strong>
+                    <p>{item.count}</p>
+                  </div>
+                  <StatusBadge status={item.status} />
+                </Link>
+              ))}
+            </div>
+          </SectionCard>
+        ))}
+      </section>
 
       <Modal
         open={editOpen}

@@ -6,7 +6,7 @@ import { RoleBadge } from '../../components/navigation/RoleBadge'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { SectionCard } from '../../components/ui/SectionCard'
 import { StatCard } from '../../components/ui/StatCard'
-import { WORKFLOW_STEPS } from '../../constants/routes'
+import { WORKFLOW_STEPS } from '../../constants/workflow'
 import { useDecisionModels } from '../../features/decision-model/useDecisionModels'
 import { formatDate, truncateText } from '../../utils/format'
 
