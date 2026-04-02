@@ -8,14 +8,15 @@ import { RegisterPage } from '../../pages/auth/RegisterPage'
 import { DashboardPage } from '../../pages/dashboard/DashboardPage'
 import { DecisionModelListPage } from '../../pages/decision-model/DecisionModelListPage'
 import { DecisionModelDetailPage } from '../../pages/decision-model/DecisionModelDetailPage'
-import { MembersPage } from '../../pages/decision-model/MembersPage'
-import { CriteriaPage } from '../../pages/criteria/CriteriaPage'
-import { AlternativesPage } from '../../pages/alternative/AlternativesPage'
-import { EvaluationsPage } from '../../pages/evaluation/EvaluationsPage'
-import { RuleEvaluationsPage } from '../../pages/evaluation/RuleEvaluationsPage'
-import { RulesPage } from '../../pages/rule/RulesPage'
-import { RuleVariablesPage } from '../../pages/rule/RuleVariablesPage'
-import { RecommendationPage } from '../../pages/recommendation/RecommendationPage'
+import { MembersPage } from '../../pages/general/MembersPage'
+import { AssistanceCategoriesPage } from '../../pages/general/AssistanceCategoriesPage'
+import { GradePoliciesPage } from '../../pages/general/GradePoliciesPage'
+import { RecommendationPage } from '../../pages/general/RecommendationPage'
+import { CriteriaPage } from '../../pages/topsis/CriteriaPage'
+import { EvaluationsPage } from '../../pages/topsis/EvaluationsPage'
+import { AlternativesPage } from '../../pages/alternatives/AlternativesPage'
+import { RuleEvaluationsPage } from '../../pages/alternatives/RuleEvaluationsPage'
+import { RulesPage } from '../../pages/rule-base/RulesPage'
 import { NotFoundPage } from '../../pages/NotFoundPage'
 import { ROUTES } from '../../constants/routes'
 
@@ -36,11 +37,12 @@ export function AppRouter() {
           <Route path={`${ROUTES.decisionModels}/:id`} element={<DecisionModelDetailPage />} />
           <Route path={`${ROUTES.decisionModels}/:id/members`} element={<MembersPage />} />
           <Route path={`${ROUTES.decisionModels}/:id/criteria`} element={<CriteriaPage />} />
+          <Route path={`${ROUTES.decisionModels}/:id/assistance-categories`} element={<AssistanceCategoriesPage />} />
           <Route path={`${ROUTES.decisionModels}/:id/alternatives`} element={<AlternativesPage />} />
           <Route path={`${ROUTES.decisionModels}/:id/evaluations`} element={<EvaluationsPage />} />
-          <Route path={`${ROUTES.decisionModels}/:id/rule-variables`} element={<RuleVariablesPage />} />
           <Route path={`${ROUTES.decisionModels}/:id/rule-evaluations`} element={<RuleEvaluationsPage />} />
           <Route path={`${ROUTES.decisionModels}/:id/rules`} element={<RulesPage />} />
+          <Route path={`${ROUTES.decisionModels}/:id/grade-policies`} element={<GradePoliciesPage />} />
           <Route path={`${ROUTES.decisionModels}/:id/recommendation`} element={<RecommendationPage />} />
         </Route>
       </Route>

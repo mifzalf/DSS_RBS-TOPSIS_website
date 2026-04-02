@@ -5,10 +5,11 @@ Frontend ini dibangun sebagai dashboard internal untuk workflow DSS, bukan landi
 ## Fokus Arsitektur
 
 - `src/app/` - shell aplikasi, router, provider, layout global
-- `src/pages/` - entry screen tiap route
-- `src/features/` - logic server-state dan domain behavior
+- `src/pages/` - entry screen yang disusun mengikuti grup workspace: `general`, `topsis`, `rule-base`, `alternatives`
+- `src/features/` - logic server-state dan domain behavior per entitas backend
 - `src/components/` - UI primitives, form, feedback, navigation, data display
 - `src/services/` - HTTP client dan wrapper API backend
+- `src/constants/` - route constants, workflow copy, dan option lists yang dipisah per concern
 - `src/styles/` - global styles dan token visual
 
 ## Dokumen Desain
