@@ -222,13 +222,19 @@
   letter-spacing: 0.08em;
 }
 
-.app-shell {
+.root-shell {
   display: block;
   min-height: 100vh;
   background: var(--bg-canvas);
 }
 
-.app-shell.is-sidebar-collapsed {
+.workspace-shell {
+  display: block;
+  min-height: 100vh;
+  background: var(--bg-canvas);
+}
+
+.workspace-shell.is-sidebar-collapsed {
   --sidebar-width: 88px;
 }
 
@@ -300,16 +306,107 @@
   overflow-y: auto;
 }
 
+.sidebar-back-link,
+.workspace-primary-link {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 10px;
+  padding: 11px 12px;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-secondary);
+  text-align: left;
+}
+
+.sidebar-back-link {
+  margin-top: 4px;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-2);
+}
+
+.workspace-primary-nav,
+.workspace-subnav {
+  display: grid;
+  gap: 8px;
+}
+
+.workspace-nav-group {
+  display: grid;
+  gap: 8px;
+}
+
+.workspace-primary-link.active,
+.workspace-primary-link:hover,
+.sidebar-back-link:hover {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.workspace-primary-label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.workspace-primary-meta {
+  display: inline-grid;
+  place-items: center;
+}
+
+.sidebar-chevron {
+  width: 16px;
+  height: 16px;
+  transition: transform 160ms ease;
+}
+
+.sidebar-chevron.expanded {
+  transform: rotate(90deg);
+}
+
+.workspace-subnav {
+  margin-left: 18px;
+  padding-left: 16px;
+  border-left: 1px solid var(--border-subtle);
+}
+
+.workspace-subnav-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.workspace-subnav-link.active,
+.workspace-subnav-link:hover {
+  background: var(--surface-2);
+  color: var(--primary);
+}
+
 .app-sidebar.is-collapsed .sidebar-brand-copy,
 .app-sidebar.is-collapsed .sidebar-section-title,
 .app-sidebar.is-collapsed .sidebar-link small,
-.app-sidebar.is-collapsed .sidebar-support {
+.app-sidebar.is-collapsed .sidebar-support,
+.app-sidebar.is-collapsed .workspace-primary-label,
+.app-sidebar.is-collapsed .workspace-primary-meta,
+.app-sidebar.is-collapsed .workspace-subnav,
+.app-sidebar.is-collapsed .sidebar-back-link .sidebar-link-copy {
   display: none;
 }
 
 .app-sidebar.is-collapsed .sidebar-brand-row {
   justify-content: center;
   border-bottom-color: transparent;
+}
+
+.app-sidebar.is-collapsed .sidebar-back-link,
+.app-sidebar.is-collapsed .workspace-primary-link {
+  grid-template-columns: 1fr;
+  justify-items: center;
+  text-align: center;
 }
 
 .app-sidebar.is-collapsed .sidebar-brand-block {
@@ -448,7 +545,14 @@
   color: var(--text-secondary);
 }
 
-.app-shell-body {
+.root-shell-content {
+  width: 100%;
+  max-width: var(--container-max);
+  padding: 24px;
+  margin: 0 auto;
+}
+
+.workspace-shell-body {
   display: grid;
   grid-template-rows: auto 1fr;
   min-width: 0;
@@ -457,7 +561,7 @@
   transition: margin-left 180ms ease;
 }
 
-.app-shell.is-sidebar-collapsed .app-shell-body {
+.workspace-shell.is-sidebar-collapsed .workspace-shell-body {
   margin-left: 88px;
 }
 
@@ -606,7 +710,7 @@
   justify-content: center;
 }
 
-.app-shell-content {
+.workspace-shell-content {
   width: 100%;
   max-width: var(--container-max);
   padding: 20px 24px 28px;
@@ -1865,7 +1969,7 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .app-shell.is-sidebar-collapsed {
+  .workspace-shell.is-sidebar-collapsed {
     --sidebar-width: 280px;
   }
 
@@ -1915,12 +2019,12 @@
     display: none;
   }
 
-  .app-shell-body,
-  .app-shell.is-sidebar-collapsed .app-shell-body {
+  .workspace-shell-body,
+  .workspace-shell.is-sidebar-collapsed .workspace-shell-body {
     margin-left: 0;
   }
 
-  .app-shell-content {
+  .workspace-shell-content {
     max-width: none;
     padding: 18px 18px 24px;
   }
@@ -1956,7 +2060,7 @@
 @media (max-width: 720px) {
   .auth-intro,
   .auth-panel,
-  .app-shell-content,
+  .workspace-shell-content,
   .topbar,
   .page-header,
   .section-card,
@@ -2062,7 +2166,7 @@
     padding: 14px 16px;
   }
 
-  .app-shell-content {
+  .workspace-shell-content {
     padding: 16px;
   }
 
@@ -2186,7 +2290,7 @@
 @media (max-width: 480px) {
   .auth-intro,
   .auth-panel,
-  .app-shell-content,
+  .workspace-shell-content,
   .topbar,
   .page-header,
   .section-card,

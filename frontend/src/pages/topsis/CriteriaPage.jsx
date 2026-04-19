@@ -1,16 +1,15 @@
 import { useState } from 'react'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { useFeedback } from '../../app/providers/useFeedback'
 import { ErrorState } from '../../components/feedback/ErrorState'
 import { LoadingState } from '../../components/feedback/LoadingState'
 import { DataTable } from '../../components/data-display/DataTable'
+import { DropdownSelect } from '../../components/ui/DropdownSelect'
 import { FormField } from '../../components/form/FormField'
 import { NumberField } from '../../components/form/NumberField'
-import { SelectField } from '../../components/form/SelectField'
 import { TextField } from '../../components/form/TextField'
-import { DecisionModelPageNav } from '../../components/navigation/DecisionModelPageNav'
 import { StatusBadge } from '../../components/navigation/StatusBadge'
 import { ActionMenu } from '../../components/ui/ActionMenu'
 import { Button } from '../../components/ui/Button'
@@ -69,6 +68,8 @@ export function CriteriaPage() {
     resolver: zodResolver(subCriteriaSchema),
     defaultValues: { label: '', value: 0 },
   })
+  const criteriaTypeValue = useWatch({ control: criteriaForm.control, name: 'type' })
+  const criteriaStatusValue = useWatch({ control: criteriaForm.control, name: 'status_active' })
 
   if (isLoading) {
     return <LoadingState title="Loading criteria" description="Checking weighted criteria and nested sub-criteria for this model." />
@@ -167,7 +168,6 @@ export function CriteriaPage() {
 
   return (
     <div className="page-stack">
-      <DecisionModelPageNav currentLabel="Criteria" />
       <PageHeader
         eyebrow="Criteria"
         title="Manage weighted criteria with visible balance control."
@@ -260,9 +260,9 @@ export function CriteriaPage() {
         <form id="criteria-form" className="stack-md" onSubmit={submitCriteria}>
           <FormField label="Code" error={criteriaForm.formState.errors.code?.message}><TextField {...criteriaForm.register('code')} placeholder="C1" /></FormField>
           <FormField label="Name" error={criteriaForm.formState.errors.name?.message}><TextField {...criteriaForm.register('name')} placeholder="Household income" /></FormField>
-          <FormField label="Type" error={criteriaForm.formState.errors.type?.message}><SelectField options={CRITERIA_TYPE_OPTIONS} {...criteriaForm.register('type')} /></FormField>
+          <FormField label="Type" error={criteriaForm.formState.errors.type?.message}><DropdownSelect value={criteriaTypeValue} options={CRITERIA_TYPE_OPTIONS} onChange={(value) => criteriaForm.setValue('type', value, { shouldValidate: true })} /></FormField>
           <FormField label="Weight" hint="Range 0 to 1" error={criteriaForm.formState.errors.weight?.message}><NumberField {...criteriaForm.register('weight')} min="0" max="1" step="0.01" /></FormField>
-          <FormField label="Status" error={criteriaForm.formState.errors.status_active?.message}><SelectField options={[{ value: 'true', label: 'Active' }, { value: 'false', label: 'Inactive' }]} {...criteriaForm.register('status_active')} /></FormField>
+          <FormField label="Status" error={criteriaForm.formState.errors.status_active?.message}><DropdownSelect value={criteriaStatusValue} options={[{ value: 'true', label: 'Active' }, { value: 'false', label: 'Inactive' }]} onChange={(value) => criteriaForm.setValue('status_active', value, { shouldValidate: true })} /></FormField>
         </form>
       </Modal>
 

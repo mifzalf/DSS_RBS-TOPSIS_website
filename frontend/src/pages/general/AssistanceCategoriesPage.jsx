@@ -1,16 +1,15 @@
 import { useState } from 'react'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { useFeedback } from '../../app/providers/useFeedback'
 import { EmptyState } from '../../components/feedback/EmptyState'
 import { ErrorState } from '../../components/feedback/ErrorState'
 import { LoadingState } from '../../components/feedback/LoadingState'
 import { DataTable } from '../../components/data-display/DataTable'
+import { DropdownSelect } from '../../components/ui/DropdownSelect'
 import { FormField } from '../../components/form/FormField'
-import { SelectField } from '../../components/form/SelectField'
 import { TextField } from '../../components/form/TextField'
-import { DecisionModelPageNav } from '../../components/navigation/DecisionModelPageNav'
 import { ActionMenu } from '../../components/ui/ActionMenu'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
@@ -18,7 +17,7 @@ import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { Modal } from '../../components/ui/Modal'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { SectionCard } from '../../components/ui/SectionCard'
-import { useAssistanceCategories, useCreateAssistanceCategory, useDeleteAssistanceCategory, useUpdateAssistanceCategory } from '../../features/assistance-category/useAssistanceCategories'
+import { useAssistanceCategories, useCreateAssistanceCategory, useDeleteAssistanceCategory, useUpdateAssistanceCategory } from '../../features/assistance-categories/useAssistanceCategories'
 import { useDecisionModelId } from '../../hooks/useDecisionModelId'
 
 const schema = z.object({
@@ -42,6 +41,8 @@ export function AssistanceCategoriesPage() {
     resolver: zodResolver(schema),
     defaultValues: { code: '', name: '', description: '', is_ranked: 'true', status_active: 'true' },
   })
+  const categoryTypeValue = useWatch({ control: form.control, name: 'is_ranked' })
+  const categoryStatusValue = useWatch({ control: form.control, name: 'status_active' })
 
   if (isLoading) return <LoadingState title="Loading assistance categories" description="Preparing master benefit categories for rules, grades, and grouped recommendations." />
   if (error) return <ErrorState description={error.message} onAction={refetch} />
@@ -91,7 +92,6 @@ export function AssistanceCategoriesPage() {
 
   return (
     <div className="page-stack">
-      <DecisionModelPageNav currentLabel="Assistance categories" />
       <PageHeader eyebrow="Assistance Categories" title="Manage the master categories used by rules, grades, and recommendation groups." description="Categories are now the source of truth for category assignment, ranking behavior, and grade policy targeting." actions={<Button type="button" onClick={openCreate}>Add category</Button>} />
       <SectionCard title="Category catalog" description="Use ranked categories for benefit assignment and rejected categories for not-eligible outcomes.">
         {data.length ? (
@@ -116,8 +116,8 @@ export function AssistanceCategoriesPage() {
           <FormField label="Code" error={form.formState.errors.code?.message}><TextField {...form.register('code')} placeholder="pkh" /></FormField>
           <FormField label="Name" error={form.formState.errors.name?.message}><TextField {...form.register('name')} placeholder="PKH" /></FormField>
           <FormField label="Description" error={form.formState.errors.description?.message}><textarea className="input textarea" rows="4" {...form.register('description')} placeholder="Program Keluarga Harapan" /></FormField>
-          <FormField label="Category type" error={form.formState.errors.is_ranked?.message}><SelectField options={[{ value: 'true', label: 'Ranked category' }, { value: 'false', label: 'Rejected category' }]} {...form.register('is_ranked')} /></FormField>
-          <FormField label="Status" error={form.formState.errors.status_active?.message}><SelectField options={[{ value: 'true', label: 'Active' }, { value: 'false', label: 'Inactive' }]} {...form.register('status_active')} /></FormField>
+          <FormField label="Category type" error={form.formState.errors.is_ranked?.message}><DropdownSelect value={categoryTypeValue} options={[{ value: 'true', label: 'Ranked category' }, { value: 'false', label: 'Rejected category' }]} onChange={(value) => form.setValue('is_ranked', value, { shouldValidate: true })} /></FormField>
+          <FormField label="Status" error={form.formState.errors.status_active?.message}><DropdownSelect value={categoryStatusValue} options={[{ value: 'true', label: 'Active' }, { value: 'false', label: 'Inactive' }]} onChange={(value) => form.setValue('status_active', value, { shouldValidate: true })} /></FormField>
         </form>
       </Modal>
 

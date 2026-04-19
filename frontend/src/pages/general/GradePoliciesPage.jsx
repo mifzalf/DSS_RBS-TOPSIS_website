@@ -1,16 +1,15 @@
 import { useState } from 'react'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { useFeedback } from '../../app/providers/useFeedback'
 import { EmptyState } from '../../components/feedback/EmptyState'
 import { ErrorState } from '../../components/feedback/ErrorState'
 import { LoadingState } from '../../components/feedback/LoadingState'
+import { DropdownSelect } from '../../components/ui/DropdownSelect'
 import { FormField } from '../../components/form/FormField'
 import { NumberField } from '../../components/form/NumberField'
-import { SelectField } from '../../components/form/SelectField'
 import { TextField } from '../../components/form/TextField'
-import { DecisionModelPageNav } from '../../components/navigation/DecisionModelPageNav'
 import { ActionMenu } from '../../components/ui/ActionMenu'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
@@ -18,9 +17,9 @@ import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { Modal } from '../../components/ui/Modal'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { SectionCard } from '../../components/ui/SectionCard'
-import { useAssistanceCategories } from '../../features/assistance-category/useAssistanceCategories'
-import { useCreateResultGradePolicy, useDeleteResultGradePolicy, useResultGradePolicies, useUpdateResultGradePolicy } from '../../features/result-grade/useResultGradePolicies'
-import { useCreateResultGradeRange, useDeleteResultGradeRange, useUpdateResultGradeRange } from '../../features/result-grade/useResultGradeRanges'
+import { useAssistanceCategories } from '../../features/assistance-categories/useAssistanceCategories'
+import { useCreateGradePolicy, useDeleteGradePolicy, useGradePolicies, useUpdateGradePolicy } from '../../features/grade-policies/useGradePolicies'
+import { useCreateGradeRange, useDeleteGradeRange, useUpdateGradeRange } from '../../features/grade-policies/useGradeRanges'
 import { useDecisionModelId } from '../../hooks/useDecisionModelId'
 
 const policySchema = z.object({
@@ -42,16 +41,18 @@ export function GradePoliciesPage() {
   const [policyModal, setPolicyModal] = useState({ open: false, policy: null })
   const [rangeModal, setRangeModal] = useState({ open: false, policy: null, range: null })
   const [deleteState, setDeleteState] = useState({ type: null, item: null })
-  const { data = [], isLoading, error, refetch } = useResultGradePolicies(decisionModelId)
+  const { data = [], isLoading, error, refetch } = useGradePolicies(decisionModelId)
   const { data: categories = [] } = useAssistanceCategories(decisionModelId)
-  const createPolicyMutation = useCreateResultGradePolicy(decisionModelId)
-  const updatePolicyMutation = useUpdateResultGradePolicy(decisionModelId)
-  const deletePolicyMutation = useDeleteResultGradePolicy(decisionModelId)
-  const createRangeMutation = useCreateResultGradeRange(decisionModelId)
-  const updateRangeMutation = useUpdateResultGradeRange(decisionModelId)
-  const deleteRangeMutation = useDeleteResultGradeRange(decisionModelId)
+  const createPolicyMutation = useCreateGradePolicy(decisionModelId)
+  const updatePolicyMutation = useUpdateGradePolicy(decisionModelId)
+  const deletePolicyMutation = useDeleteGradePolicy(decisionModelId)
+  const createRangeMutation = useCreateGradeRange(decisionModelId)
+  const updateRangeMutation = useUpdateGradeRange(decisionModelId)
+  const deleteRangeMutation = useDeleteGradeRange(decisionModelId)
   const policyForm = useForm({ resolver: zodResolver(policySchema), defaultValues: { category_id: '', applies_to_status: 'ranked' } })
   const rangeForm = useForm({ resolver: zodResolver(rangeSchema), defaultValues: { label: '', code: '', min_score: '', max_score: '', sort_order: 1 } })
+  const gradePolicyCategoryValue = useWatch({ control: policyForm.control, name: 'category_id' })
+  const gradePolicyStatusValue = useWatch({ control: policyForm.control, name: 'applies_to_status' })
 
   if (isLoading) {
     return <LoadingState title="Loading grade policies" description="Preparing grade policy scopes and range rules for this decision model." />
@@ -138,7 +139,6 @@ export function GradePoliciesPage() {
 
   return (
     <div className="page-stack">
-      <DecisionModelPageNav currentLabel="Grade policies" />
       <PageHeader
         eyebrow="Grade Policies"
         title="Map ranked and rejected outcomes into formal grade labels."
@@ -194,8 +194,8 @@ export function GradePoliciesPage() {
 
       <Modal open={policyModal.open} title={policyModal.policy ? 'Edit grade policy' : 'Create grade policy'} onClose={() => setPolicyModal({ open: false, policy: null })} footer={<><Button type="button" variant="ghost" onClick={() => setPolicyModal({ open: false, policy: null })}>Cancel</Button><Button type="submit" form="grade-policy-form" disabled={policyForm.formState.isSubmitting || createPolicyMutation.isPending || updatePolicyMutation.isPending}>Save policy</Button></>}>
         <form id="grade-policy-form" className="stack-md" onSubmit={submitPolicy}>
-          <FormField label="Category" error={policyForm.formState.errors.category_id?.message}><SelectField options={[{ value: '', label: 'Select category' }, ...categories.map((item) => ({ value: String(item.id), label: `${item.name} (${item.code})` }))]} {...policyForm.register('category_id')} /></FormField>
-          <FormField label="Applies to status" error={policyForm.formState.errors.applies_to_status?.message}><SelectField options={[{ value: 'ranked', label: 'Ranked' }, { value: 'rejected', label: 'Rejected' }]} {...policyForm.register('applies_to_status')} /></FormField>
+          <FormField label="Category" error={policyForm.formState.errors.category_id?.message}><DropdownSelect value={gradePolicyCategoryValue} options={[{ value: '', label: 'Select category' }, ...categories.map((item) => ({ value: String(item.id), label: `${item.name} (${item.code})` }))]} onChange={(value) => policyForm.setValue('category_id', value, { shouldValidate: true })} /></FormField>
+          <FormField label="Applies to status" error={policyForm.formState.errors.applies_to_status?.message}><DropdownSelect value={gradePolicyStatusValue} options={[{ value: 'ranked', label: 'Ranked' }, { value: 'rejected', label: 'Rejected' }]} onChange={(value) => policyForm.setValue('applies_to_status', value, { shouldValidate: true })} /></FormField>
         </form>
       </Modal>
 

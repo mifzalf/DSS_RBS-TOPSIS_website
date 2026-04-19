@@ -1,6 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { Link } from 'react-router-dom'
+import { useMemo, useState } from 'react'
+import { useAuth } from '../../app/providers/useAuth'
 import { useFeedback } from '../../app/providers/useFeedback'
 import { EmptyState } from '../../components/feedback/EmptyState'
 import { ErrorState } from '../../components/feedback/ErrorState'
@@ -11,24 +13,47 @@ import { RoleBadge } from '../../components/navigation/RoleBadge'
 import { ActionMenu } from '../../components/ui/ActionMenu'
 import { Button } from '../../components/ui/Button'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
+import { Drawer } from '../../components/ui/Drawer'
 import { Modal } from '../../components/ui/Modal'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { SectionCard } from '../../components/ui/SectionCard'
 import { StatCard } from '../../components/ui/StatCard'
+import { WORKFLOW_STEPS } from '../../constants/workflow'
 import { useCreateDecisionModel, useDeleteDecisionModel, useDecisionModels, useUpdateDecisionModel } from '../../features/decision-model/useDecisionModels'
 import { decisionModelSchema } from '../../features/decision-model/decisionModel.schema'
 import { formatDate, truncateText } from '../../utils/format'
-import { useState } from 'react'
 
 export function DecisionModelListPage() {
   const [open, setOpen] = useState(false)
+  const [journeyOpen, setJourneyOpen] = useState(false)
   const [selectedModel, setSelectedModel] = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
+  const { user, logout } = useAuth()
   const { pushToast } = useFeedback()
   const { data = [], isLoading, error, refetch } = useDecisionModels()
   const createMutation = useCreateDecisionModel()
   const updateMutation = useUpdateDecisionModel()
   const deleteMutation = useDeleteDecisionModel()
+  const readyModelCount = useMemo(
+    () =>
+      data.filter((item) => {
+        const summary = item.summary || item.progress || item.readiness || null
+
+        if (!summary) {
+          return false
+        }
+
+        return Boolean(
+          summary.has_categories &&
+            summary.has_criteria &&
+            summary.has_balanced_weights &&
+            summary.has_alternatives &&
+            summary.has_rules &&
+            summary.has_grade_policies,
+        )
+      }).length,
+    [data],
+  )
   const {
     register,
     handleSubmit,
@@ -92,11 +117,32 @@ export function DecisionModelListPage() {
     return <ErrorState description={error.message} onAction={refetch} />
   }
 
-  const ownerCount = data.filter((item) => item.role === 'owner').length
-  const latestModel = data[0]
-
   return (
     <div className="page-stack">
+      <header className="topbar surface-panel root-topbar">
+        <div className="topbar-main">
+          <div className="topbar-context">
+            <div className="topbar-heading">
+              <strong className="topbar-title">Decision models</strong>
+              <p>Choose a program workspace or create a new one to start the DSS process.</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="topbar-actions">
+          <div className="user-chip">
+            <span>{user?.name?.[0]?.toUpperCase() || 'U'}</span>
+            <div className="user-chip-copy">
+              <strong>{user?.name || 'User'}</strong>
+              <small>@{user?.username || 'session'}</small>
+            </div>
+          </div>
+          <Button type="button" variant="ghost" className="topbar-logout-button" onClick={logout}>
+            Logout
+          </Button>
+        </div>
+      </header>
+
       <PageHeader
         eyebrow="Decision Models"
         title="Manage models as structured workspaces, not scattered CRUD pages."
@@ -110,8 +156,12 @@ export function DecisionModelListPage() {
 
       <section className="stats-grid decision-model-stats-grid">
         <StatCard label="Total models" value={data.length} hint="Decision workspaces available in your account." />
-        <StatCard label="Owner access" value={ownerCount} hint="Models where you control member and workflow management." />
-        <StatCard label="Latest created" value={latestModel ? formatDate(latestModel.created_at) : '-'} hint="Most recent workspace entry." />
+        <StatCard label="Models ready to use" value={readyModelCount || '-'} hint={readyModelCount ? 'Programs with the core DSS setup already completed.' : 'Waiting for readiness summary from the backend list endpoint.'} />
+        <button type="button" className="stat-card stat-card-journey" onClick={() => setJourneyOpen(true)}>
+          <span className="stat-card-label">Suggested journey</span>
+          <strong className="stat-card-value">View steps</strong>
+          <span className="stat-card-hint">Open the recommended workflow sequence for building a new program.</span>
+        </button>
       </section>
 
       <SectionCard title="Model catalog" description="Role badge stays visible so ownership and permissions are easy to scan.">
@@ -201,6 +251,20 @@ export function DecisionModelListPage() {
         onClose={() => setDeleteTarget(null)}
         onConfirm={handleDelete}
       />
+
+      <Drawer open={journeyOpen} title="Suggested journey" onClose={() => setJourneyOpen(false)}>
+        <div className="workflow-list">
+          {WORKFLOW_STEPS.map((step, index) => (
+            <article key={step.key} className="workflow-item">
+              <span>{String(index + 1).padStart(2, '0')}</span>
+              <div>
+                <strong>{step.label}</strong>
+                <p>{step.description}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+      </Drawer>
     </div>
   )
 }

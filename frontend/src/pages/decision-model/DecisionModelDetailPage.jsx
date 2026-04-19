@@ -6,7 +6,6 @@ import { useForm } from 'react-hook-form'
 import { useFeedback } from '../../app/providers/useFeedback'
 import { ErrorState } from '../../components/feedback/ErrorState'
 import { LoadingState } from '../../components/feedback/LoadingState'
-import { DecisionModelPageNav } from '../../components/navigation/DecisionModelPageNav'
 import { StatusBadge } from '../../components/navigation/StatusBadge'
 import { FormField } from '../../components/form/FormField'
 import { TextField } from '../../components/form/TextField'
@@ -18,8 +17,8 @@ import { PageHeader } from '../../components/ui/PageHeader'
 import { ProgressIndicator } from '../../components/ui/ProgressIndicator'
 import { SectionCard } from '../../components/ui/SectionCard'
 import { StatCard } from '../../components/ui/StatCard'
-import { useAlternatives } from '../../features/alternative/useAlternatives'
-import { useAssistanceCategories } from '../../features/assistance-category/useAssistanceCategories'
+import { useAlternatives } from '../../features/alternatives/useAlternatives'
+import { useAssistanceCategories } from '../../features/assistance-categories/useAssistanceCategories'
 import { useCriteriaWithSubCriteria } from '../../features/criteria/useCriteria'
 import { decisionModelSchema } from '../../features/decision-model/decisionModel.schema'
 import { useDeleteDecisionModel, useDecisionModel, useUpdateDecisionModel } from '../../features/decision-model/useDecisionModels'
@@ -27,7 +26,7 @@ import { useEvaluationOverview } from '../../features/evaluation/useEvaluationOv
 import { useRuleVariables } from '../../features/rule-variable/useRuleVariables'
 import { useRulesWithConditions } from '../../features/rule/useRules'
 import { useResults } from '../../features/result/useResults'
-import { useResultGradePolicies } from '../../features/result-grade/useResultGradePolicies'
+import { useGradePolicies } from '../../features/grade-policies/useGradePolicies'
 import { useDecisionModelId } from '../../hooks/useDecisionModelId'
 import { ruleEvaluationApi } from '../../services/api/rule-evaluation.api'
 import { formatPercent } from '../../utils/format'
@@ -60,7 +59,7 @@ export function DecisionModelDetailPage() {
   const categoriesQuery = useAssistanceCategories(decisionModelId)
   const alternativesQuery = useAlternatives(decisionModelId)
   const ruleVariablesQuery = useRuleVariables(decisionModelId)
-  const gradePoliciesQuery = useResultGradePolicies(decisionModelId)
+  const gradePoliciesQuery = useGradePolicies(decisionModelId)
   const rulesQuery = useRulesWithConditions(decisionModelId)
   const resultsQuery = useResults(decisionModelId)
   const evaluationOverview = useEvaluationOverview(alternativesQuery.data || [], criteriaQuery.data || [])
@@ -219,8 +218,6 @@ export function DecisionModelDetailPage() {
 
   return (
     <div className="page-stack">
-      <DecisionModelPageNav currentLabel="Overview" />
-
       <PageHeader
         eyebrow="Decision Model"
         title={model.name}

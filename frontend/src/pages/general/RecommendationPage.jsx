@@ -3,7 +3,6 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useFeedback } from '../../app/providers/useFeedback'
 import { DataTable } from '../../components/data-display/DataTable'
 import { LoadingState } from '../../components/feedback/LoadingState'
-import { DecisionModelPageNav } from '../../components/navigation/DecisionModelPageNav'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { EmptyState } from '../../components/feedback/EmptyState'
@@ -130,7 +129,6 @@ export function RecommendationPage() {
 
   return (
     <div className="page-stack">
-      <DecisionModelPageNav currentLabel="Recommendations" />
       <PageHeader
         eyebrow="Recommendation"
         title="Review the final recommendation for each assistance group."

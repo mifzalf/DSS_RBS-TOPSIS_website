@@ -6,20 +6,19 @@ import { z } from 'zod'
 import { useFeedback } from '../../app/providers/useFeedback'
 import { ErrorState } from '../../components/feedback/ErrorState'
 import { LoadingState } from '../../components/feedback/LoadingState'
-import { DecisionModelPageNav } from '../../components/navigation/DecisionModelPageNav'
 import { Badge } from '../../components/ui/Badge'
 import { ActionMenu } from '../../components/ui/ActionMenu'
 import { Button } from '../../components/ui/Button'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
+import { DropdownSelect } from '../../components/ui/DropdownSelect'
 import { FormField } from '../../components/form/FormField'
 import { Modal } from '../../components/ui/Modal'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { SectionCard } from '../../components/ui/SectionCard'
-import { SelectField } from '../../components/form/SelectField'
 import { TextField } from '../../components/form/TextField'
 import { queryKeys } from '../../constants/queryKeys'
 import { RULE_ACTION_OPTIONS, RULE_VARIABLE_TYPE_OPTIONS } from '../../constants/options'
-import { useAssistanceCategories } from '../../features/assistance-category/useAssistanceCategories'
+import { useAssistanceCategories } from '../../features/assistance-categories/useAssistanceCategories'
 import { useCreateRuleVariable, useDeleteRuleVariable, useRuleVariables, useUpdateRuleVariable } from '../../features/rule-variable/useRuleVariables'
 import { useRulesWithConditions } from '../../features/rule/useRules'
 import { useDecisionModelId } from '../../hooks/useDecisionModelId'
@@ -92,8 +91,15 @@ export function RulesPage() {
     defaultValues: { rule_variable_id: '', operator: '=', value: '' },
   })
 
+  const variableTypeValue = useWatch({ control: variableForm.control, name: 'value_type' })
+  const variableStatusValue = useWatch({ control: variableForm.control, name: 'status_active' })
+  const ruleLogicTypeValue = useWatch({ control: ruleForm.control, name: 'logic_type' })
+  const ruleActionTypeValue = useWatch({ control: ruleForm.control, name: 'action_type' })
+  const ruleCategoryValue = useWatch({ control: ruleForm.control, name: 'category_id' })
+  const ruleStatusValue = useWatch({ control: ruleForm.control, name: 'status_active' })
   const selectedRuleVariableId = useWatch({ control: conditionForm.control, name: 'rule_variable_id' })
   const selectedActionType = useWatch({ control: ruleForm.control, name: 'action_type' })
+  const conditionOperatorValue = useWatch({ control: conditionForm.control, name: 'operator' })
 
   if (isLoading) return <LoadingState title="Loading rule base" description="Preparing rule variables, rules, and nested conditions." />
   if (error) return <ErrorState description={error.message} onAction={refetch} />
@@ -216,7 +222,6 @@ export function RulesPage() {
 
   return (
     <div className="page-stack">
-      <DecisionModelPageNav currentLabel="Rules" />
       <PageHeader
         eyebrow="Rule Base"
         title="Define facts and rules in one workspace so the rule engine stays compact and readable."
@@ -286,9 +291,9 @@ export function RulesPage() {
         <form id="rule-variable-form" className="stack-md" onSubmit={submitVariable}>
           <FormField label="Code" error={variableForm.formState.errors.code?.message}><TextField {...variableForm.register('code')} placeholder="V1" /></FormField>
           <FormField label="Name" error={variableForm.formState.errors.name?.message}><TextField {...variableForm.register('name')} placeholder="Has pregnant mother" /></FormField>
-          <FormField label="Value type" error={variableForm.formState.errors.value_type?.message}><SelectField options={RULE_VARIABLE_TYPE_OPTIONS} {...variableForm.register('value_type')} /></FormField>
+          <FormField label="Value type" error={variableForm.formState.errors.value_type?.message}><DropdownSelect value={variableTypeValue} options={RULE_VARIABLE_TYPE_OPTIONS} onChange={(value) => variableForm.setValue('value_type', value, { shouldValidate: true })} /></FormField>
           <FormField label="Description" error={variableForm.formState.errors.description?.message}><textarea className="input textarea" rows="4" {...variableForm.register('description')} placeholder="Explain the fact represented by this variable." /></FormField>
-          <FormField label="Status" error={variableForm.formState.errors.status_active?.message}><SelectField options={[{ value: 'true', label: 'Active' }, { value: 'false', label: 'Inactive' }]} {...variableForm.register('status_active')} /></FormField>
+          <FormField label="Status" error={variableForm.formState.errors.status_active?.message}><DropdownSelect value={variableStatusValue} options={[{ value: 'true', label: 'Active' }, { value: 'false', label: 'Inactive' }]} onChange={(value) => variableForm.setValue('status_active', value, { shouldValidate: true })} /></FormField>
         </form>
       </Modal>
 
@@ -296,18 +301,18 @@ export function RulesPage() {
         <form id="rule-form" className="stack-md" onSubmit={submitRule}>
           <FormField label="Name" error={ruleForm.formState.errors.name?.message}><TextField {...ruleForm.register('name')} placeholder="Eligibility rule 1" /></FormField>
           <FormField label="Priority" error={ruleForm.formState.errors.priority?.message}><TextField type="number" {...ruleForm.register('priority')} /></FormField>
-          <FormField label="Logic type" error={ruleForm.formState.errors.logic_type?.message}><SelectField options={[{ value: 'AND', label: 'AND' }, { value: 'OR', label: 'OR' }]} {...ruleForm.register('logic_type')} /></FormField>
-          <FormField label="Action" error={ruleForm.formState.errors.action_type?.message}><SelectField options={RULE_ACTION_OPTIONS} {...ruleForm.register('action_type')} /></FormField>
-          <FormField label="Category" error={ruleForm.formState.errors.category_id?.message}><SelectField options={[{ value: '', label: selectedActionType === 'reject' ? 'Select rejected category' : 'Select ranked category' }, ...filteredCategories.map((item) => ({ value: String(item.id), label: `${item.name} (${item.code})` }))]} {...ruleForm.register('category_id')} /></FormField>
-          <FormField label="Status" error={ruleForm.formState.errors.status_active?.message}><SelectField options={[{ value: 'true', label: 'Active' }, { value: 'false', label: 'Inactive' }]} {...ruleForm.register('status_active')} /></FormField>
+          <FormField label="Logic type" error={ruleForm.formState.errors.logic_type?.message}><DropdownSelect value={ruleLogicTypeValue} options={[{ value: 'AND', label: 'AND' }, { value: 'OR', label: 'OR' }]} onChange={(value) => ruleForm.setValue('logic_type', value, { shouldValidate: true })} /></FormField>
+          <FormField label="Action" error={ruleForm.formState.errors.action_type?.message}><DropdownSelect value={ruleActionTypeValue} options={RULE_ACTION_OPTIONS} onChange={(value) => ruleForm.setValue('action_type', value, { shouldValidate: true })} /></FormField>
+          <FormField label="Category" error={ruleForm.formState.errors.category_id?.message}><DropdownSelect value={ruleCategoryValue} options={[{ value: '', label: selectedActionType === 'reject' ? 'Select rejected category' : 'Select ranked category' }, ...filteredCategories.map((item) => ({ value: String(item.id), label: `${item.name} (${item.code})` }))]} onChange={(value) => ruleForm.setValue('category_id', value, { shouldValidate: true })} /></FormField>
+          <FormField label="Status" error={ruleForm.formState.errors.status_active?.message}><DropdownSelect value={ruleStatusValue} options={[{ value: 'true', label: 'Active' }, { value: 'false', label: 'Inactive' }]} onChange={(value) => ruleForm.setValue('status_active', value, { shouldValidate: true })} /></FormField>
         </form>
       </Modal>
 
       <Modal open={conditionModal.open} title={conditionModal.rule ? `${conditionModal.condition ? 'Edit' : 'Add'} condition for ${conditionModal.rule.name || `Rule ${conditionModal.rule.priority}`}` : 'Condition'} onClose={() => setConditionModal({ open: false, rule: null, condition: null })} footer={<><Button type="button" variant="ghost" onClick={() => setConditionModal({ open: false, rule: null, condition: null })}>Cancel</Button><Button type="submit" form="rule-condition-form" disabled={conditionForm.formState.isSubmitting || conditionMutation.isPending}>Save condition</Button></>}>
         <form id="rule-condition-form" className="stack-md" onSubmit={submitCondition}>
-          <FormField label="Rule variable" error={conditionForm.formState.errors.rule_variable_id?.message}><SelectField options={[{ value: '', label: 'Select variable' }, ...ruleVariables.map((item) => ({ value: String(item.id), label: `${item.code} - ${item.name}` }))]} {...conditionForm.register('rule_variable_id')} /></FormField>
+          <FormField label="Rule variable" error={conditionForm.formState.errors.rule_variable_id?.message}><DropdownSelect value={selectedRuleVariableId} options={[{ value: '', label: 'Select variable' }, ...ruleVariables.map((item) => ({ value: String(item.id), label: `${item.code} - ${item.name}` }))]} onChange={(value) => conditionForm.setValue('rule_variable_id', value, { shouldValidate: true })} /></FormField>
           {selectedVariable ? <div className="rule-variable-help mini-card"><strong>{selectedVariable.code} - {selectedVariable.name}</strong><p>Value type: {RULE_VARIABLE_TYPE_OPTIONS.find((item) => item.value === selectedVariable.value_type)?.label || selectedVariable.value_type}</p></div> : null}
-          <FormField label="Operator" error={conditionForm.formState.errors.operator?.message}><SelectField options={[{ value: '=', label: '=' }, { value: '>', label: '>' }, { value: '<', label: '<' }, { value: '>=', label: '>=' }, { value: '<=', label: '<=' }]} {...conditionForm.register('operator')} /></FormField>
+          <FormField label="Operator" error={conditionForm.formState.errors.operator?.message}><DropdownSelect value={conditionOperatorValue} options={[{ value: '=', label: '=' }, { value: '>', label: '>' }, { value: '<', label: '<' }, { value: '>=', label: '>=' }, { value: '<=', label: '<=' }]} onChange={(value) => conditionForm.setValue('operator', value, { shouldValidate: true })} /></FormField>
           <FormField label="Value" error={conditionForm.formState.errors.value?.message}><TextField {...conditionForm.register('value')} placeholder={selectedVariable?.value_type === 'boolean' ? 'true / false' : selectedVariable?.value_type === 'number' ? 'Enter numeric value' : 'Enter string value'} /></FormField>
         </form>
       </Modal>

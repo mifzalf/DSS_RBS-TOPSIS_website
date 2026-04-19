@@ -6,7 +6,7 @@ export function PublicOnlyRoute() {
   const { isAuthenticated } = useAuth()
 
   if (isAuthenticated) {
-    return <Navigate to={ROUTES.dashboard} replace />
+    return <Navigate to={ROUTES.decisionModels} replace />
   }
 
   return <Outlet />

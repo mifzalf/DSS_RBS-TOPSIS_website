@@ -30,7 +30,7 @@ export function LoginPage() {
     try {
       await login(values)
       pushToast({ title: 'Login successful', description: 'Session is ready and protected routes are now available.', tone: 'success' })
-      navigate(location.state?.from?.pathname || ROUTES.dashboard, { replace: true })
+      navigate(location.state?.from?.pathname || ROUTES.decisionModels, { replace: true })
     } catch (error) {
       pushToast({ title: 'Login failed', description: error.message, tone: 'error' })
     }

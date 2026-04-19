@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useLocation, useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../app/providers/useAuth'
+import { useDecisionModel } from '../../features/decision-model/useDecisionModels'
 import { Button } from '../ui/Button'
 
 function MenuIcon() {
@@ -12,10 +13,33 @@ function MenuIcon() {
 }
 
 export function Topbar({ onMenuToggle }) {
+  const { pathname } = useLocation()
+  const { id } = useParams()
   const navigate = useNavigate()
   const { user, logout } = useAuth()
+  const decisionModelQuery = useDecisionModel(id)
   const [mobileProfileOpen, setMobileProfileOpen] = useState(false)
   const mobileProfileRef = useRef(null)
+
+  const workspaceMeta = useMemo(() => {
+    const decisionModelName = decisionModelQuery.data?.name || 'Program workspace'
+
+    const definitions = [
+      { match: (path) => path === `/decision-models/${id}`, title: 'Overview', subtitle: decisionModelName },
+      { match: (path) => path.endsWith('/members'), title: 'Members', subtitle: decisionModelName },
+      { match: (path) => path.endsWith('/assistance-categories'), title: 'Assistance categories', subtitle: decisionModelName },
+      { match: (path) => path.endsWith('/grade-policies'), title: 'Grade policies', subtitle: decisionModelName },
+      { match: (path) => path.endsWith('/criteria'), title: 'Criteria', subtitle: decisionModelName },
+      { match: (path) => path.endsWith('/alternatives'), title: 'Alternatives', subtitle: decisionModelName },
+      { match: (path) => path.endsWith('/evaluations'), title: 'TOPSIS evaluations', subtitle: decisionModelName },
+      { match: (path) => path.endsWith('/rule-evaluations'), title: 'Rule evaluations', subtitle: decisionModelName },
+      { match: (path) => path.endsWith('/rules'), title: 'Rule base', subtitle: decisionModelName },
+      { match: (path) => path.endsWith('/recommendation'), title: 'Recommendations', subtitle: decisionModelName },
+    ]
+
+    const active = definitions.find((item) => item.match(pathname))
+    return active || { title: 'Decision models', subtitle: 'Social assistance review space' }
+  }, [decisionModelQuery.data?.name, id, pathname])
 
   useEffect(() => {
     const handleOutside = (event) => {
@@ -50,8 +74,8 @@ export function Topbar({ onMenuToggle }) {
 
         <div className="topbar-context">
           <div className="topbar-heading">
-            <strong className="topbar-title">DSS RBS-TOPSIS</strong>
-            <p>Social assistance review space</p>
+            <strong className="topbar-title">{workspaceMeta.title}</strong>
+            <p>{workspaceMeta.subtitle}</p>
           </div>
         </div>
       </div>

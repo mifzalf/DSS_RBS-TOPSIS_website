@@ -1,36 +1,36 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { resultGradePolicyApi } from '../../services/api/result-grade-policy.api'
+import { assistanceCategoriesApi } from '../../services/api/assistance-categories.api'
 
-const key = (decisionModelId) => ['result-grade-policies', decisionModelId]
+const key = (decisionModelId) => ['assistance-categories', decisionModelId]
 
-export function useResultGradePolicies(decisionModelId) {
+export function useAssistanceCategories(decisionModelId) {
   return useQuery({
     queryKey: key(decisionModelId),
-    queryFn: () => resultGradePolicyApi.list(decisionModelId),
+    queryFn: () => assistanceCategoriesApi.list(decisionModelId),
     enabled: Boolean(decisionModelId),
   })
 }
 
-export function useCreateResultGradePolicy(decisionModelId) {
+export function useCreateAssistanceCategory(decisionModelId) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: resultGradePolicyApi.create,
+    mutationFn: assistanceCategoriesApi.create,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: key(decisionModelId) }),
   })
 }
 
-export function useUpdateResultGradePolicy(decisionModelId) {
+export function useUpdateAssistanceCategory(decisionModelId) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, payload }) => resultGradePolicyApi.update(id, payload),
+    mutationFn: ({ id, payload }) => assistanceCategoriesApi.update(id, payload),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: key(decisionModelId) }),
   })
 }
 
-export function useDeleteResultGradePolicy(decisionModelId) {
+export function useDeleteAssistanceCategory(decisionModelId) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: resultGradePolicyApi.remove,
+    mutationFn: assistanceCategoriesApi.remove,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: key(decisionModelId) }),
   })
 }

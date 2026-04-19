@@ -1,28 +1,28 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { resultGradeRangeApi } from '../../services/api/result-grade-range.api'
+import { gradeRangeApi } from '../../services/api/grade-range.api'
 
 const key = (decisionModelId) => ['result-grade-policies', decisionModelId]
 
-export function useCreateResultGradeRange(decisionModelId) {
+export function useCreateGradeRange(decisionModelId) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: resultGradeRangeApi.create,
+    mutationFn: gradeRangeApi.create,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: key(decisionModelId) }),
   })
 }
 
-export function useUpdateResultGradeRange(decisionModelId) {
+export function useUpdateGradeRange(decisionModelId) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, payload }) => resultGradeRangeApi.update(id, payload),
+    mutationFn: ({ id, payload }) => gradeRangeApi.update(id, payload),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: key(decisionModelId) }),
   })
 }
 
-export function useDeleteResultGradeRange(decisionModelId) {
+export function useDeleteGradeRange(decisionModelId) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: resultGradeRangeApi.remove,
+    mutationFn: gradeRangeApi.remove,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: key(decisionModelId) }),
   })
 }

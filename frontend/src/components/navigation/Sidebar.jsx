@@ -33,7 +33,6 @@ const navigation = [
   {
     title: 'Main',
     items: [
-      { label: 'Dashboard', to: ROUTES.dashboard, hint: 'Overview and activity', icon: <DashboardIcon /> },
       { label: 'Decision Models', to: ROUTES.decisionModels, hint: 'Workflow and setup', icon: <DecisionModelIcon /> },
     ],
   },

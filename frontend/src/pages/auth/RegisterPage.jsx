@@ -31,8 +31,8 @@ export function RegisterPage() {
     const { confirmPassword: _confirmPassword, ...values } = formValues
     try {
       await registerAccount(values)
-      pushToast({ title: 'Registration successful', description: 'Your session is active and dashboard is ready.', tone: 'success' })
-      navigate(ROUTES.dashboard, { replace: true })
+      pushToast({ title: 'Registration successful', description: 'Your session is active and decision model workspace is ready.', tone: 'success' })
+      navigate(ROUTES.decisionModels, { replace: true })
     } catch (error) {
       pushToast({ title: 'Registration failed', description: error.message, tone: 'error' })
     }

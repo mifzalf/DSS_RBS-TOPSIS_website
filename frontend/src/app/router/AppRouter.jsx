@@ -1,11 +1,11 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
-import { AppLayout } from '../layouts/AppLayout'
+import { RootLayout } from '../layouts/RootLayout'
+import { DecisionModelWorkspaceLayout } from '../layouts/DecisionModelWorkspaceLayout'
 import { AuthLayout } from '../layouts/AuthLayout'
 import { ProtectedRoute } from './ProtectedRoute'
 import { PublicOnlyRoute } from './PublicOnlyRoute'
 import { LoginPage } from '../../pages/auth/LoginPage'
 import { RegisterPage } from '../../pages/auth/RegisterPage'
-import { DashboardPage } from '../../pages/dashboard/DashboardPage'
 import { DecisionModelListPage } from '../../pages/decision-model/DecisionModelListPage'
 import { DecisionModelDetailPage } from '../../pages/decision-model/DecisionModelDetailPage'
 import { MembersPage } from '../../pages/general/MembersPage'
@@ -31,9 +31,11 @@ export function AppRouter() {
       </Route>
 
       <Route element={<ProtectedRoute />}>
-        <Route element={<AppLayout />}>
-          <Route path={ROUTES.dashboard} element={<DashboardPage />} />
+        <Route element={<RootLayout />}>
           <Route path={ROUTES.decisionModels} element={<DecisionModelListPage />} />
+        </Route>
+
+        <Route element={<DecisionModelWorkspaceLayout />}>
           <Route path={`${ROUTES.decisionModels}/:id`} element={<DecisionModelDetailPage />} />
           <Route path={`${ROUTES.decisionModels}/:id/members`} element={<MembersPage />} />
           <Route path={`${ROUTES.decisionModels}/:id/criteria`} element={<CriteriaPage />} />
@@ -47,7 +49,7 @@ export function AppRouter() {
         </Route>
       </Route>
 
-      <Route path="/" element={<Navigate to={ROUTES.dashboard} replace />} />
+      <Route path="/" element={<Navigate to={ROUTES.decisionModels} replace />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   )

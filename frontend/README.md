@@ -4,11 +4,11 @@ Frontend ini dibangun sebagai dashboard internal untuk workflow DSS, bukan landi
 
 ## Fokus Arsitektur
 
-- `src/app/` - shell aplikasi, router, provider, layout global
-- `src/pages/` - entry screen yang disusun mengikuti grup workspace: `general`, `topsis`, `rule-base`, `alternatives`
-- `src/features/` - logic server-state dan domain behavior per entitas backend
+- `src/app/` - shell aplikasi, router, provider, dan layout terpisah untuk halaman awal vs workspace model
+- `src/pages/` - entry screen yang disusun mengikuti grup workspace: `general`, `topsis`, `rule-base`, `alternatives`, plus `decision-model` sebagai hub
+- `src/features/` - hooks server-state dan logic per domain frontend (contoh: `alternatives`, `assistance-categories`, `grade-policies`)
 - `src/components/` - UI primitives, form, feedback, navigation, data display
-- `src/services/` - HTTP client dan wrapper API backend
+- `src/services/` - HTTP client dan wrapper API backend dengan naming yang mengikuti domain frontend
 - `src/constants/` - route constants, workflow copy, dan option lists yang dipisah per concern
 - `src/styles/` - global styles dan token visual
 
@@ -30,4 +30,5 @@ npm run build
 
 - Base API menggunakan `VITE_API_BASE_URL`
 - Session auth memakai token bearer yang disimpan di local storage
-- Fokus fase berikutnya adalah merapikan shell, density, responsive behavior, dan domain page design
+- Halaman awal setelah login langsung menuju `Decision Models`
+- Sidebar hanya aktif saat masuk ke workspace decision model

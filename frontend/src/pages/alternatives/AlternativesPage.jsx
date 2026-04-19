@@ -8,14 +8,13 @@ import { LoadingState } from '../../components/feedback/LoadingState'
 import { DataTable } from '../../components/data-display/DataTable'
 import { FormField } from '../../components/form/FormField'
 import { TextField } from '../../components/form/TextField'
-import { DecisionModelPageNav } from '../../components/navigation/DecisionModelPageNav'
 import { ActionMenu } from '../../components/ui/ActionMenu'
 import { Button } from '../../components/ui/Button'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { Modal } from '../../components/ui/Modal'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { SectionCard } from '../../components/ui/SectionCard'
-import { useAlternatives, useCreateAlternative, useDeleteAlternative, useUpdateAlternative } from '../../features/alternative/useAlternatives'
+import { useAlternatives, useCreateAlternative, useDeleteAlternative, useUpdateAlternative } from '../../features/alternatives/useAlternatives'
 import { useDecisionModelId } from '../../hooks/useDecisionModelId'
 import { truncateText } from '../../utils/format'
 
@@ -79,7 +78,6 @@ export function AlternativesPage() {
 
   return (
     <div className="page-stack">
-      <DecisionModelPageNav currentLabel="Alternatives" />
       <PageHeader eyebrow="Alternatives" title="Keep candidate options clean, comparable, and easy to scan." description="Manage the candidate list that will later receive both TOPSIS and RBS inputs." actions={<Button type="button" onClick={openCreate}>Add alternative</Button>} />
       <SectionCard title="Alternative table" description="Create, update, and remove candidate options from one compact list.">
         <DataTable

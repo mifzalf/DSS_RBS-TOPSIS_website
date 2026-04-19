@@ -2,13 +2,12 @@ import { useState } from 'react'
 import { useFeedback } from '../../app/providers/useFeedback'
 import { ErrorState } from '../../components/feedback/ErrorState'
 import { LoadingState } from '../../components/feedback/LoadingState'
-import { DecisionModelPageNav } from '../../components/navigation/DecisionModelPageNav'
 import { Button } from '../../components/ui/Button'
 import { DropdownSelect } from '../../components/ui/DropdownSelect'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { ProgressIndicator } from '../../components/ui/ProgressIndicator'
 import { SectionCard } from '../../components/ui/SectionCard'
-import { useAlternatives } from '../../features/alternative/useAlternatives'
+import { useAlternatives } from '../../features/alternatives/useAlternatives'
 import { useCriteriaWithSubCriteria } from '../../features/criteria/useCriteria'
 import { useEvaluationOverview } from '../../features/evaluation/useEvaluationOverview'
 import { useCreateEvaluation, useDeleteEvaluation, useUpdateEvaluation } from '../../features/evaluation/useEvaluations'
@@ -75,7 +74,6 @@ export function EvaluationsPage() {
 
   return (
     <div className="page-stack">
-      <DecisionModelPageNav currentLabel="TOPSIS Evaluations" />
       <PageHeader eyebrow="TOPSIS Evaluations" title="Use a matrix mindset so scoring feels structured instead of repetitive." description="Select one alternative and assign one sub-criteria value for each weighted criterion." />
       <div className="content-grid two-column">
         <SectionCard title="Completeness" description="Shows how close the model is to a recommendation-ready evaluation set.">

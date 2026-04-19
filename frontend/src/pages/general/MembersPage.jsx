@@ -1,15 +1,14 @@
 import { useMemo, useState } from 'react'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { useFeedback } from '../../app/providers/useFeedback'
 import { ErrorState } from '../../components/feedback/ErrorState'
 import { LoadingState } from '../../components/feedback/LoadingState'
 import { DataTable } from '../../components/data-display/DataTable'
+import { DropdownSelect } from '../../components/ui/DropdownSelect'
 import { FormField } from '../../components/form/FormField'
-import { SelectField } from '../../components/form/SelectField'
 import { TextField } from '../../components/form/TextField'
-import { DecisionModelPageNav } from '../../components/navigation/DecisionModelPageNav'
 import { RoleBadge } from '../../components/navigation/RoleBadge'
 import { ActionMenu } from '../../components/ui/ActionMenu'
 import { Button } from '../../components/ui/Button'
@@ -45,6 +44,8 @@ export function MembersPage() {
   const deleteMutation = useDeleteMember(decisionModelId)
   const createForm = useForm({ resolver: zodResolver(createSchema), defaultValues: { user_id: '', role: 'viewer' } })
   const updateForm = useForm({ resolver: zodResolver(updateSchema), defaultValues: { role: 'viewer' } })
+  const createRoleValue = useWatch({ control: createForm.control, name: 'role' })
+  const updateRoleValue = useWatch({ control: updateForm.control, name: 'role' })
   const userSearch = useUserSearch({ query: userSearchQuery, decisionModelId, enabled: createOpen })
   const userOptions = useMemo(
     () => (userSearch.data || []).map((user) => ({ value: String(user.id), label: `${user.name} (@${user.username})` })),
@@ -98,7 +99,6 @@ export function MembersPage() {
 
   return (
     <div className="page-stack">
-      <DecisionModelPageNav currentLabel="Members" />
       <PageHeader eyebrow="Members" title="Keep access explicit and role changes easy to review." description="Search user accounts by name or username, then assign their role inside the decision model." actions={<Button type="button" onClick={() => setCreateOpen(true)}>Add member</Button>} />
       <SectionCard title="Current members" description="Owner, editor, and viewer badges make authorization visible before a change is made.">
         <DataTable
@@ -168,13 +168,13 @@ export function MembersPage() {
               ) : null}
             </div>
           </FormField>
-          <FormField label="Role" error={createForm.formState.errors.role?.message}><SelectField options={ROLE_OPTIONS} {...createForm.register('role')} /></FormField>
+          <FormField label="Role" error={createForm.formState.errors.role?.message}><DropdownSelect value={createRoleValue} options={ROLE_OPTIONS} onChange={(value) => createForm.setValue('role', value, { shouldValidate: true })} /></FormField>
         </form>
       </Modal>
 
       <Modal open={Boolean(selectedMember)} title={`Change role for ${selectedMember?.user?.name || 'member'}`} onClose={() => setSelectedMember(null)} footer={<><Button type="button" variant="ghost" onClick={() => setSelectedMember(null)}>Cancel</Button><Button type="submit" form="member-update-form" disabled={updateForm.formState.isSubmitting || updateMutation.isPending}>Save role</Button></>}>
         <form id="member-update-form" className="stack-md" onSubmit={submitUpdate}>
-          <FormField label="Role" error={updateForm.formState.errors.role?.message}><SelectField options={ROLE_OPTIONS} {...updateForm.register('role')} /></FormField>
+          <FormField label="Role" error={updateForm.formState.errors.role?.message}><DropdownSelect value={updateRoleValue} options={ROLE_OPTIONS} onChange={(value) => updateForm.setValue('role', value, { shouldValidate: true })} /></FormField>
         </form>
       </Modal>
 

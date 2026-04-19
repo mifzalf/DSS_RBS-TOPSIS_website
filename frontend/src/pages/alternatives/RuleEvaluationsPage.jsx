@@ -3,12 +3,11 @@ import { useFeedback } from '../../app/providers/useFeedback'
 import { EmptyState } from '../../components/feedback/EmptyState'
 import { ErrorState } from '../../components/feedback/ErrorState'
 import { LoadingState } from '../../components/feedback/LoadingState'
-import { DecisionModelPageNav } from '../../components/navigation/DecisionModelPageNav'
 import { Button } from '../../components/ui/Button'
 import { DropdownSelect } from '../../components/ui/DropdownSelect'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { SectionCard } from '../../components/ui/SectionCard'
-import { useAlternatives } from '../../features/alternative/useAlternatives'
+import { useAlternatives } from '../../features/alternatives/useAlternatives'
 import { useDeleteRuleEvaluation, useRuleEvaluations, useUpsertRuleEvaluation } from '../../features/rule-evaluation/useRuleEvaluations'
 import { useRuleVariables } from '../../features/rule-variable/useRuleVariables'
 import { useDecisionModelId } from '../../hooks/useDecisionModelId'
@@ -94,7 +93,6 @@ export function RuleEvaluationsPage() {
 
   return (
     <div className="page-stack">
-      <DecisionModelPageNav currentLabel="Rule Evaluations" />
       <PageHeader eyebrow="Rule Evaluations" title="Fill RBS facts separately from TOPSIS scoring to keep the workflow readable." description="Choose one alternative, then assign typed fact values for each rule variable. Boolean, number, and string inputs are rendered automatically." />
       <SectionCard title="Alternative selector" description="Rule evaluations are entered per alternative so classification facts stay isolated from TOPSIS scoring.">
         {alternatives.length ? (
