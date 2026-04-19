@@ -40,7 +40,7 @@ exports.getAllDecisionModels = async (req, res) => {
             order: [["created_at", "DESC"]]
         })
 
-        const data = decisionModels.map(model => {
+        const plainDecisionModels = decisionModels.map(model => {
             const plain = model.get({ plain: true })
             const membershipRole = plain.members?.[0]?.role
             delete plain.members
@@ -49,6 +49,8 @@ exports.getAllDecisionModels = async (req, res) => {
                 role: membershipRole
             }
         })
+
+        const data = await decisionModelService.hydrateDecisionModelsWithReadiness(plainDecisionModels)
 
         return sendSuccess(res, {
             message: "Decision model list retrieved successfully",
