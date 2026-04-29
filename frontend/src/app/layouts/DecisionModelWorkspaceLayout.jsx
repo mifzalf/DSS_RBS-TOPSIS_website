@@ -1,7 +1,8 @@
-import { Outlet, useLocation } from 'react-router-dom'
+import { Navigate, Outlet, useLocation, useParams } from 'react-router-dom'
 import { useMemo, useState } from 'react'
 import { Topbar } from '../../components/navigation/Topbar'
 import { WorkspaceSidebar } from '../../components/navigation/WorkspaceSidebar'
+import { useDecisionModels } from '../../features/decision-model/useDecisionModels'
 
 const SIDEBAR_STORAGE_KEY = 'dss.workspace.sidebar.collapsed'
 const DESKTOP_BREAKPOINT = '(min-width: 1121px)'
@@ -10,10 +11,16 @@ export function DecisionModelWorkspaceLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => localStorage.getItem(SIDEBAR_STORAGE_KEY) === 'true')
   const location = useLocation()
+  const { id } = useParams()
+  const { data: models = [] } = useDecisionModels()
+  const currentModel = useMemo(() => models.find((m) => String(m.id) === String(id)), [models, id])
+  const role = currentModel?.role || null
 
   const segment = useMemo(() => {
     return location.pathname.includes('/recommendation') ? 'recommendation' : 'workshop'
   }, [location.pathname])
+
+  const shouldRedirect = role === 'viewer' && segment === 'workshop'
 
   const isDesktop = () => window.matchMedia(DESKTOP_BREAKPOINT).matches
 
@@ -36,9 +43,13 @@ export function DecisionModelWorkspaceLayout() {
     }
   }
 
+  if (shouldRedirect) {
+    return <Navigate to={`/decision-models/${id}/recommendation/logic`} replace />
+  }
+
   return (
     <div className={`workspace-shell ${sidebarCollapsed ? 'is-sidebar-collapsed' : ''}`}>
-      <WorkspaceSidebar segment={segment} open={sidebarOpen} collapsed={sidebarCollapsed} onClose={handleSidebarClose} pathname={location.pathname} />
+      <WorkspaceSidebar segment={segment} role={role} open={sidebarOpen} collapsed={sidebarCollapsed} onClose={handleSidebarClose} pathname={location.pathname} />
       <div className="workspace-shell-body">
         <Topbar onMenuToggle={handleSidebarToggle} />
         <main className="workspace-shell-content">

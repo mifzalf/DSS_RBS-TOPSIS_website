@@ -150,10 +150,9 @@ export function DecisionModelDetailPage() {
     {
       key: 'general',
       title: 'Ruang kerja umum',
-      description: 'Konteks program, master kategori, pemeringkatan, dan keluaran DSS akhir.',
-      progress: generalProgress,
+      description: 'Konteks program, master tipe keputusan, pemeringkatan, dan keluaran DSS akhir.',
       items: [
-        { label: 'Kategori', href: `/decision-models/${decisionModelId}/assistance-categories`, count: categories.length, status: buildReadinessStatus(categories.length) },
+        { label: 'Tipe keputusan', href: `/decision-models/${decisionModelId}/assistance-categories`, count: categories.length, status: buildReadinessStatus(categories.length) },
         { label: 'Kelola pemeringkatan', href: `/decision-models/${decisionModelId}/grade-policies`, count: `${gradePolicies.length} kebijakan / ${gradeRangeCount} rentang`, status: gradePolicies.length === 0 ? 'pending' : hasValidGradeRanges ? 'ready' : 'warning' },
         { label: 'Rekomendasi', href: `/decision-models/${decisionModelId}/recommendation`, count: results.length ? 'Tersedia' : 'Menunggu', status: hasRecommendations ? 'ready' : 'pending' },
       ],
@@ -171,7 +170,7 @@ export function DecisionModelDetailPage() {
     {
       key: 'rule-base',
       title: 'Rule Base',
-      description: 'Atur fakta bertipe dan rule bisnis untuk menentukan kategori sebelum pemeringkatan.',
+      description: 'Atur fakta bertipe dan rule bisnis untuk menentukan tipe keputusan sebelum pemeringkatan.',
       progress: ruleBaseProgress,
       items: [
         { label: 'Variabel rule', href: `/decision-models/${decisionModelId}/rules`, count: ruleVariables.length, status: buildReadinessStatus(ruleVariables.length) },
@@ -241,13 +240,13 @@ export function DecisionModelDetailPage() {
       <section className="decision-model-hero-grid">
         <SectionCard title="Pusat kendali workspace">
           <div className="decision-model-hero-stats">
-            <StatCard label="Kategori" value={categories.length} hint={`${rankedCategories} diperingkat / ${rejectedCategories} ditolak`} />
+            <StatCard label="Tipe keputusan" value={categories.length} hint={`${rankedCategories} diperingkat / ${rejectedCategories} ditolak`} />
             <StatCard label="Alternatif" value={alternatives.length} hint="Alternatif siap untuk penilaian dan jawaban rule." />
             <StatCard label="Variabel rule" value={ruleVariables.length} hint="Fakta bertipe yang tersedia untuk kondisi rule." />
             <StatCard label="Kebijakan pemeringkatan" value={gradePolicies.length} hint={`${gradeRangeCount} rentang peringkat telah diatur.`} />
           </div>
           <div className="decision-model-hero-progress">
-            <ProgressIndicator value={overallProgress} label="Kesiapan workspace" hint="Dihitung dari pengaturan kategori, pemeringkatan, TOPSIS, Rule Base, jawaban alternatif, dan ketersediaan rekomendasi." tone="accent" />
+            <ProgressIndicator value={overallProgress} label="Kesiapan workspace" hint="Dihitung dari pengaturan tipe keputusan, pemeringkatan, TOPSIS, Rule Base, jawaban alternatif, dan ketersediaan rekomendasi." tone="accent" />
             <ProgressIndicator value={evaluationProgress} label="Cakupan jawaban TOPSIS" hint={`${completedEvaluationCells} dari ${expectedEvaluationCells} jawaban TOPSIS yang diharapkan sudah terisi.`} tone={evaluationProgress === 100 ? 'success' : 'warning'} />
             <ProgressIndicator value={Math.round(Math.min(totalWeight, 1) * 100)} label="Keseimbangan bobot kriteria" hint={isWeightBalanced ? 'Total bobot TOPSIS sudah seimbang.' : `Total bobot saat ini ${formatPercent(totalWeight)} dan seharusnya mencapai 100%.`} tone={isWeightBalanced ? 'success' : 'warning'} />
           </div>

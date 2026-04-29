@@ -20,7 +20,7 @@ export function AuthLayout() {
             <div className="auth-hero-metrics">
               <article className="auth-hero-metric">
                 <strong>Klasifikasi lebih terstruktur</strong>
-                <span>Kelompokkan alternatif ke kategori yang sesuai sebelum proses pemeringkatan dilakukan.</span>
+                <span>Kelompokkan alternatif ke tipe keputusan yang sesuai sebelum proses pemeringkatan dilakukan.</span>
               </article>
               <article className="auth-hero-metric">
                 <strong>Pemeringkatan lebih jelas</strong>
@@ -37,12 +37,12 @@ export function AuthLayout() {
             <article className="auth-story-card auth-story-card-primary">
               <span className="auth-story-label">Persiapan</span>
               <strong>Susun struktur penilaian</strong>
-              <p>Atur kategori, kriteria, dan data alternatif dalam satu alur kerja yang saling terhubung.</p>
+               <p>Atur tipe keputusan, kriteria, dan data alternatif dalam satu alur kerja yang saling terhubung.</p>
             </article>
             <article className="auth-story-card">
               <span className="auth-story-label">Hasil</span>
               <strong>Output yang fleksibel</strong>
-              <p>Sistem dapat digunakan untuk berbagai skenario DSS dengan kategori hasil yang Anda tentukan sendiri.</p>
+               <p>Sistem dapat digunakan untuk berbagai skenario DSS dengan tipe keputusan yang Anda tentukan sendiri.</p>
             </article>
             <article className="auth-story-card auth-story-card-accent">
               <span className="auth-story-label">Kolaborasi</span>

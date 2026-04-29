@@ -19,29 +19,37 @@ function BackIcon() {
   )
 }
 
-const WORKSHOP_NAV = [
+const WORKSHOP_OWNER_NAV = [
   { label: 'Ringkasan', icon: 'M4 5h12M4 5v10a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V5M7 9h6M7 12h4', getHref: (id) => `/decision-models/${id}` },
   { label: 'Anggota', icon: 'M8 7a2 2 0 1 0 3.99-.05A2 2 0 0 0 8 7zm-2.5 7c0-2.5 3-4.5 6.5-4.5s6.5 2 6.5 4.5', getHref: (id) => `/decision-models/${id}/members` },
-  { label: 'Kategori', icon: 'M3 5h4l2-2h8v12H3zm0 0v12', getHref: (id) => `/decision-models/${id}/assistance-categories` },
+  { label: 'Tipe keputusan', icon: 'M3 5h4l2-2h8v12H3zm0 0v12', getHref: (id) => `/decision-models/${id}/assistance-categories` },
   { label: 'Kelola pemeringkatan', icon: 'M5 12V8h3v4zm4 0V5h3v7zm4 0v-4h3v4z', getHref: (id) => `/decision-models/${id}/grade-policies` },
   { label: 'Kriteria', icon: 'M5 5h3v10H5zm7 0h3v10h-3z', getHref: (id) => `/decision-models/${id}/criteria` },
   { label: 'Rule Base', icon: 'M4 6h4l2-2h6v10H4z', getHref: (id) => `/decision-models/${id}/rules` },
 ]
 
+const WORKSHOP_EDITOR_NAV = WORKSHOP_OWNER_NAV.filter((item) => item.label !== 'Anggota')
+
 const RECOMMENDATION_NAV = [
+  { label: 'Logika DSS', icon: 'M4 5h12M7 9h6M7 13h6', getHref: (id) => `/decision-models/${id}/recommendation/logic` },
   { label: 'Alternatif', icon: 'M4 6h12M4 6v9a1 1 0 0 0 1 1h10M4 10h12', getHref: (id) => `/decision-models/${id}/recommendation/alternatives` },
   { label: 'Evaluasi', icon: 'M6 3v2h8V3M5 5v12h10V5M9 10l2 2 4-4', getHref: (id) => `/decision-models/${id}/recommendation/evaluations` },
   { label: 'Hasil', icon: 'M10 3l2.5 5.2L18 9l-4 3.8 1 5.2-5-2.8-5 2.8 1-5.2L2 9l5.5-.8z', getHref: (id) => `/decision-models/${id}/recommendation/results` },
 ]
 
-export function WorkspaceSidebar({ segment, open, collapsed, onClose, pathname }) {
+function resolveWorkshopNav(role) {
+  if (role === 'owner') return WORKSHOP_OWNER_NAV
+  return WORKSHOP_EDITOR_NAV
+}
+
+export function WorkspaceSidebar({ segment, open, collapsed, onClose, pathname, role }) {
   const decisionModelId = useDecisionModelId()
   const navigate = useNavigate()
   const decisionModelQuery = useDecisionModel(decisionModelId)
   const decisionModelName = decisionModelQuery.data?.name || 'Program terpilih'
 
   const isRecommendation = segment === 'recommendation'
-  const navItems = isRecommendation ? RECOMMENDATION_NAV : WORKSHOP_NAV
+  const navItems = isRecommendation ? RECOMMENDATION_NAV : resolveWorkshopNav(role)
   const sectionLabel = isRecommendation ? 'Rekomendasi' : 'Workshop'
   const description = isRecommendation ? 'Alur rekomendasi' : 'Ruang kerja program'
 

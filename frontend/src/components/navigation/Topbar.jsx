@@ -27,7 +27,7 @@ export function Topbar({ onMenuToggle }) {
     const definitions = [
       { match: (path) => path === `/decision-models/${id}`, title: 'Ringkasan', subtitle: decisionModelName },
       { match: (path) => path.endsWith('/members'), title: 'Anggota', subtitle: decisionModelName },
-      { match: (path) => path.endsWith('/assistance-categories'), title: 'Kategori', subtitle: decisionModelName },
+      { match: (path) => path.endsWith('/assistance-categories'), title: 'Tipe keputusan', subtitle: decisionModelName },
       { match: (path) => path.endsWith('/grade-policies'), title: 'Kebijakan grade', subtitle: decisionModelName },
       { match: (path) => path.endsWith('/criteria'), title: 'Kriteria', subtitle: decisionModelName },
       { match: (path) => path.endsWith('/alternatives'), title: 'Alternatif', subtitle: decisionModelName },

@@ -2,8 +2,9 @@ import { Link, useLocation } from 'react-router-dom'
 import { useDecisionModelId } from '../../hooks/useDecisionModelId'
 
 const STEPS = [
+  { key: 'logic', label: 'Logika', description: 'Lihat faktor, aturan, dan prioritas di balik keputusan.' },
   { key: 'alternatives', label: 'Alternatif', description: 'Daftar rumah tangga atau kandidat yang akan dinilai.' },
-  { key: 'evaluations', label: 'Evaluasi', description: 'Isi jawaban TOPSIS dan fakta RBS untuk setiap alternatif.' },
+  { key: 'evaluations', label: 'Evaluasi', description: 'Isi jawaban kelayakan dan penilaian untuk setiap alternatif.' },
   { key: 'results', label: 'Hasil', description: 'Lihat rekomendasi akhir dan prioritas setiap grup bantuan.' },
 ]
 

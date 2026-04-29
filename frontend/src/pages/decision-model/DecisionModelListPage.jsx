@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { Link } from 'react-router-dom'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '../../app/providers/useAuth'
 import { useFeedback } from '../../app/providers/useFeedback'
 import { EmptyState } from '../../components/feedback/EmptyState'
@@ -28,6 +28,8 @@ export function DecisionModelListPage() {
   const [journeyOpen, setJourneyOpen] = useState(false)
   const [selectedModel, setSelectedModel] = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
+  const [mobileProfileOpen, setMobileProfileOpen] = useState(false)
+  const mobileProfileRef = useRef(null)
   const { user, logout } = useAuth()
   const { pushToast } = useFeedback()
   const { data = [], isLoading, error, refetch } = useDecisionModels()
@@ -54,6 +56,21 @@ export function DecisionModelListPage() {
       }).length,
     [data],
   )
+
+  useEffect(() => {
+    const handleOutside = (event) => {
+      if (!mobileProfileRef.current?.contains(event.target)) {
+        setMobileProfileOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleOutside)
+    return () => document.removeEventListener('mousedown', handleOutside)
+  }, [])
+
+  const handleLogout = () => {
+    logout()
+  }
+
   const {
     register,
     handleSubmit,
@@ -137,9 +154,31 @@ export function DecisionModelListPage() {
               <small>@{user?.username || 'session'}</small>
             </div>
           </div>
-          <Button type="button" variant="ghost" className="topbar-logout-button" onClick={logout}>
+          <Button type="button" variant="ghost" className="topbar-logout-button" onClick={handleLogout}>
             Keluar
           </Button>
+          <div ref={mobileProfileRef} className="mobile-profile-menu">
+            <button
+              type="button"
+              className="mobile-profile-trigger"
+              aria-label="Buka menu profil"
+              aria-expanded={mobileProfileOpen}
+              onClick={() => setMobileProfileOpen((current) => !current)}
+            >
+              {user?.name?.[0]?.toUpperCase() || 'U'}
+            </button>
+            {mobileProfileOpen ? (
+              <div className="mobile-profile-popover">
+                <div className="mobile-profile-summary">
+                  <strong>{user?.name || 'Pengguna'}</strong>
+                  <small>@{user?.username || 'session'}</small>
+                </div>
+                <Button type="button" variant="ghost" className="mobile-profile-logout" onClick={handleLogout}>
+                  Keluar
+                </Button>
+              </div>
+            ) : null}
+          </div>
         </div>
       </header>
 
@@ -196,9 +235,11 @@ export function DecisionModelListPage() {
                 </div>
 
                 <div className="decision-model-card-actions">
-                  <Link className="button button-secondary" to={`/decision-models/${model.id}`}>
-                    Workshop
-                  </Link>
+                  {model.role !== 'viewer' && (
+                    <Link className="button button-secondary" to={`/decision-models/${model.id}`}>
+                      Workshop
+                    </Link>
+                  )}
                   <Link className="button button-ghost" to={`/decision-models/${model.id}/recommendation`}>
                     Rekomendasi
                   </Link>

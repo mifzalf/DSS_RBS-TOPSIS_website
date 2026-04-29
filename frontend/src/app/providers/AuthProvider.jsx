@@ -1,4 +1,5 @@
 import { createContext, useCallback, useEffect, useMemo, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { authApi } from '../../services/api/auth.api'
 import { subscribeToUnauthorized } from '../../services/http/sessionEvents'
 import { authStorage } from '../../services/http/storage'
@@ -6,6 +7,7 @@ import { authStorage } from '../../services/http/storage'
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
+  const queryClient = useQueryClient()
   const [session, setSession] = useState(() => ({
     token: authStorage.getToken(),
     user: authStorage.getUser(),
@@ -19,7 +21,8 @@ export function AuthProvider({ children }) {
   const logout = useCallback(() => {
     authStorage.clearSession()
     setSession({ token: null, user: null })
-  }, [])
+    queryClient.clear()
+  }, [queryClient])
 
   const login = useCallback(
     async (payload) => {

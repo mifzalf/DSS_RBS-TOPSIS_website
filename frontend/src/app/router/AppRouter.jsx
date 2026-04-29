@@ -15,13 +15,14 @@ import { CriteriaPage } from '../../pages/topsis/CriteriaPage'
 import { RulesPage } from '../../pages/rule-base/RulesPage'
 import { RecommendationAlternativesPage } from '../../pages/recommendation-flow/RecommendationAlternativesPage'
 import { RecommendationEvaluationsPage } from '../../pages/recommendation-flow/RecommendationEvaluationsPage'
+import { RecommendationLogicPage } from '../../pages/recommendation-flow/RecommendationLogicPage'
 import { RecommendationResultsPage } from '../../pages/recommendation-flow/RecommendationResultsPage'
 import { NotFoundPage } from '../../pages/NotFoundPage'
 import { ROUTES } from '../../constants/routes'
 
 function RecommendationRedirect() {
   const { id } = useParams()
-  return <Navigate to={`/decision-models/${id}/recommendation/alternatives`} replace />
+  return <Navigate to={`/decision-models/${id}/recommendation/logic`} replace />
 }
 
 export function AppRouter() {
@@ -48,6 +49,7 @@ export function AppRouter() {
           <Route path={`${ROUTES.decisionModels}/:id/grade-policies`} element={<GradePoliciesPage />} />
 
           <Route path={`${ROUTES.decisionModels}/:id/recommendation`} element={<RecommendationRedirect />} />
+          <Route path={`${ROUTES.decisionModels}/:id/recommendation/logic`} element={<RecommendationLogicPage />} />
           <Route path={`${ROUTES.decisionModels}/:id/recommendation/alternatives`} element={<RecommendationAlternativesPage />} />
           <Route path={`${ROUTES.decisionModels}/:id/recommendation/evaluations`} element={<RecommendationEvaluationsPage />} />
           <Route path={`${ROUTES.decisionModels}/:id/recommendation/results`} element={<RecommendationResultsPage />} />

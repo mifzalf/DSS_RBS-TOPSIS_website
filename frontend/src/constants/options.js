@@ -16,6 +16,6 @@ export const RULE_VARIABLE_TYPE_OPTIONS = [
 ]
 
 export const RULE_ACTION_OPTIONS = [
-  { value: 'assign_benefit', label: 'Tetapkan kategori' },
+  { value: 'assign_benefit', label: 'Tetapkan tipe keputusan' },
   { value: 'reject', label: 'Tolak' },
 ]

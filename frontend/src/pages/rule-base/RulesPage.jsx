@@ -37,7 +37,7 @@ const ruleSchema = z.object({
   priority: z.coerce.number().int().min(1, 'Prioritas minimal adalah 1.'),
   logic_type: z.enum(['AND', 'OR', 'EMPTY']),
   action_type: z.enum(['assign_benefit', 'reject']),
-  category_id: z.string().min(1, 'Kategori wajib dipilih.'),
+  category_id: z.string().min(1, 'Tipe keputusan wajib dipilih.'),
   status_active: z.enum(['true', 'false']),
 })
 
@@ -260,11 +260,11 @@ export function RulesPage() {
                     <p>Prioritas {rule.priority} · {rule.logic_type}</p>
                   </div>
                   <div className="rule-card-badges">
-                    <Badge tone={rule.action_type === 'reject' ? 'warning' : 'success'}>{rule.action_type === 'reject' ? 'tolak' : 'tetapkan kategori'}</Badge>
+                    <Badge tone={rule.action_type === 'reject' ? 'warning' : 'success'}>{rule.action_type === 'reject' ? 'tolak' : 'tetapkan tipe keputusan'}</Badge>
                     <Badge tone={rule.status_active ? 'success' : 'neutral'}>{rule.status_active ? 'aktif' : 'nonaktif'}</Badge>
                   </div>
                 </div>
-                <div className="rule-card-target"><span>Kategori target</span><strong>{rule.categoryRef?.name || `Kategori #${rule.category_id}`}</strong></div>
+                <div className="rule-card-target"><span>Tipe keputusan target</span><strong>{rule.categoryRef?.name || `Tipe #${rule.category_id}`}</strong></div>
                 <div className="rule-card-meta-row">
                   <Badge tone={rule.action_type === 'reject' ? 'warning' : 'success'}>{RULE_ACTION_OPTIONS.find((item) => item.value === rule.action_type)?.label || rule.action_type}</Badge>
                   <ActionMenu items={[
@@ -310,7 +310,7 @@ export function RulesPage() {
           <FormField label="Prioritas" error={ruleForm.formState.errors.priority?.message}><TextField type="number" {...ruleForm.register('priority')} /></FormField>
           <FormField label="Tipe logika" error={ruleForm.formState.errors.logic_type?.message}><DropdownSelect value={ruleLogicTypeValue} options={[{ value: 'AND', label: 'AND' }, { value: 'OR', label: 'OR' }, { value: 'EMPTY', label: 'EMPTY (semua null/false)' }]} onChange={(value) => ruleForm.setValue('logic_type', value, { shouldValidate: true })} /></FormField>
           <FormField label="Aksi" error={ruleForm.formState.errors.action_type?.message}><DropdownSelect value={ruleActionTypeValue} options={RULE_ACTION_OPTIONS} onChange={(value) => ruleForm.setValue('action_type', value, { shouldValidate: true })} /></FormField>
-          <FormField label="Kategori" error={ruleForm.formState.errors.category_id?.message}><DropdownSelect value={ruleCategoryValue} options={[{ value: '', label: selectedActionType === 'reject' ? 'Pilih kategori ditolak' : 'Pilih kategori diperingkat' }, ...filteredCategories.map((item) => ({ value: String(item.id), label: `${item.name} (${item.code})` }))]} onChange={(value) => ruleForm.setValue('category_id', value, { shouldValidate: true })} /></FormField>
+          <FormField label="Tipe keputusan" error={ruleForm.formState.errors.category_id?.message}><DropdownSelect value={ruleCategoryValue} options={[{ value: '', label: selectedActionType === 'reject' ? 'Pilih tipe ditolak' : 'Pilih tipe diperingkat' }, ...filteredCategories.map((item) => ({ value: String(item.id), label: `${item.name} (${item.code})` }))]} onChange={(value) => ruleForm.setValue('category_id', value, { shouldValidate: true })} /></FormField>
           <FormField label="Status" error={ruleForm.formState.errors.status_active?.message}><DropdownSelect value={ruleStatusValue} options={[{ value: 'true', label: 'Aktif' }, { value: 'false', label: 'Nonaktif' }]} onChange={(value) => ruleForm.setValue('status_active', value, { shouldValidate: true })} /></FormField>
         </form>
       </Modal>

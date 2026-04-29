@@ -44,7 +44,7 @@ export function AssistanceCategoriesPage() {
   const categoryTypeValue = useWatch({ control: form.control, name: 'is_ranked' })
   const categoryStatusValue = useWatch({ control: form.control, name: 'status_active' })
 
-  if (isLoading) return <LoadingState title="Memuat kategori" description="Menyiapkan kategori master untuk rule, grade, dan rekomendasi." />
+  if (isLoading) return <LoadingState title="Memuat tipe keputusan" description="Menyiapkan tipe keputusan untuk rule, grade, dan rekomendasi." />
   if (error) return <ErrorState description={error.message} onAction={refetch} />
 
   const openCreate = () => {
@@ -69,31 +69,30 @@ export function AssistanceCategoriesPage() {
     try {
       if (modalState.category) {
         await updateMutation.mutateAsync({ id: modalState.category.id, payload })
-        pushToast({ title: 'Kategori diperbarui', description: 'Pengaturan kategori berhasil diperbarui.', tone: 'success' })
+        pushToast({ title: 'Tipe keputusan diperbarui', description: 'Pengaturan tipe keputusan berhasil diperbarui.', tone: 'success' })
       } else {
         await createMutation.mutateAsync(payload)
-        pushToast({ title: 'Kategori dibuat', description: 'Kategori master baru siap digunakan untuk rule dan kebijakan grade.', tone: 'success' })
+        pushToast({ title: 'Tipe keputusan dibuat', description: 'Tipe keputusan baru siap digunakan untuk rule dan grade.', tone: 'success' })
       }
       setModalState({ open: false, category: null })
     } catch (submitError) {
-      pushToast({ title: 'Permintaan kategori gagal', description: submitError.message, tone: 'error' })
+      pushToast({ title: 'Permintaan tipe keputusan gagal', description: submitError.message, tone: 'error' })
     }
   })
 
   const handleDelete = async () => {
     try {
       await deleteMutation.mutateAsync(deleteTarget.id)
-      pushToast({ title: 'Kategori dihapus', description: 'Kategori master berhasil dihapus.', tone: 'success' })
-      setDeleteTarget(null)
+      pushToast({ title: 'Tipe keputusan dihapus', description: 'Tipe keputusan berhasil dihapus.', tone: 'success' })
     } catch (deleteError) {
-      pushToast({ title: 'Gagal menghapus kategori', description: deleteError.message, tone: 'error' })
+      pushToast({ title: 'Gagal menghapus tipe keputusan', description: deleteError.message, tone: 'error' })
     }
   }
 
   return (
     <div className="page-stack">
-      <PageHeader eyebrow="Kategori" title="Kelola kategori" actions={<Button type="button" onClick={openCreate}>Tambah kategori</Button>} />
-      <SectionCard title="Daftar kategori">
+      <PageHeader eyebrow="Tipe Keputusan" title="Kelola tipe keputusan" actions={<Button type="button" onClick={openCreate}>Tambah tipe</Button>} />
+      <SectionCard title="Daftar tipe keputusan">
         {data.length ? (
           <DataTable
             columns={[
@@ -107,21 +106,21 @@ export function AssistanceCategoriesPage() {
             rows={data}
           />
         ) : (
-          <EmptyState title="Belum ada kategori" description="Tambahkan minimal satu kategori sebelum membuat rule atau kebijakan grade." actionLabel="Tambah kategori" onAction={openCreate} />
+          <EmptyState title="Belum ada tipe keputusan" description="Tambahkan minimal satu tipe sebelum membuat rule atau grade." actionLabel="Tambah tipe" onAction={openCreate} />
         )}
       </SectionCard>
 
-      <Modal open={modalState.open} title={modalState.category ? 'Ubah kategori' : 'Tambah kategori'} onClose={() => setModalState({ open: false, category: null })} footer={<><Button type="button" variant="ghost" onClick={() => setModalState({ open: false, category: null })}>Batal</Button><Button type="submit" form="assistance-category-form" disabled={form.formState.isSubmitting || createMutation.isPending || updateMutation.isPending}>Simpan kategori</Button></>}>
+      <Modal open={modalState.open} title={modalState.category ? 'Ubah tipe keputusan' : 'Tambah tipe keputusan'} onClose={() => setModalState({ open: false, category: null })} footer={<><Button type="button" variant="ghost" onClick={() => setModalState({ open: false, category: null })}>Batal</Button><Button type="submit" form="assistance-category-form" disabled={form.formState.isSubmitting || createMutation.isPending || updateMutation.isPending}>Simpan tipe</Button></>}>
         <form id="assistance-category-form" className="stack-md" onSubmit={submitForm}>
           <FormField label="Kode" error={form.formState.errors.code?.message}><TextField {...form.register('code')} placeholder="pkh" /></FormField>
           <FormField label="Nama" error={form.formState.errors.name?.message}><TextField {...form.register('name')} placeholder="PKH" /></FormField>
           <FormField label="Deskripsi" error={form.formState.errors.description?.message}><textarea className="input textarea" rows="4" {...form.register('description')} placeholder="Program Keluarga Harapan" /></FormField>
-          <FormField label="Tipe kategori" error={form.formState.errors.is_ranked?.message}><DropdownSelect value={categoryTypeValue} options={[{ value: 'true', label: 'Kategori diperingkat' }, { value: 'false', label: 'Kategori ditolak' }]} onChange={(value) => form.setValue('is_ranked', value, { shouldValidate: true })} /></FormField>
+          <FormField label="Tipe" error={form.formState.errors.is_ranked?.message}><DropdownSelect value={categoryTypeValue} options={[{ value: 'true', label: 'Diperingkat' }, { value: 'false', label: 'Ditolak' }]} onChange={(value) => form.setValue('is_ranked', value, { shouldValidate: true })} /></FormField>
           <FormField label="Status" error={form.formState.errors.status_active?.message}><DropdownSelect value={categoryStatusValue} options={[{ value: 'true', label: 'Aktif' }, { value: 'false', label: 'Nonaktif' }]} onChange={(value) => form.setValue('status_active', value, { shouldValidate: true })} /></FormField>
         </form>
       </Modal>
 
-      <ConfirmDialog open={Boolean(deleteTarget)} title="Hapus kategori" description={`Hapus ${deleteTarget?.name || 'kategori ini'}?`} confirmLabel={deleteMutation.isPending ? 'Menghapus...' : 'Hapus'} onClose={() => setDeleteTarget(null)} onConfirm={handleDelete} />
+      <ConfirmDialog open={Boolean(deleteTarget)} title="Hapus tipe keputusan" description={`Hapus ${deleteTarget?.name || 'tipe ini'}?`} confirmLabel={deleteMutation.isPending ? 'Menghapus...' : 'Hapus'} onClose={() => setDeleteTarget(null)} onConfirm={handleDelete} />
     </div>
   )
 }
