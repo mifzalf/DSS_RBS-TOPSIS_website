@@ -22,7 +22,7 @@ import { useUserSearch } from '../../features/users/useUserSearch'
 import { useDecisionModelId } from '../../hooks/useDecisionModelId'
 
 const createSchema = z.object({
-  user_id: z.coerce.number().int().min(1, 'Please select a user account.'),
+  user_id: z.coerce.number().int().min(1, 'Silakan pilih akun pengguna.'),
   role: z.enum(['owner', 'editor', 'viewer']),
 })
 
@@ -52,7 +52,7 @@ export function MembersPage() {
     [userSearch.data],
   )
 
-  if (isLoading) return <LoadingState title="Loading members" description="Reading who can own, edit, or view this model." />
+  if (isLoading) return <LoadingState title="Memuat anggota" description="Menyiapkan daftar akses pengguna untuk model ini." />
   if (error) return <ErrorState description={error.message} onAction={refetch} />
 
   const openUpdate = (member) => {
@@ -70,40 +70,40 @@ export function MembersPage() {
   const submitCreate = createForm.handleSubmit(async (values) => {
     try {
       await createMutation.mutateAsync({ user_id: Number(values.user_id), role: values.role })
-      pushToast({ title: 'Member added', description: 'User access has been granted to this model.', tone: 'success' })
+      pushToast({ title: 'Anggota ditambahkan', description: 'Akses pengguna ke model ini berhasil diberikan.', tone: 'success' })
       closeCreateModal()
     } catch (submitError) {
-      pushToast({ title: 'Failed to add member', description: submitError.message, tone: 'error' })
+      pushToast({ title: 'Gagal menambahkan anggota', description: submitError.message, tone: 'error' })
     }
   })
 
   const submitUpdate = updateForm.handleSubmit(async (values) => {
     try {
       await updateMutation.mutateAsync({ memberId: selectedMember.id, payload: values })
-      pushToast({ title: 'Role updated', description: 'Member role has been refreshed.', tone: 'success' })
+      pushToast({ title: 'Role diperbarui', description: 'Role anggota berhasil diperbarui.', tone: 'success' })
       setSelectedMember(null)
     } catch (submitError) {
-      pushToast({ title: 'Failed to update role', description: submitError.message, tone: 'error' })
+      pushToast({ title: 'Gagal memperbarui role', description: submitError.message, tone: 'error' })
     }
   })
 
   const handleDelete = async () => {
     try {
       await deleteMutation.mutateAsync(deleteTarget.id)
-      pushToast({ title: 'Member removed', description: 'User access has been revoked from this model.', tone: 'success' })
+      pushToast({ title: 'Anggota dihapus', description: 'Akses pengguna dari model ini berhasil dicabut.', tone: 'success' })
       setDeleteTarget(null)
     } catch (deleteError) {
-      pushToast({ title: 'Failed to remove member', description: deleteError.message, tone: 'error' })
+      pushToast({ title: 'Gagal menghapus anggota', description: deleteError.message, tone: 'error' })
     }
   }
 
   return (
     <div className="page-stack">
-      <PageHeader eyebrow="Members" title="Keep access explicit and role changes easy to review." description="Search user accounts by name or username, then assign their role inside the decision model." actions={<Button type="button" onClick={() => setCreateOpen(true)}>Add member</Button>} />
-      <SectionCard title="Current members" description="Owner, editor, and viewer badges make authorization visible before a change is made.">
+        <PageHeader eyebrow="Anggota" title="Kelola anggota" actions={<Button type="button" onClick={() => setCreateOpen(true)}>Tambah anggota</Button>} />
+      <SectionCard title="Anggota saat ini">
         <DataTable
           columns={[
-            { key: 'user', header: 'User', render: (row) => row.user ? `${row.user.name} (@${row.user.username})` : row.user_id },
+            { key: 'user', header: 'Pengguna', render: (row) => row.user ? `${row.user.name} (@${row.user.username})` : row.user_id },
             { key: 'role', header: 'Role', render: (row) => <RoleBadge role={row.role} /> },
             {
               key: 'actions',
@@ -112,8 +112,8 @@ export function MembersPage() {
               render: (row) => (
                 <ActionMenu
                   items={[
-                    { label: 'Change role', onSelect: () => openUpdate(row) },
-                    { label: 'Remove member', tone: 'danger', onSelect: () => setDeleteTarget(row) },
+                     { label: 'Ubah role', onSelect: () => openUpdate(row) },
+                     { label: 'Hapus anggota', tone: 'danger', onSelect: () => setDeleteTarget(row) },
                   ]}
                 />
               ),
@@ -123,9 +123,9 @@ export function MembersPage() {
         />
       </SectionCard>
 
-      <Modal open={createOpen} title="Add member" onClose={closeCreateModal} footer={<><Button type="button" variant="ghost" onClick={closeCreateModal}>Cancel</Button><Button type="submit" form="member-create-form" disabled={createForm.formState.isSubmitting || createMutation.isPending}>Add member</Button></>}>
+      <Modal open={createOpen} title="Tambah anggota" onClose={closeCreateModal} footer={<><Button type="button" variant="ghost" onClick={closeCreateModal}>Batal</Button><Button type="submit" form="member-create-form" disabled={createForm.formState.isSubmitting || createMutation.isPending}>Tambah anggota</Button></>}>
         <form id="member-create-form" className="stack-md" onSubmit={submitCreate}>
-          <FormField label="User account" hint={selectedUserOption ? `Selected: ${selectedUserOption.label}` : 'Search by full name or username, then pick one result below.'} error={createForm.formState.errors.user_id?.message}>
+          <FormField label="Akun pengguna" hint={selectedUserOption ? `Terpilih: ${selectedUserOption.label}` : 'Cari berdasarkan nama lengkap atau username, lalu pilih hasil di bawah.'} error={createForm.formState.errors.user_id?.message}>
             <input type="hidden" {...createForm.register('user_id')} />
             <div className="search-select">
               <TextField
@@ -136,13 +136,13 @@ export function MembersPage() {
                   setSelectedUserOption(null)
                   createForm.setValue('user_id', '')
                 }}
-                placeholder="Type a name or username"
+                placeholder="Ketik nama atau username"
               />
               {userSearchQuery && !selectedUserOption ? (
                 <div className="search-select-results">
                   {userSearch.isLoading ? (
                     <button type="button" className="search-select-option muted" disabled>
-                      Searching...
+                      Mencari...
                     </button>
                   ) : userOptions.length ? (
                     userOptions.map((option) => (
@@ -161,7 +161,7 @@ export function MembersPage() {
                     ))
                   ) : (
                     <button type="button" className="search-select-option muted" disabled>
-                      No users found
+                      Pengguna tidak ditemukan
                     </button>
                   )}
                 </div>
@@ -172,13 +172,13 @@ export function MembersPage() {
         </form>
       </Modal>
 
-      <Modal open={Boolean(selectedMember)} title={`Change role for ${selectedMember?.user?.name || 'member'}`} onClose={() => setSelectedMember(null)} footer={<><Button type="button" variant="ghost" onClick={() => setSelectedMember(null)}>Cancel</Button><Button type="submit" form="member-update-form" disabled={updateForm.formState.isSubmitting || updateMutation.isPending}>Save role</Button></>}>
+      <Modal open={Boolean(selectedMember)} title={`Ubah role untuk ${selectedMember?.user?.name || 'anggota'}`} onClose={() => setSelectedMember(null)} footer={<><Button type="button" variant="ghost" onClick={() => setSelectedMember(null)}>Batal</Button><Button type="submit" form="member-update-form" disabled={updateForm.formState.isSubmitting || updateMutation.isPending}>Simpan role</Button></>}>
         <form id="member-update-form" className="stack-md" onSubmit={submitUpdate}>
           <FormField label="Role" error={updateForm.formState.errors.role?.message}><DropdownSelect value={updateRoleValue} options={ROLE_OPTIONS} onChange={(value) => updateForm.setValue('role', value, { shouldValidate: true })} /></FormField>
         </form>
       </Modal>
 
-      <ConfirmDialog open={Boolean(deleteTarget)} title="Remove member" description={`Remove ${deleteTarget?.user?.name || 'this member'} from the decision model?`} confirmLabel={deleteMutation.isPending ? 'Removing...' : 'Remove member'} onClose={() => setDeleteTarget(null)} onConfirm={handleDelete} />
+      <ConfirmDialog open={Boolean(deleteTarget)} title="Hapus anggota" description={`Hapus ${deleteTarget?.user?.name || 'anggota ini'} dari model keputusan?`} confirmLabel={deleteMutation.isPending ? 'Menghapus...' : 'Hapus anggota'} onClose={() => setDeleteTarget(null)} onConfirm={handleDelete} />
     </div>
   )
 }

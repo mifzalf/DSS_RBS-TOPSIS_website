@@ -1,5 +1,4 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { useState } from 'react'
 import { useDecisionModel } from '../../features/decision-model/useDecisionModels'
 import { useDecisionModelId } from '../../hooks/useDecisionModelId'
 
@@ -7,44 +6,6 @@ function MenuIcon() {
   return (
     <svg viewBox="0 0 20 20" aria-hidden="true" className="menu-toggle-icon">
       <path d="M4 6h12M4 10h12M4 14h12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  )
-}
-
-function GeneralIcon() {
-  return (
-    <svg viewBox="0 0 20 20" aria-hidden="true" className="sidebar-nav-icon">
-      <rect x="4" y="4" width="12" height="12" rx="2" />
-      <path d="M7 8h6M7 12h4" />
-    </svg>
-  )
-}
-
-function AlternativesIcon() {
-  return (
-    <svg viewBox="0 0 20 20" aria-hidden="true" className="sidebar-nav-icon">
-      <path d="M5 5.5h10M5 10h10M5 14.5h10" />
-      <circle cx="5" cy="5.5" r="1.2" fill="currentColor" stroke="none" />
-      <circle cx="5" cy="10" r="1.2" fill="currentColor" stroke="none" />
-      <circle cx="5" cy="14.5" r="1.2" fill="currentColor" stroke="none" />
-    </svg>
-  )
-}
-
-function CriteriaIcon() {
-  return (
-    <svg viewBox="0 0 20 20" aria-hidden="true" className="sidebar-nav-icon">
-      <path d="M6 4.5 4.5 6v8l1.5 1.5h8L15.5 14V6L14 4.5Z" />
-      <path d="M8 8.5h4M8 11.5h4" />
-    </svg>
-  )
-}
-
-function RuleBaseIcon() {
-  return (
-    <svg viewBox="0 0 20 20" aria-hidden="true" className="sidebar-nav-icon">
-      <path d="M6 6.5h8M6 10h8M6 13.5h5" />
-      <rect x="4" y="4" width="12" height="12" rx="2" />
     </svg>
   )
 }
@@ -58,85 +19,45 @@ function BackIcon() {
   )
 }
 
-function ChevronIcon({ expanded }) {
-  return (
-    <svg viewBox="0 0 20 20" aria-hidden="true" className={`sidebar-chevron ${expanded ? 'expanded' : ''}`}>
-      <path d="M7 6.5 12 10l-5 3.5" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
-}
-
-const PRIMARY_NAV = [
-  {
-    key: 'general',
-    label: 'General',
-    icon: <GeneralIcon />,
-    expandable: true,
-    children: [
-      { label: 'Overview', getHref: (id) => `/decision-models/${id}` },
-      { label: 'Members', getHref: (id) => `/decision-models/${id}/members` },
-      { label: 'Assistance categories', getHref: (id) => `/decision-models/${id}/assistance-categories` },
-      { label: 'Grade policies', getHref: (id) => `/decision-models/${id}/grade-policies` },
-      { label: 'Recommendations', getHref: (id) => `/decision-models/${id}/recommendation` },
-    ],
-  },
-  {
-    key: 'alternatives',
-    label: 'Alternatives',
-    icon: <AlternativesIcon />,
-    expandable: true,
-    children: [
-      { label: 'Alternatives', getHref: (id) => `/decision-models/${id}/alternatives` },
-      { label: 'TOPSIS evaluations', getHref: (id) => `/decision-models/${id}/evaluations` },
-      { label: 'Rule evaluations', getHref: (id) => `/decision-models/${id}/rule-evaluations` },
-    ],
-  },
-  {
-    key: 'criteria',
-    label: 'Criteria',
-    icon: <CriteriaIcon />,
-    expandable: false,
-    getHref: (id) => `/decision-models/${id}/criteria`,
-  },
-  {
-    key: 'rulebase',
-    label: 'Rule Base',
-    icon: <RuleBaseIcon />,
-    expandable: false,
-    getHref: (id) => `/decision-models/${id}/rules`,
-  },
+const WORKSHOP_NAV = [
+  { label: 'Ringkasan', icon: 'M4 5h12M4 5v10a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V5M7 9h6M7 12h4', getHref: (id) => `/decision-models/${id}` },
+  { label: 'Anggota', icon: 'M8 7a2 2 0 1 0 3.99-.05A2 2 0 0 0 8 7zm-2.5 7c0-2.5 3-4.5 6.5-4.5s6.5 2 6.5 4.5', getHref: (id) => `/decision-models/${id}/members` },
+  { label: 'Kategori', icon: 'M3 5h4l2-2h8v12H3zm0 0v12', getHref: (id) => `/decision-models/${id}/assistance-categories` },
+  { label: 'Kelola pemeringkatan', icon: 'M5 12V8h3v4zm4 0V5h3v7zm4 0v-4h3v4z', getHref: (id) => `/decision-models/${id}/grade-policies` },
+  { label: 'Kriteria', icon: 'M5 5h3v10H5zm7 0h3v10h-3z', getHref: (id) => `/decision-models/${id}/criteria` },
+  { label: 'Rule Base', icon: 'M4 6h4l2-2h6v10H4z', getHref: (id) => `/decision-models/${id}/rules` },
 ]
 
-function isPrimaryActive(item, pathname, decisionModelId) {
-  if (item.expandable) {
-    return item.children.some((child) => pathname === child.getHref(decisionModelId))
-  }
-  return pathname === item.getHref(decisionModelId)
-}
+const RECOMMENDATION_NAV = [
+  { label: 'Alternatif', icon: 'M4 6h12M4 6v9a1 1 0 0 0 1 1h10M4 10h12', getHref: (id) => `/decision-models/${id}/recommendation/alternatives` },
+  { label: 'Evaluasi', icon: 'M6 3v2h8V3M5 5v12h10V5M9 10l2 2 4-4', getHref: (id) => `/decision-models/${id}/recommendation/evaluations` },
+  { label: 'Hasil', icon: 'M10 3l2.5 5.2L18 9l-4 3.8 1 5.2-5-2.8-5 2.8 1-5.2L2 9l5.5-.8z', getHref: (id) => `/decision-models/${id}/recommendation/results` },
+]
 
-export function WorkspaceSidebar({ open, collapsed, onClose, pathname }) {
+export function WorkspaceSidebar({ segment, open, collapsed, onClose, pathname }) {
   const decisionModelId = useDecisionModelId()
   const navigate = useNavigate()
   const decisionModelQuery = useDecisionModel(decisionModelId)
-  const decisionModelName = decisionModelQuery.data?.name || 'Selected program'
-  const [expandedGroup, setExpandedGroup] = useState(() => {
-    const matched = PRIMARY_NAV.find((item) => item.expandable && item.children.some((child) => pathname === child.getHref(decisionModelId)))
-    return matched?.key || 'general'
-  })
+  const decisionModelName = decisionModelQuery.data?.name || 'Program terpilih'
+
+  const isRecommendation = segment === 'recommendation'
+  const navItems = isRecommendation ? RECOMMENDATION_NAV : WORKSHOP_NAV
+  const sectionLabel = isRecommendation ? 'Rekomendasi' : 'Workshop'
+  const description = isRecommendation ? 'Alur rekomendasi' : 'Ruang kerja program'
 
   return (
     <>
-      <button type="button" className={`sidebar-backdrop ${open ? 'visible' : ''}`} aria-label="Close navigation" onClick={onClose} />
+      <button type="button" className={`sidebar-backdrop ${open ? 'visible' : ''}`} aria-label="Tutup navigasi" onClick={onClose} />
       <aside className={`app-sidebar workspace-sidebar ${open ? 'is-open' : ''} ${collapsed ? 'is-collapsed' : ''}`}>
         <div className="sidebar-brand-row">
           <div className="sidebar-brand-block">
             <span className="brand-mark">DSS</span>
             <div className="sidebar-brand-copy">
               <strong>{decisionModelName}</strong>
-              <p>Program workspace</p>
+              <p>{description}</p>
             </div>
           </div>
-          <button type="button" className="icon-button sidebar-close" onClick={onClose} aria-label="Close menu">
+          <button type="button" className="icon-button sidebar-close" onClick={onClose} aria-label="Tutup menu">
             <MenuIcon />
           </button>
         </div>
@@ -144,45 +65,23 @@ export function WorkspaceSidebar({ open, collapsed, onClose, pathname }) {
         <button type="button" className="sidebar-back-link" onClick={() => navigate('/decision-models')}>
           <span className="sidebar-link-icon" aria-hidden="true"><BackIcon /></span>
           <span className="sidebar-link-copy">
-            <span className="sidebar-link-label">Back to programs</span>
+            <span className="sidebar-link-label">Kembali ke program</span>
           </span>
         </button>
 
         <div className="sidebar-scrollable">
           <div className="workspace-primary-nav">
-            {PRIMARY_NAV.map((item) => {
-              const active = isPrimaryActive(item, pathname, decisionModelId)
-
-              if (!item.expandable) {
-                return (
-                  <NavLink key={item.key} to={item.getHref(decisionModelId)} onClick={onClose} className={({ isActive }) => `workspace-primary-link ${isActive ? 'active' : ''}`}>
-                    <span className="sidebar-link-icon" aria-hidden="true">{item.icon}</span>
-                    <span className="workspace-primary-label">{item.label}</span>
-                  </NavLink>
-                )
-              }
-
-              const expanded = expandedGroup === item.key
-
-              return (
-                <div key={item.key} className={`workspace-nav-group ${active ? 'active' : ''}`}>
-                  <button type="button" className={`workspace-primary-link ${active ? 'active' : ''}`} onClick={() => setExpandedGroup((current) => (current === item.key ? '' : item.key))}>
-                    <span className="sidebar-link-icon" aria-hidden="true">{item.icon}</span>
-                    <span className="workspace-primary-label">{item.label}</span>
-                    <span className="workspace-primary-meta"><ChevronIcon expanded={expanded} /></span>
-                  </button>
-                  {expanded ? (
-                    <div className="workspace-subnav">
-                      {item.children.map((child) => (
-                        <NavLink key={child.label} to={child.getHref(decisionModelId)} onClick={onClose} className={({ isActive }) => `workspace-subnav-link ${isActive ? 'active' : ''}`}>
-                          {child.label}
-                        </NavLink>
-                      ))}
-                    </div>
-                  ) : null}
-                </div>
-              )
-            })}
+            <div className="sidebar-nav-section-label">{sectionLabel}</div>
+            {navItems.map((item) => (
+              <NavLink key={item.label} to={item.getHref(decisionModelId)} onClick={onClose} className={({ isActive }) => `workspace-primary-link ${isActive ? 'active' : ''}`}>
+                <span className="sidebar-link-icon" aria-hidden="true">
+                  <svg viewBox="0 0 20 20" className="sidebar-nav-icon">
+                    <path d={item.icon} fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </span>
+                <span className="workspace-primary-label">{item.label}</span>
+              </NavLink>
+            ))}
           </div>
         </div>
       </aside>

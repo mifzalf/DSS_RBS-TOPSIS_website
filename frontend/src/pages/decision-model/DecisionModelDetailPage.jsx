@@ -93,7 +93,7 @@ export function DecisionModelDetailPage() {
     evaluationOverview.isLoading ||
     ruleEvaluationQueries.some((query) => query.isLoading)
   ) {
-    return <LoadingState title="Loading model overview" description="Mapping the current workflow readiness for this decision model." />
+    return <LoadingState title="Memuat ringkasan model" description="Menyusun tingkat kesiapan workflow untuk model keputusan ini." />
   }
 
   if (modelQuery.error) {
@@ -149,44 +149,44 @@ export function DecisionModelDetailPage() {
   const workspaceGroups = [
     {
       key: 'general',
-      title: 'General workspace',
-      description: 'Program context, category master, grading, and final DSS outputs.',
+      title: 'Ruang kerja umum',
+      description: 'Konteks program, master kategori, pemeringkatan, dan keluaran DSS akhir.',
       progress: generalProgress,
       items: [
-        { label: 'Assistance categories', href: `/decision-models/${decisionModelId}/assistance-categories`, count: categories.length, status: buildReadinessStatus(categories.length) },
-        { label: 'Grade policies', href: `/decision-models/${decisionModelId}/grade-policies`, count: `${gradePolicies.length} policies / ${gradeRangeCount} ranges`, status: gradePolicies.length === 0 ? 'pending' : hasValidGradeRanges ? 'ready' : 'warning' },
-        { label: 'Recommendations', href: `/decision-models/${decisionModelId}/recommendation`, count: results.length ? 'Available' : 'Pending', status: hasRecommendations ? 'ready' : 'pending' },
+        { label: 'Kategori', href: `/decision-models/${decisionModelId}/assistance-categories`, count: categories.length, status: buildReadinessStatus(categories.length) },
+        { label: 'Kelola pemeringkatan', href: `/decision-models/${decisionModelId}/grade-policies`, count: `${gradePolicies.length} kebijakan / ${gradeRangeCount} rentang`, status: gradePolicies.length === 0 ? 'pending' : hasValidGradeRanges ? 'ready' : 'warning' },
+        { label: 'Rekomendasi', href: `/decision-models/${decisionModelId}/recommendation`, count: results.length ? 'Tersedia' : 'Menunggu', status: hasRecommendations ? 'ready' : 'pending' },
       ],
     },
     {
       key: 'topsis',
-      title: 'TOPSIS builder',
-      description: 'Weight the criteria framework that drives preference scoring.',
+      title: 'Penyusun TOPSIS',
+      description: 'Susun bobot kriteria yang membentuk penilaian preferensi.',
       progress: topsisProgress,
       items: [
-        { label: 'Criteria', href: `/decision-models/${decisionModelId}/criteria`, count: criteria.length, status: buildReadinessStatus(criteria.length) },
-        { label: 'Weight balance', href: `/decision-models/${decisionModelId}/criteria`, count: formatPercent(totalWeight), status: isWeightBalanced ? 'ready' : totalWeight > 0 ? 'warning' : 'pending' },
+        { label: 'Kriteria', href: `/decision-models/${decisionModelId}/criteria`, count: criteria.length, status: buildReadinessStatus(criteria.length) },
+        { label: 'Keseimbangan bobot', href: `/decision-models/${decisionModelId}/criteria`, count: formatPercent(totalWeight), status: isWeightBalanced ? 'ready' : totalWeight > 0 ? 'warning' : 'pending' },
       ],
     },
     {
       key: 'rule-base',
-      title: 'Rule base engine',
-      description: 'Define typed facts and business rules that assign categories before ranking.',
+      title: 'Rule Base',
+      description: 'Atur fakta bertipe dan rule bisnis untuk menentukan kategori sebelum pemeringkatan.',
       progress: ruleBaseProgress,
       items: [
-        { label: 'Rule variables', href: `/decision-models/${decisionModelId}/rules`, count: ruleVariables.length, status: buildReadinessStatus(ruleVariables.length) },
-        { label: 'Rules', href: `/decision-models/${decisionModelId}/rules`, count: rules.length, status: buildReadinessStatus(rules.length) },
+        { label: 'Variabel rule', href: `/decision-models/${decisionModelId}/rules`, count: ruleVariables.length, status: buildReadinessStatus(ruleVariables.length) },
+        { label: 'Rule', href: `/decision-models/${decisionModelId}/rules`, count: rules.length, status: buildReadinessStatus(rules.length) },
       ],
     },
     {
       key: 'alternatives',
-      title: 'Alternatives workspace',
-      description: 'Manage households and complete both TOPSIS and rule-based answers.',
+      title: 'Ruang kerja alternatif',
+      description: 'Kelola rumah tangga dan lengkapi jawaban TOPSIS maupun rule-based.',
       progress: alternativesProgress,
       items: [
-        { label: 'Alternatives', href: `/decision-models/${decisionModelId}/alternatives`, count: alternatives.length, status: buildReadinessStatus(alternatives.length) },
-        { label: 'TOPSIS evaluations', href: `/decision-models/${decisionModelId}/evaluations`, count: `${completedEvaluationCells}/${expectedEvaluationCells}`, status: hasCompleteTopsisEvaluations ? 'ready' : evaluationProgress > 0 ? 'warning' : 'pending' },
-        { label: 'Rule evaluations', href: `/decision-models/${decisionModelId}/rule-evaluations`, count: `${totalRuleEvaluations}/${expectedRuleEvaluations || 0}`, status: hasRuleEvaluations ? 'ready' : totalRuleEvaluations > 0 ? 'warning' : 'pending' },
+        { label: 'Alternatif', href: `/decision-models/${decisionModelId}/alternatives`, count: alternatives.length, status: buildReadinessStatus(alternatives.length) },
+        { label: 'Evaluasi TOPSIS', href: `/decision-models/${decisionModelId}/evaluations`, count: `${completedEvaluationCells}/${expectedEvaluationCells}`, status: hasCompleteTopsisEvaluations ? 'ready' : evaluationProgress > 0 ? 'warning' : 'pending' },
+        { label: 'Evaluasi Rule', href: `/decision-models/${decisionModelId}/rule-evaluations`, count: `${totalRuleEvaluations}/${expectedRuleEvaluations || 0}`, status: hasRuleEvaluations ? 'ready' : totalRuleEvaluations > 0 ? 'warning' : 'pending' },
       ],
     },
   ]
@@ -199,67 +199,67 @@ export function DecisionModelDetailPage() {
   const handleUpdate = handleSubmit(async (values) => {
     try {
       await updateMutation.mutateAsync({ id: decisionModelId, payload: values })
-      pushToast({ title: 'Decision model updated', description: 'Workspace information has been refreshed.', tone: 'success' })
+      pushToast({ title: 'Model keputusan diperbarui', description: 'Informasi ruang kerja berhasil diperbarui.', tone: 'success' })
       setEditOpen(false)
     } catch (error) {
-      pushToast({ title: 'Failed to update model', description: error.message, tone: 'error' })
+      pushToast({ title: 'Gagal memperbarui model', description: error.message, tone: 'error' })
     }
   })
 
   const handleDelete = async () => {
     try {
       await deleteMutation.mutateAsync(decisionModelId)
-      pushToast({ title: 'Decision model deleted', description: 'The workspace has been removed.', tone: 'success' })
+      pushToast({ title: 'Model keputusan dihapus', description: 'Ruang kerja berhasil dihapus.', tone: 'success' })
       navigate('/decision-models')
     } catch (error) {
-      pushToast({ title: 'Failed to delete model', description: error.message, tone: 'error' })
+      pushToast({ title: 'Gagal menghapus model', description: error.message, tone: 'error' })
     }
   }
 
   return (
     <div className="page-stack">
       <PageHeader
-        eyebrow="Decision Model"
+        eyebrow="Model Keputusan"
         title={model.name}
-        description={model.descriptions || 'This model has not received a description yet.'}
+        description={model.descriptions || undefined}
         actions={
           <div className="decision-model-page-actions">
             <ActionMenu
               items={[
-                { label: 'Edit', onSelect: openEditModal },
-                { label: 'Delete', tone: 'danger', onSelect: () => setDeleteOpen(true) },
+                { label: 'Ubah', onSelect: openEditModal },
+                { label: 'Hapus', tone: 'danger', onSelect: () => setDeleteOpen(true) },
               ]}
               align="left"
             />
             <Link className="button button-secondary" to={`/decision-models/${decisionModelId}/recommendation`}>
-              Open recommendation
+              Buka rekomendasi
             </Link>
           </div>
         }
       />
 
       <section className="decision-model-hero-grid">
-        <SectionCard title="Workspace command center" description="Use this overview to see whether the model is ready by general setup, TOPSIS design, rule base, and alternative answers.">
+        <SectionCard title="Pusat kendali workspace">
           <div className="decision-model-hero-stats">
-            <StatCard label="Assistance categories" value={categories.length} hint={`${rankedCategories} ranked / ${rejectedCategories} rejected`} />
-            <StatCard label="Households" value={alternatives.length} hint="Alternatives ready for scoring and rule answers." />
-            <StatCard label="Rule variables" value={ruleVariables.length} hint="Typed facts available for rule conditions." />
-            <StatCard label="Grade policies" value={gradePolicies.length} hint={`${gradeRangeCount} total grade ranges configured.`} />
+            <StatCard label="Kategori" value={categories.length} hint={`${rankedCategories} diperingkat / ${rejectedCategories} ditolak`} />
+            <StatCard label="Alternatif" value={alternatives.length} hint="Alternatif siap untuk penilaian dan jawaban rule." />
+            <StatCard label="Variabel rule" value={ruleVariables.length} hint="Fakta bertipe yang tersedia untuk kondisi rule." />
+            <StatCard label="Kebijakan pemeringkatan" value={gradePolicies.length} hint={`${gradeRangeCount} rentang peringkat telah diatur.`} />
           </div>
           <div className="decision-model-hero-progress">
-            <ProgressIndicator value={overallProgress} label="Overall workspace readiness" hint="Calculated from category setup, grade rules, TOPSIS setup, rule base, alternative answers, and recommendation availability." tone="accent" />
-            <ProgressIndicator value={evaluationProgress} label="TOPSIS answer coverage" hint={`${completedEvaluationCells} of ${expectedEvaluationCells} expected TOPSIS answers are filled.`} tone={evaluationProgress === 100 ? 'success' : 'warning'} />
-            <ProgressIndicator value={Math.round(Math.min(totalWeight, 1) * 100)} label="Criteria weight balance" hint={isWeightBalanced ? 'The TOPSIS weight total is balanced.' : `Current weight total is ${formatPercent(totalWeight)} and should reach 100%.`} tone={isWeightBalanced ? 'success' : 'warning'} />
+            <ProgressIndicator value={overallProgress} label="Kesiapan workspace" hint="Dihitung dari pengaturan kategori, pemeringkatan, TOPSIS, Rule Base, jawaban alternatif, dan ketersediaan rekomendasi." tone="accent" />
+            <ProgressIndicator value={evaluationProgress} label="Cakupan jawaban TOPSIS" hint={`${completedEvaluationCells} dari ${expectedEvaluationCells} jawaban TOPSIS yang diharapkan sudah terisi.`} tone={evaluationProgress === 100 ? 'success' : 'warning'} />
+            <ProgressIndicator value={Math.round(Math.min(totalWeight, 1) * 100)} label="Keseimbangan bobot kriteria" hint={isWeightBalanced ? 'Total bobot TOPSIS sudah seimbang.' : `Total bobot saat ini ${formatPercent(totalWeight)} dan seharusnya mencapai 100%.`} tone={isWeightBalanced ? 'success' : 'warning'} />
           </div>
         </SectionCard>
 
-        <SectionCard title="Latest system snapshot" description="A quick reading of the current decision model state before your team moves to the next group.">
+        <SectionCard title="Snapshot sistem terbaru">
           <div className="decision-model-snapshot-list">
-            <div className="decision-model-snapshot-item"><span>Rule engine status</span><StatusBadge status={rules.length && ruleVariables.length ? 'ready' : ruleVariables.length || rules.length ? 'warning' : 'pending'} /></div>
-            <div className="decision-model-snapshot-item"><span>Recommendation output</span><StatusBadge status={results.length ? 'ready' : 'pending'} /></div>
-            <div className="decision-model-snapshot-item"><span>TOPSIS coverage</span><strong>{completedEvaluationCells}/{expectedEvaluationCells || 0}</strong></div>
-            <div className="decision-model-snapshot-item"><span>Rule answer coverage</span><strong>{totalRuleEvaluations}/{expectedRuleEvaluations || 0}</strong></div>
-            <div className="decision-model-snapshot-item"><span>Open recommendation view</span><Link to={`/decision-models/${decisionModelId}/recommendation`} className="button button-ghost">Open</Link></div>
+            <div className="decision-model-snapshot-item"><span>Status rule engine</span><StatusBadge status={rules.length && ruleVariables.length ? 'ready' : ruleVariables.length || rules.length ? 'warning' : 'pending'} /></div>
+            <div className="decision-model-snapshot-item"><span>Output rekomendasi</span><StatusBadge status={results.length ? 'ready' : 'pending'} /></div>
+            <div className="decision-model-snapshot-item"><span>Cakupan TOPSIS</span><strong>{completedEvaluationCells}/{expectedEvaluationCells || 0}</strong></div>
+            <div className="decision-model-snapshot-item"><span>Cakupan jawaban rule</span><strong>{totalRuleEvaluations}/{expectedRuleEvaluations || 0}</strong></div>
+            <div className="decision-model-snapshot-item"><span>Buka tampilan rekomendasi</span><Link to={`/decision-models/${decisionModelId}/recommendation`} className="button button-ghost">Buka</Link></div>
           </div>
         </SectionCard>
       </section>
@@ -267,7 +267,7 @@ export function DecisionModelDetailPage() {
       <section className="decision-model-workspace-grid">
         {workspaceGroups.map((group) => (
           <SectionCard key={group.key} title={group.title} description={group.description} className="decision-model-workspace-card">
-            <ProgressIndicator value={group.progress} label="Group readiness" hint="Use this to decide which workspace area still needs work." tone={group.progress === 100 ? 'success' : group.progress > 0 ? 'warning' : 'default'} />
+            <ProgressIndicator value={group.progress} label="Kesiapan grup" hint="Gunakan indikator ini untuk melihat area yang masih perlu dilengkapi." tone={group.progress === 100 ? 'success' : group.progress > 0 ? 'warning' : 'default'} />
             <div className="decision-model-workspace-links">
               {group.items.map((item) => (
                 <Link key={item.label} to={item.href} className="workflow-link">
@@ -285,34 +285,34 @@ export function DecisionModelDetailPage() {
 
       <Modal
         open={editOpen}
-        title="Edit decision model"
+        title="Ubah model keputusan"
         onClose={() => setEditOpen(false)}
         footer={
           <>
             <Button type="button" variant="ghost" onClick={() => setEditOpen(false)}>
-              Cancel
+              Batal
             </Button>
             <Button type="submit" form="detail-decision-model-form" disabled={isSubmitting || updateMutation.isPending}>
-              Save changes
+              Simpan perubahan
             </Button>
           </>
         }
       >
         <form id="detail-decision-model-form" className="stack-md" onSubmit={handleUpdate}>
-          <FormField label="Model name" error={errors.name?.message}>
-            <TextField placeholder="Scholarship selection 2026" {...register('name')} />
+          <FormField label="Nama model" error={errors.name?.message}>
+            <TextField placeholder="Seleksi beasiswa 2026" {...register('name')} />
           </FormField>
-          <FormField label="Description" hint="Optional context for the evaluation objective." error={errors.descriptions?.message}>
-            <textarea className="input textarea" rows="4" placeholder="Explain what decision this model will support." {...register('descriptions')} />
+          <FormField label="Deskripsi" hint="Opsional" error={errors.descriptions?.message}>
+            <textarea className="input textarea" rows="4" placeholder="Jelaskan keputusan yang didukung model ini." {...register('descriptions')} />
           </FormField>
         </form>
       </Modal>
 
       <ConfirmDialog
         open={deleteOpen}
-        title="Delete decision model"
-        description={`Delete ${model.name}? This action cannot be undone.`}
-        confirmLabel={deleteMutation.isPending ? 'Deleting...' : 'Delete model'}
+        title="Hapus model keputusan"
+        description={`Hapus ${model.name}? Tindakan ini tidak dapat dibatalkan.`}
+        confirmLabel={deleteMutation.isPending ? 'Menghapus...' : 'Hapus model'}
         onClose={() => setDeleteOpen(false)}
         onConfirm={handleDelete}
       />

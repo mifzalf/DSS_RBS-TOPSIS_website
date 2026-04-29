@@ -1,5 +1,5 @@
 import { Outlet, useLocation } from 'react-router-dom'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Topbar } from '../../components/navigation/Topbar'
 import { WorkspaceSidebar } from '../../components/navigation/WorkspaceSidebar'
 
@@ -10,6 +10,10 @@ export function DecisionModelWorkspaceLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => localStorage.getItem(SIDEBAR_STORAGE_KEY) === 'true')
   const location = useLocation()
+
+  const segment = useMemo(() => {
+    return location.pathname.includes('/recommendation') ? 'recommendation' : 'workshop'
+  }, [location.pathname])
 
   const isDesktop = () => window.matchMedia(DESKTOP_BREAKPOINT).matches
 
@@ -34,7 +38,7 @@ export function DecisionModelWorkspaceLayout() {
 
   return (
     <div className={`workspace-shell ${sidebarCollapsed ? 'is-sidebar-collapsed' : ''}`}>
-      <WorkspaceSidebar open={sidebarOpen} collapsed={sidebarCollapsed} onClose={handleSidebarClose} pathname={location.pathname} />
+      <WorkspaceSidebar segment={segment} open={sidebarOpen} collapsed={sidebarCollapsed} onClose={handleSidebarClose} pathname={location.pathname} />
       <div className="workspace-shell-body">
         <Topbar onMenuToggle={handleSidebarToggle} />
         <main className="workspace-shell-content">

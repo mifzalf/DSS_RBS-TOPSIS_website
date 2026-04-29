@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useParams } from 'react-router-dom'
 import { RootLayout } from '../layouts/RootLayout'
 import { DecisionModelWorkspaceLayout } from '../layouts/DecisionModelWorkspaceLayout'
 import { AuthLayout } from '../layouts/AuthLayout'
@@ -11,14 +11,18 @@ import { DecisionModelDetailPage } from '../../pages/decision-model/DecisionMode
 import { MembersPage } from '../../pages/general/MembersPage'
 import { AssistanceCategoriesPage } from '../../pages/general/AssistanceCategoriesPage'
 import { GradePoliciesPage } from '../../pages/general/GradePoliciesPage'
-import { RecommendationPage } from '../../pages/general/RecommendationPage'
 import { CriteriaPage } from '../../pages/topsis/CriteriaPage'
-import { EvaluationsPage } from '../../pages/topsis/EvaluationsPage'
-import { AlternativesPage } from '../../pages/alternatives/AlternativesPage'
-import { RuleEvaluationsPage } from '../../pages/alternatives/RuleEvaluationsPage'
 import { RulesPage } from '../../pages/rule-base/RulesPage'
+import { RecommendationAlternativesPage } from '../../pages/recommendation-flow/RecommendationAlternativesPage'
+import { RecommendationEvaluationsPage } from '../../pages/recommendation-flow/RecommendationEvaluationsPage'
+import { RecommendationResultsPage } from '../../pages/recommendation-flow/RecommendationResultsPage'
 import { NotFoundPage } from '../../pages/NotFoundPage'
 import { ROUTES } from '../../constants/routes'
+
+function RecommendationRedirect() {
+  const { id } = useParams()
+  return <Navigate to={`/decision-models/${id}/recommendation/alternatives`} replace />
+}
 
 export function AppRouter() {
   return (
@@ -40,12 +44,13 @@ export function AppRouter() {
           <Route path={`${ROUTES.decisionModels}/:id/members`} element={<MembersPage />} />
           <Route path={`${ROUTES.decisionModels}/:id/criteria`} element={<CriteriaPage />} />
           <Route path={`${ROUTES.decisionModels}/:id/assistance-categories`} element={<AssistanceCategoriesPage />} />
-          <Route path={`${ROUTES.decisionModels}/:id/alternatives`} element={<AlternativesPage />} />
-          <Route path={`${ROUTES.decisionModels}/:id/evaluations`} element={<EvaluationsPage />} />
-          <Route path={`${ROUTES.decisionModels}/:id/rule-evaluations`} element={<RuleEvaluationsPage />} />
           <Route path={`${ROUTES.decisionModels}/:id/rules`} element={<RulesPage />} />
           <Route path={`${ROUTES.decisionModels}/:id/grade-policies`} element={<GradePoliciesPage />} />
-          <Route path={`${ROUTES.decisionModels}/:id/recommendation`} element={<RecommendationPage />} />
+
+          <Route path={`${ROUTES.decisionModels}/:id/recommendation`} element={<RecommendationRedirect />} />
+          <Route path={`${ROUTES.decisionModels}/:id/recommendation/alternatives`} element={<RecommendationAlternativesPage />} />
+          <Route path={`${ROUTES.decisionModels}/:id/recommendation/evaluations`} element={<RecommendationEvaluationsPage />} />
+          <Route path={`${ROUTES.decisionModels}/:id/recommendation/results`} element={<RecommendationResultsPage />} />
         </Route>
       </Route>
 

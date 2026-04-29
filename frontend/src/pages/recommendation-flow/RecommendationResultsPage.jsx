@@ -8,6 +8,7 @@ import { Button } from '../../components/ui/Button'
 import { EmptyState } from '../../components/feedback/EmptyState'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { SectionCard } from '../../components/ui/SectionCard'
+import { RecommendationFlowNav } from '../../components/navigation/RecommendationFlowNav'
 import { queryKeys } from '../../constants/queryKeys'
 import { useGenerateRecommendation } from '../../features/recommendation/useGenerateRecommendation'
 import { useResults } from '../../features/result/useResults'
@@ -79,7 +80,7 @@ function normalizeRecommendationGroups(payload) {
   }
 }
 
-export function RecommendationPage() {
+export function RecommendationResultsPage() {
   const decisionModelId = useDecisionModelId()
   const queryClient = useQueryClient()
   const { pushToast } = useFeedback()
@@ -133,12 +134,14 @@ export function RecommendationPage() {
 
   return (
     <div className="page-stack">
+      <RecommendationFlowNav />
       <PageHeader
-        eyebrow="Rekomendasi"
-        title="Tinjau rekomendasi akhir"
+        eyebrow="Langkah 3/3"
+        title="Hasil rekomendasi"
+        description="Tinjau hasil pengelompokan dan prioritas akhir setiap grup bantuan."
         actions={
           <Button type="button" onClick={onGenerate} disabled={generateMutation.isPending}>
-            {generateMutation.isPending ? 'Memperbarui rekomendasi...' : 'Perbarui rekomendasi'}
+            {generateMutation.isPending ? 'Memperbarui...' : 'Perbarui rekomendasi'}
           </Button>
         }
       />
@@ -159,7 +162,6 @@ export function RecommendationPage() {
         <SectionCard key={`ranked-${group.category_id || group.category}`} title={group.category}>
           <div className="recommendation-group-head">
             <Badge tone="success">daftar prioritas</Badge>
-            <Badge tone="info">category #{group.category_id || '-'}</Badge>
             <span>{group.items.length} rumah tangga</span>
           </div>
           <DataTable
@@ -182,7 +184,6 @@ export function RecommendationPage() {
         <SectionCard key={`rejected-${group.category}`} title={group.category}>
           <div className="recommendation-group-head">
             <Badge tone="warning">tidak direkomendasikan</Badge>
-            <Badge tone="neutral">category #{group.category_id || '-'}</Badge>
             <span>{group.items.length} rumah tangga</span>
           </div>
           <div className="recommendation-rejected-list">
