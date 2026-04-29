@@ -5,9 +5,9 @@ export function NotFoundPage() {
   return (
     <div className="centered-page">
       <div className="surface-panel feedback-state">
-        <h1>Page not found</h1>
-        <p>The requested route does not exist in the current frontend shell.</p>
-        <Link className="button button-primary" to={ROUTES.decisionModels}>Back to decision models</Link>
+        <h1>Halaman tidak ditemukan</h1>
+        <p>Rute yang Anda tuju tidak tersedia pada aplikasi ini.</p>
+        <Link className="button button-primary" to={ROUTES.decisionModels}>Kembali ke model keputusan</Link>
       </div>
     </div>
   )

@@ -1,4 +1,4 @@
-export function LoadingState({ title = 'Loading data', description = 'Preparing the latest decision workspace.' }) {
+export function LoadingState({ title = 'Memuat data', description = 'Menyiapkan workspace keputusan terbaru.' }) {
   return (
     <div className="feedback-state surface-panel">
       <div className="loading-orb" aria-hidden="true" />

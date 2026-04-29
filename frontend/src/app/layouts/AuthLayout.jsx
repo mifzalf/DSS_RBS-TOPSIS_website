@@ -9,45 +9,45 @@ export function AuthLayout() {
         <div className="auth-hero-shell">
           <div className="auth-hero-copy stack-lg">
             <div className="stack-md">
-              <span className="page-header-eyebrow auth-eyebrow">Decision support Studio</span>
-              <h1>Organize decisions in one clear and guided workspace.</h1>
+              <span className="page-header-eyebrow auth-eyebrow">Decision Support Studio</span>
+              <h1>Kelola proses keputusan dalam satu workspace yang jelas dan terarah.</h1>
               <p>
-                Review household conditions, organize eligibility, and produce fair assistance priorities in a place that feels clear,
-                practical, and easy to present.
+                Bangun model, susun kriteria, evaluasi alternatif, dan hasilkan rekomendasi dalam alur kerja yang rapi,
+                praktis, dan mudah ditinjau.
               </p>
             </div>
 
             <div className="auth-hero-metrics">
               <article className="auth-hero-metric">
-                <strong>Group households first</strong>
-                <span>Separate eligible and non-eligible households before prioritizing them.</span>
+                <strong>Klasifikasi lebih terstruktur</strong>
+                <span>Kelompokkan alternatif ke kategori yang sesuai sebelum proses pemeringkatan dilakukan.</span>
               </article>
               <article className="auth-hero-metric">
-                <strong>Prioritize fairly</strong>
-                <span>Order households inside each assistance group so the recommendation stays transparent.</span>
+                <strong>Pemeringkatan lebih jelas</strong>
+                <span>Nilai dan urutkan alternatif berdasarkan kriteria yang telah ditetapkan secara konsisten.</span>
               </article>
               <article className="auth-hero-metric">
-                <strong>Ready to share</strong>
-                <span>Keep the full process neat so the final result is easy to review with your team.</span>
+                <strong>Siap ditinjau bersama</strong>
+                <span>Simpan seluruh proses dalam satu tempat agar hasil akhir mudah diverifikasi bersama tim.</span>
               </article>
             </div>
           </div>
 
           <div className="auth-storyboard">
             <article className="auth-story-card auth-story-card-primary">
-              <span className="auth-story-label">Preparation</span>
-              <strong>Set the assessment structure</strong>
-              <p>Arrange assessment factors, household data, and eligibility indicators in one connected flow.</p>
+              <span className="auth-story-label">Persiapan</span>
+              <strong>Susun struktur penilaian</strong>
+              <p>Atur kategori, kriteria, dan data alternatif dalam satu alur kerja yang saling terhubung.</p>
             </article>
             <article className="auth-story-card">
-              <span className="auth-story-label">Outcome</span>
-              <strong>Clear assistance groups</strong>
-              <p>Households can be separated into categories such as PKH, Sembako, or not eligible.</p>
+              <span className="auth-story-label">Hasil</span>
+              <strong>Output yang fleksibel</strong>
+              <p>Sistem dapat digunakan untuk berbagai skenario DSS dengan kategori hasil yang Anda tentukan sendiri.</p>
             </article>
             <article className="auth-story-card auth-story-card-accent">
-              <span className="auth-story-label">Collaboration</span>
-              <strong>One place for the team</strong>
-              <p>Keep member access, household answers, and final recommendations visible in the same place.</p>
+              <span className="auth-story-label">Kolaborasi</span>
+              <strong>Satu tempat untuk tim</strong>
+              <p>Kelola akses anggota, evaluasi alternatif, dan rekomendasi akhir dari workspace yang sama.</p>
             </article>
           </div>
         </div>

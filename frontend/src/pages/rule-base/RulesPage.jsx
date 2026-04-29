@@ -25,26 +25,26 @@ import { useDecisionModelId } from '../../hooks/useDecisionModelId'
 import { ruleApi } from '../../services/api/rule.api'
 
 const variableSchema = z.object({
-  code: z.string().min(1, 'Code is required.').max(30, 'Maximum 30 characters.'),
-  name: z.string().min(1, 'Name is required.').max(150, 'Maximum 150 characters.'),
+  code: z.string().min(1, 'Kode wajib diisi.').max(30, 'Maksimal 30 karakter.'),
+  name: z.string().min(1, 'Nama wajib diisi.').max(150, 'Maksimal 150 karakter.'),
   value_type: z.enum(['boolean', 'number', 'string']),
-  description: z.string().max(5000, 'Maximum 5000 characters.').optional().or(z.literal('')),
+  description: z.string().max(5000, 'Maksimal 5000 karakter.').optional().or(z.literal('')),
   status_active: z.enum(['true', 'false']),
 })
 
 const ruleSchema = z.object({
-  name: z.string().min(1, 'Name is required.').max(150, 'Maximum 150 characters.'),
-  priority: z.coerce.number().int().min(1, 'Minimum priority is 1.'),
-  logic_type: z.enum(['AND', 'OR']),
+  name: z.string().min(1, 'Nama wajib diisi.').max(150, 'Maksimal 150 karakter.'),
+  priority: z.coerce.number().int().min(1, 'Prioritas minimal adalah 1.'),
+  logic_type: z.enum(['AND', 'OR', 'EMPTY']),
   action_type: z.enum(['assign_benefit', 'reject']),
-  category_id: z.string().min(1, 'Category is required.'),
+  category_id: z.string().min(1, 'Kategori wajib dipilih.'),
   status_active: z.enum(['true', 'false']),
 })
 
 const conditionSchema = z.object({
-  rule_variable_id: z.string().min(1, 'Rule variable is required.'),
+  rule_variable_id: z.string().min(1, 'Variabel rule wajib dipilih.'),
   operator: z.enum(['=', '>', '<', '>=', '<=']),
-  value: z.string().min(1, 'Value is required.'),
+  value: z.string().min(1, 'Nilai wajib diisi.'),
 })
 
 export function RulesPage() {
@@ -101,7 +101,7 @@ export function RulesPage() {
   const selectedActionType = useWatch({ control: ruleForm.control, name: 'action_type' })
   const conditionOperatorValue = useWatch({ control: conditionForm.control, name: 'operator' })
 
-  if (isLoading) return <LoadingState title="Loading rule base" description="Preparing rule variables, rules, and nested conditions." />
+  if (isLoading) return <LoadingState title="Memuat Rule Base" description="Menyiapkan variabel rule, rule, dan kondisi turunannya." />
   if (error) return <ErrorState description={error.message} onAction={refetch} />
 
   const selectedVariable = ruleVariables.find((item) => String(item.id) === selectedRuleVariableId)
@@ -151,14 +151,14 @@ export function RulesPage() {
     try {
       if (variableModal.variable) {
         await updateVariableMutation.mutateAsync({ id: variableModal.variable.id, payload })
-        pushToast({ title: 'Rule variable updated', description: 'Typed fact definition has been refreshed.', tone: 'success' })
+        pushToast({ title: 'Variabel rule diperbarui', description: 'Definisi fakta bertipe berhasil diperbarui.', tone: 'success' })
       } else {
         await createVariableMutation.mutateAsync(payload)
-        pushToast({ title: 'Rule variable created', description: 'New typed fact can now be used in rule conditions.', tone: 'success' })
+        pushToast({ title: 'Variabel rule ditambahkan', description: 'Fakta bertipe baru siap digunakan pada kondisi rule.', tone: 'success' })
       }
       setVariableModal({ open: false, variable: null })
     } catch (submitError) {
-      pushToast({ title: 'Rule variable request failed', description: submitError.message, tone: 'error' })
+      pushToast({ title: 'Permintaan variabel rule gagal', description: submitError.message, tone: 'error' })
     }
   })
 
@@ -175,10 +175,10 @@ export function RulesPage() {
 
     try {
       await ruleMutation.mutateAsync({ id: ruleModal.rule?.id, payload })
-      pushToast({ title: ruleModal.rule ? 'Rule updated' : 'Rule created', description: 'Rule configuration has been saved.', tone: 'success' })
+      pushToast({ title: ruleModal.rule ? 'Rule diperbarui' : 'Rule ditambahkan', description: 'Konfigurasi rule berhasil disimpan.', tone: 'success' })
       setRuleModal({ open: false, rule: null })
     } catch (submitError) {
-      pushToast({ title: 'Rule request failed', description: submitError.message, tone: 'error' })
+      pushToast({ title: 'Permintaan rule gagal', description: submitError.message, tone: 'error' })
     }
   })
 
@@ -193,10 +193,10 @@ export function RulesPage() {
           value: values.value,
         },
       })
-      pushToast({ title: conditionModal.condition ? 'Condition updated' : 'Condition added', description: 'Rule condition has been saved.', tone: 'success' })
+      pushToast({ title: conditionModal.condition ? 'Kondisi diperbarui' : 'Kondisi ditambahkan', description: 'Kondisi rule berhasil disimpan.', tone: 'success' })
       setConditionModal({ open: false, rule: null, condition: null })
     } catch (submitError) {
-      pushToast({ title: 'Condition request failed', description: submitError.message, tone: 'error' })
+      pushToast({ title: 'Permintaan kondisi gagal', description: submitError.message, tone: 'error' })
     }
   })
 
@@ -204,19 +204,19 @@ export function RulesPage() {
     try {
       if (deleteState.type === 'variable') {
         await deleteVariableMutation.mutateAsync(deleteState.item.id)
-        pushToast({ title: 'Rule variable deleted', description: 'Typed fact definition has been removed.', tone: 'success' })
+        pushToast({ title: 'Variabel rule dihapus', description: 'Definisi fakta bertipe berhasil dihapus.', tone: 'success' })
       }
       if (deleteState.type === 'rule') {
         await deleteRuleMutation.mutateAsync(deleteState.item.id)
-        pushToast({ title: 'Rule deleted', description: 'Rule configuration has been removed.', tone: 'success' })
+        pushToast({ title: 'Rule dihapus', description: 'Konfigurasi rule berhasil dihapus.', tone: 'success' })
       }
       if (deleteState.type === 'condition') {
         await deleteConditionMutation.mutateAsync(deleteState.item.id)
-        pushToast({ title: 'Condition deleted', description: 'Rule condition has been removed.', tone: 'success' })
+        pushToast({ title: 'Kondisi dihapus', description: 'Kondisi rule berhasil dihapus.', tone: 'success' })
       }
       setDeleteState({ type: null, item: null })
     } catch (deleteError) {
-      pushToast({ title: 'Delete request failed', description: deleteError.message, tone: 'error' })
+      pushToast({ title: 'Permintaan hapus gagal', description: deleteError.message, tone: 'error' })
     }
   }
 
@@ -224,100 +224,107 @@ export function RulesPage() {
     <div className="page-stack">
       <PageHeader
         eyebrow="Rule Base"
-        title="Define facts and rules in one workspace so the rule engine stays compact and readable."
-        description="Rule variables act like reusable fact definitions, while rules and conditions turn those facts into category assignments."
+        title="Kelola Rule Base"
       />
 
       <div className="content-grid two-column">
-        <SectionCard title="Rule variables" description="Typed facts used by rule conditions and alternative-level rule evaluations." actions={<Button type="button" onClick={openCreateVariable}>Add variable</Button>}>
+        <SectionCard title="Variabel rule" actions={<Button type="button" onClick={openCreateVariable}>Tambah variabel</Button>}>
           <div className="rule-card-list">
             {ruleVariables.length ? ruleVariables.map((variable) => (
               <article key={variable.id} className="rule-card">
                 <div className="rule-card-head">
                   <div>
                     <strong>{variable.code} - {variable.name}</strong>
-                    <p>{variable.description || 'No description provided.'}</p>
+                    <p>{variable.description || 'Belum ada deskripsi.'}</p>
                   </div>
                   <div className="rule-card-badges">
                     <Badge tone="info">{variable.value_type}</Badge>
-                    <Badge tone={variable.status_active ? 'success' : 'neutral'}>{variable.status_active ? 'active' : 'inactive'}</Badge>
+                    <Badge tone={variable.status_active ? 'success' : 'neutral'}>{variable.status_active ? 'aktif' : 'nonaktif'}</Badge>
                   </div>
                 </div>
                 <div className="rule-card-meta-row">
-                  <Badge tone="info">Typed fact</Badge>
-                  <ActionMenu items={[{ label: 'Edit variable', onSelect: () => openEditVariable(variable) }, { label: 'Delete variable', tone: 'danger', onSelect: () => setDeleteState({ type: 'variable', item: variable }) }]} />
+                  <Badge tone="info">Fakta bertipe</Badge>
+                  <ActionMenu items={[{ label: 'Ubah variabel', onSelect: () => openEditVariable(variable) }, { label: 'Hapus variabel', tone: 'danger', onSelect: () => setDeleteState({ type: 'variable', item: variable }) }]} />
                 </div>
               </article>
-            )) : <p className="subtle-text">No rule variables yet.</p>}</div>
+            )) : <p className="subtle-text">Belum ada variabel rule.</p>}</div>
         </SectionCard>
 
-        <SectionCard title="Rules" description="Use variables and categories to assign benefits or reject households." actions={<Button type="button" onClick={openCreateRule}>Add rule</Button>}>
+        <SectionCard title="Rule" actions={<Button type="button" onClick={openCreateRule}>Tambah rule</Button>}>
           <div className="rule-card-list">
             {data.length ? data.map((rule) => (
               <article key={rule.id} className="rule-card">
                 <div className="rule-card-head">
                   <div>
                     <strong>{rule.name || `Rule ${rule.priority}`}</strong>
-                    <p>Priority {rule.priority} · {rule.logic_type}</p>
+                    <p>Prioritas {rule.priority} · {rule.logic_type}</p>
                   </div>
                   <div className="rule-card-badges">
-                    <Badge tone={rule.action_type === 'reject' ? 'warning' : 'success'}>{rule.action_type}</Badge>
-                    <Badge tone={rule.status_active ? 'success' : 'neutral'}>{rule.status_active ? 'active' : 'inactive'}</Badge>
+                    <Badge tone={rule.action_type === 'reject' ? 'warning' : 'success'}>{rule.action_type === 'reject' ? 'tolak' : 'tetapkan kategori'}</Badge>
+                    <Badge tone={rule.status_active ? 'success' : 'neutral'}>{rule.status_active ? 'aktif' : 'nonaktif'}</Badge>
                   </div>
                 </div>
-                <div className="rule-card-target"><span>Target category</span><strong>{rule.categoryRef?.name || `Category #${rule.category_id}`}</strong></div>
+                <div className="rule-card-target"><span>Kategori target</span><strong>{rule.categoryRef?.name || `Kategori #${rule.category_id}`}</strong></div>
                 <div className="rule-card-meta-row">
                   <Badge tone={rule.action_type === 'reject' ? 'warning' : 'success'}>{RULE_ACTION_OPTIONS.find((item) => item.value === rule.action_type)?.label || rule.action_type}</Badge>
-                  <ActionMenu items={[{ label: 'Add condition', onSelect: () => openCreateCondition(rule) }, { label: 'Edit rule', onSelect: () => openEditRule(rule) }, { label: 'Delete rule', tone: 'danger', onSelect: () => setDeleteState({ type: 'rule', item: rule }) }]} />
+                  <ActionMenu items={[
+                    ...(rule.logic_type !== 'EMPTY' ? [{ label: 'Tambah kondisi', onSelect: () => openCreateCondition(rule) }] : []),
+                    { label: 'Ubah rule', onSelect: () => openEditRule(rule) },
+                    { label: 'Hapus rule', tone: 'danger', onSelect: () => setDeleteState({ type: 'rule', item: rule }) },
+                  ]} />
                 </div>
-                <div className="rule-condition-list">
-                  {rule.conditions.length ? rule.conditions.map((condition) => (
-                    <div key={condition.id} className="rule-condition-item">
-                      <div>
-                        <strong>{condition.ruleVariable ? `${condition.ruleVariable.code} · ${condition.ruleVariable.name}` : condition.field}</strong>
-                        <span>{condition.operator} {condition.value}</span>
+                {rule.logic_type === 'EMPTY' ? (
+                  <div className="rule-condition-item"><p className="subtle-text">Kondisi tidak diperlukan. Rule ini akan otomatis cocok jika semua variabel aktif bernilai null atau false.</p></div>
+                ) : (
+                  <div className="rule-condition-list">
+                    {rule.conditions.length ? rule.conditions.map((condition) => (
+                      <div key={condition.id} className="rule-condition-item">
+                        <div>
+                          <strong>{condition.ruleVariable ? `${condition.ruleVariable.code} · ${condition.ruleVariable.name}` : condition.field}</strong>
+                          <span>{condition.operator} {condition.value}</span>
+                        </div>
+                        <ActionMenu items={[{ label: 'Ubah kondisi', onSelect: () => openEditCondition(rule, condition) }, { label: 'Hapus kondisi', tone: 'danger', onSelect: () => setDeleteState({ type: 'condition', item: condition }) }]} />
                       </div>
-                      <ActionMenu items={[{ label: 'Edit condition', onSelect: () => openEditCondition(rule, condition) }, { label: 'Delete condition', tone: 'danger', onSelect: () => setDeleteState({ type: 'condition', item: condition }) }]} />
-                    </div>
-                  )) : <p>No conditions attached yet.</p>}
-                </div>
+                    )) : <p>Belum ada kondisi.</p>}
+                  </div>
+                )}
               </article>
-            )) : <p className="subtle-text">No rules yet.</p>}
+            )) : <p className="subtle-text">Belum ada rule.</p>}
           </div>
         </SectionCard>
       </div>
 
-      <Modal open={variableModal.open} title={variableModal.variable ? 'Edit rule variable' : 'Create rule variable'} onClose={() => setVariableModal({ open: false, variable: null })} footer={<><Button type="button" variant="ghost" onClick={() => setVariableModal({ open: false, variable: null })}>Cancel</Button><Button type="submit" form="rule-variable-form" disabled={variableForm.formState.isSubmitting || createVariableMutation.isPending || updateVariableMutation.isPending}>Save variable</Button></>}>
+      <Modal open={variableModal.open} title={variableModal.variable ? 'Ubah variabel rule' : 'Tambah variabel rule'} onClose={() => setVariableModal({ open: false, variable: null })} footer={<><Button type="button" variant="ghost" onClick={() => setVariableModal({ open: false, variable: null })}>Batal</Button><Button type="submit" form="rule-variable-form" disabled={variableForm.formState.isSubmitting || createVariableMutation.isPending || updateVariableMutation.isPending}>Simpan variabel</Button></>}>
         <form id="rule-variable-form" className="stack-md" onSubmit={submitVariable}>
-          <FormField label="Code" error={variableForm.formState.errors.code?.message}><TextField {...variableForm.register('code')} placeholder="V1" /></FormField>
-          <FormField label="Name" error={variableForm.formState.errors.name?.message}><TextField {...variableForm.register('name')} placeholder="Has pregnant mother" /></FormField>
-          <FormField label="Value type" error={variableForm.formState.errors.value_type?.message}><DropdownSelect value={variableTypeValue} options={RULE_VARIABLE_TYPE_OPTIONS} onChange={(value) => variableForm.setValue('value_type', value, { shouldValidate: true })} /></FormField>
-          <FormField label="Description" error={variableForm.formState.errors.description?.message}><textarea className="input textarea" rows="4" {...variableForm.register('description')} placeholder="Explain the fact represented by this variable." /></FormField>
-          <FormField label="Status" error={variableForm.formState.errors.status_active?.message}><DropdownSelect value={variableStatusValue} options={[{ value: 'true', label: 'Active' }, { value: 'false', label: 'Inactive' }]} onChange={(value) => variableForm.setValue('status_active', value, { shouldValidate: true })} /></FormField>
+          <FormField label="Kode" error={variableForm.formState.errors.code?.message}><TextField {...variableForm.register('code')} placeholder="V1" /></FormField>
+          <FormField label="Nama" error={variableForm.formState.errors.name?.message}><TextField {...variableForm.register('name')} placeholder="Terdapat ibu hamil" /></FormField>
+          <FormField label="Tipe nilai" error={variableForm.formState.errors.value_type?.message}><DropdownSelect value={variableTypeValue} options={RULE_VARIABLE_TYPE_OPTIONS} onChange={(value) => variableForm.setValue('value_type', value, { shouldValidate: true })} /></FormField>
+          <FormField label="Deskripsi" error={variableForm.formState.errors.description?.message}><textarea className="input textarea" rows="4" {...variableForm.register('description')} placeholder="Jelaskan fakta yang direpresentasikan variabel ini." /></FormField>
+          <FormField label="Status" error={variableForm.formState.errors.status_active?.message}><DropdownSelect value={variableStatusValue} options={[{ value: 'true', label: 'Aktif' }, { value: 'false', label: 'Nonaktif' }]} onChange={(value) => variableForm.setValue('status_active', value, { shouldValidate: true })} /></FormField>
         </form>
       </Modal>
 
-      <Modal open={ruleModal.open} title={ruleModal.rule ? 'Edit rule' : 'Create rule'} onClose={() => setRuleModal({ open: false, rule: null })} footer={<><Button type="button" variant="ghost" onClick={() => setRuleModal({ open: false, rule: null })}>Cancel</Button><Button type="submit" form="rule-form" disabled={ruleForm.formState.isSubmitting || ruleMutation.isPending}>Save rule</Button></>}>
+      <Modal open={ruleModal.open} title={ruleModal.rule ? 'Ubah rule' : 'Tambah rule'} onClose={() => setRuleModal({ open: false, rule: null })} footer={<><Button type="button" variant="ghost" onClick={() => setRuleModal({ open: false, rule: null })}>Batal</Button><Button type="submit" form="rule-form" disabled={ruleForm.formState.isSubmitting || ruleMutation.isPending}>Simpan rule</Button></>}>
         <form id="rule-form" className="stack-md" onSubmit={submitRule}>
-          <FormField label="Name" error={ruleForm.formState.errors.name?.message}><TextField {...ruleForm.register('name')} placeholder="Eligibility rule 1" /></FormField>
-          <FormField label="Priority" error={ruleForm.formState.errors.priority?.message}><TextField type="number" {...ruleForm.register('priority')} /></FormField>
-          <FormField label="Logic type" error={ruleForm.formState.errors.logic_type?.message}><DropdownSelect value={ruleLogicTypeValue} options={[{ value: 'AND', label: 'AND' }, { value: 'OR', label: 'OR' }]} onChange={(value) => ruleForm.setValue('logic_type', value, { shouldValidate: true })} /></FormField>
-          <FormField label="Action" error={ruleForm.formState.errors.action_type?.message}><DropdownSelect value={ruleActionTypeValue} options={RULE_ACTION_OPTIONS} onChange={(value) => ruleForm.setValue('action_type', value, { shouldValidate: true })} /></FormField>
-          <FormField label="Category" error={ruleForm.formState.errors.category_id?.message}><DropdownSelect value={ruleCategoryValue} options={[{ value: '', label: selectedActionType === 'reject' ? 'Select rejected category' : 'Select ranked category' }, ...filteredCategories.map((item) => ({ value: String(item.id), label: `${item.name} (${item.code})` }))]} onChange={(value) => ruleForm.setValue('category_id', value, { shouldValidate: true })} /></FormField>
-          <FormField label="Status" error={ruleForm.formState.errors.status_active?.message}><DropdownSelect value={ruleStatusValue} options={[{ value: 'true', label: 'Active' }, { value: 'false', label: 'Inactive' }]} onChange={(value) => ruleForm.setValue('status_active', value, { shouldValidate: true })} /></FormField>
+          <FormField label="Nama" error={ruleForm.formState.errors.name?.message}><TextField {...ruleForm.register('name')} placeholder="Rule kelayakan 1" /></FormField>
+          <FormField label="Prioritas" error={ruleForm.formState.errors.priority?.message}><TextField type="number" {...ruleForm.register('priority')} /></FormField>
+          <FormField label="Tipe logika" error={ruleForm.formState.errors.logic_type?.message}><DropdownSelect value={ruleLogicTypeValue} options={[{ value: 'AND', label: 'AND' }, { value: 'OR', label: 'OR' }, { value: 'EMPTY', label: 'EMPTY (semua null/false)' }]} onChange={(value) => ruleForm.setValue('logic_type', value, { shouldValidate: true })} /></FormField>
+          <FormField label="Aksi" error={ruleForm.formState.errors.action_type?.message}><DropdownSelect value={ruleActionTypeValue} options={RULE_ACTION_OPTIONS} onChange={(value) => ruleForm.setValue('action_type', value, { shouldValidate: true })} /></FormField>
+          <FormField label="Kategori" error={ruleForm.formState.errors.category_id?.message}><DropdownSelect value={ruleCategoryValue} options={[{ value: '', label: selectedActionType === 'reject' ? 'Pilih kategori ditolak' : 'Pilih kategori diperingkat' }, ...filteredCategories.map((item) => ({ value: String(item.id), label: `${item.name} (${item.code})` }))]} onChange={(value) => ruleForm.setValue('category_id', value, { shouldValidate: true })} /></FormField>
+          <FormField label="Status" error={ruleForm.formState.errors.status_active?.message}><DropdownSelect value={ruleStatusValue} options={[{ value: 'true', label: 'Aktif' }, { value: 'false', label: 'Nonaktif' }]} onChange={(value) => ruleForm.setValue('status_active', value, { shouldValidate: true })} /></FormField>
         </form>
       </Modal>
 
-      <Modal open={conditionModal.open} title={conditionModal.rule ? `${conditionModal.condition ? 'Edit' : 'Add'} condition for ${conditionModal.rule.name || `Rule ${conditionModal.rule.priority}`}` : 'Condition'} onClose={() => setConditionModal({ open: false, rule: null, condition: null })} footer={<><Button type="button" variant="ghost" onClick={() => setConditionModal({ open: false, rule: null, condition: null })}>Cancel</Button><Button type="submit" form="rule-condition-form" disabled={conditionForm.formState.isSubmitting || conditionMutation.isPending}>Save condition</Button></>}>
+      <Modal open={conditionModal.open} title={conditionModal.rule ? `${conditionModal.condition ? 'Ubah' : 'Tambah'} kondisi untuk ${conditionModal.rule.name || `Rule ${conditionModal.rule.priority}`}` : 'Kondisi'} onClose={() => setConditionModal({ open: false, rule: null, condition: null })} footer={<><Button type="button" variant="ghost" onClick={() => setConditionModal({ open: false, rule: null, condition: null })}>Batal</Button><Button type="submit" form="rule-condition-form" disabled={conditionForm.formState.isSubmitting || conditionMutation.isPending}>Simpan kondisi</Button></>}>
         <form id="rule-condition-form" className="stack-md" onSubmit={submitCondition}>
-          <FormField label="Rule variable" error={conditionForm.formState.errors.rule_variable_id?.message}><DropdownSelect value={selectedRuleVariableId} options={[{ value: '', label: 'Select variable' }, ...ruleVariables.map((item) => ({ value: String(item.id), label: `${item.code} - ${item.name}` }))]} onChange={(value) => conditionForm.setValue('rule_variable_id', value, { shouldValidate: true })} /></FormField>
-          {selectedVariable ? <div className="rule-variable-help mini-card"><strong>{selectedVariable.code} - {selectedVariable.name}</strong><p>Value type: {RULE_VARIABLE_TYPE_OPTIONS.find((item) => item.value === selectedVariable.value_type)?.label || selectedVariable.value_type}</p></div> : null}
+          <FormField label="Variabel rule" error={conditionForm.formState.errors.rule_variable_id?.message}><DropdownSelect value={selectedRuleVariableId} options={[{ value: '', label: 'Pilih variabel' }, ...ruleVariables.map((item) => ({ value: String(item.id), label: `${item.code} - ${item.name}` }))]} onChange={(value) => conditionForm.setValue('rule_variable_id', value, { shouldValidate: true })} /></FormField>
+          {selectedVariable ? <div className="rule-variable-help mini-card"><strong>{selectedVariable.code} - {selectedVariable.name}</strong><p>Tipe nilai: {RULE_VARIABLE_TYPE_OPTIONS.find((item) => item.value === selectedVariable.value_type)?.label || selectedVariable.value_type}</p></div> : null}
           <FormField label="Operator" error={conditionForm.formState.errors.operator?.message}><DropdownSelect value={conditionOperatorValue} options={[{ value: '=', label: '=' }, { value: '>', label: '>' }, { value: '<', label: '<' }, { value: '>=', label: '>=' }, { value: '<=', label: '<=' }]} onChange={(value) => conditionForm.setValue('operator', value, { shouldValidate: true })} /></FormField>
-          <FormField label="Value" error={conditionForm.formState.errors.value?.message}><TextField {...conditionForm.register('value')} placeholder={selectedVariable?.value_type === 'boolean' ? 'true / false' : selectedVariable?.value_type === 'number' ? 'Enter numeric value' : 'Enter string value'} /></FormField>
+          <FormField label="Nilai" error={conditionForm.formState.errors.value?.message}><TextField {...conditionForm.register('value')} placeholder={selectedVariable?.value_type === 'boolean' ? 'true / false' : selectedVariable?.value_type === 'number' ? 'Masukkan nilai angka' : 'Masukkan nilai teks'} /></FormField>
         </form>
       </Modal>
 
-      <ConfirmDialog open={Boolean(deleteState.item)} title={`Delete ${deleteState.type || 'item'}`} description={`Delete ${deleteState.type === 'rule' ? deleteState.item?.name : deleteState.type === 'variable' ? deleteState.item?.name : 'this condition'}?`} confirmLabel={(deleteState.type === 'variable' ? deleteVariableMutation.isPending : deleteState.type === 'rule' ? deleteRuleMutation.isPending : deleteConditionMutation.isPending) ? 'Deleting...' : 'Delete'} onClose={() => setDeleteState({ type: null, item: null })} onConfirm={handleDelete} />
+      <ConfirmDialog open={Boolean(deleteState.item)} title={`Hapus ${deleteState.type === 'variable' ? 'variabel' : deleteState.type === 'rule' ? 'rule' : 'kondisi'}`} description={`Hapus ${deleteState.type === 'rule' ? deleteState.item?.name : deleteState.type === 'variable' ? deleteState.item?.name : 'kondisi ini'}?`} confirmLabel={(deleteState.type === 'variable' ? deleteVariableMutation.isPending : deleteState.type === 'rule' ? deleteRuleMutation.isPending : deleteConditionMutation.isPending) ? 'Menghapus...' : 'Hapus'} onClose={() => setDeleteState({ type: null, item: null })} onConfirm={handleDelete} />
     </div>
   )
 }

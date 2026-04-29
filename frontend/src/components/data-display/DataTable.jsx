@@ -1,6 +1,6 @@
 import { cn } from '../../utils/cn'
 
-export function DataTable({ columns, rows, emptyMessage = 'No rows available.' }) {
+export function DataTable({ columns, rows, emptyMessage = 'Belum ada data.' }) {
   return (
     <div className="data-table-wrapper">
       <table className="data-table">

@@ -31,9 +31,9 @@ function MenuIcon() {
 
 const navigation = [
   {
-    title: 'Main',
+    title: 'Utama',
     items: [
-      { label: 'Decision Models', to: ROUTES.decisionModels, hint: 'Workflow and setup', icon: <DecisionModelIcon /> },
+      { label: 'Model Keputusan', to: ROUTES.decisionModels, hint: 'Alur kerja dan pengaturan', icon: <DecisionModelIcon /> },
     ],
   },
 ]
@@ -53,10 +53,10 @@ export function Sidebar({ open, collapsed, onClose }) {
             <span className="brand-mark">DSS</span>
             <div className="sidebar-brand-copy">
               <strong>RBS-TOPSIS</strong>
-              <p>Decision support workspace</p>
+              <p>Ruang kerja decision support</p>
             </div>
           </div>
-          <button type="button" className="icon-button sidebar-close" onClick={onClose} aria-label="Close menu">
+          <button type="button" className="icon-button sidebar-close" onClick={onClose} aria-label="Tutup menu">
             <MenuIcon />
           </button>
         </div>
@@ -82,8 +82,8 @@ export function Sidebar({ open, collapsed, onClose }) {
           </div>
 
           <div className="sidebar-support surface-panel">
-            <strong>Workflow discipline</strong>
-            <p>Criteria, alternatives, evaluations, rules, and recommendation stay in one guided track.</p>
+            <strong>Alur kerja terarah</strong>
+            <p>Kriteria, alternatif, evaluasi, rule, dan rekomendasi tetap dalam satu alur yang konsisten.</p>
           </div>
         </div>
       </aside>

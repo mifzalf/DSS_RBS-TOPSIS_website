@@ -7,5 +7,11 @@ const toneMap = {
 }
 
 export function RoleBadge({ role = 'viewer' }) {
-  return <Badge tone={toneMap[role] || 'neutral'}>{role}</Badge>
+  const labelMap = {
+    owner: 'Pemilik',
+    editor: 'Editor',
+    viewer: 'Peninjau',
+  }
+
+  return <Badge tone={toneMap[role] || 'neutral'}>{labelMap[role] || role}</Badge>
 }

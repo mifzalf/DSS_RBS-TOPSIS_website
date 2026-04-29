@@ -31,49 +31,49 @@ export function RegisterPage() {
     const { confirmPassword: _confirmPassword, ...values } = formValues
     try {
       await registerAccount(values)
-      pushToast({ title: 'Registration successful', description: 'Your session is active and decision model workspace is ready.', tone: 'success' })
+      pushToast({ title: 'Registrasi berhasil', description: 'Akun berhasil dibuat dan sesi Anda sudah aktif.', tone: 'success' })
       navigate(ROUTES.decisionModels, { replace: true })
     } catch (error) {
-      pushToast({ title: 'Registration failed', description: error.message, tone: 'error' })
+      pushToast({ title: 'Registrasi gagal', description: error.message, tone: 'error' })
     }
   })
 
   return (
     <div className="auth-card surface-panel">
       <div className="auth-card-header">
-        <span className="page-header-eyebrow">New workspace</span>
-        <h2>Create an account and start preparing assistance decisions.</h2>
+        <span className="page-header-eyebrow">Akun baru</span>
+        <h2>Buat akun untuk mulai menyusun model keputusan secara terstruktur.</h2>
       </div>
 
       <form className="stack-md" onSubmit={onSubmit}>
-        <FormField label="Name" error={errors.name?.message}>
-          <TextField placeholder="Your full name" {...register('name')} />
+        <FormField label="Nama" error={errors.name?.message}>
+          <TextField placeholder="Nama lengkap" {...register('name')} />
         </FormField>
 
         <FormField label="Username" error={errors.username?.message}>
-          <TextField placeholder="team.member" {...register('username')} />
+          <TextField placeholder="anggota.tim" {...register('username')} />
         </FormField>
 
         <FormField label="Password" error={errors.password?.message}>
-          <TextField type="password" placeholder="Minimum 6 characters" {...register('password')} />
+          <TextField type="password" placeholder="Minimal 6 karakter" {...register('password')} />
         </FormField>
 
-        <FormField label="Confirm password" error={errors.confirmPassword?.message}>
-          <TextField type="password" placeholder="Repeat your password" {...register('confirmPassword')} />
+        <FormField label="Konfirmasi password" error={errors.confirmPassword?.message}>
+          <TextField type="password" placeholder="Ulangi password" {...register('confirmPassword')} />
         </FormField>
 
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Creating account...' : 'Register'}
+          {isSubmitting ? 'Membuat akun...' : 'Daftar'}
         </Button>
       </form>
 
       <div className="auth-card-note">
-        <strong>Built for collaborative review</strong>
-        <p>Prepare assessment factors, household answers, and final recommendations together in one connected experience.</p>
+        <strong>Mendukung kerja kolaboratif</strong>
+        <p>Susun kriteria, data alternatif, evaluasi, dan rekomendasi akhir dalam satu alur kerja yang terhubung.</p>
       </div>
 
       <p className="auth-switch">
-        Sudah punya akun? <Link to={ROUTES.login}>Login</Link>
+        Sudah punya akun? <Link to={ROUTES.login}>Masuk</Link>
       </p>
     </div>
   )

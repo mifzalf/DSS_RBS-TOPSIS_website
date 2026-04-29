@@ -1,10 +1,10 @@
 import { Button } from '../ui/Button'
 
-export function ErrorState({ title = 'Something went wrong', description, actionLabel = 'Try again', onAction }) {
+export function ErrorState({ title = 'Terjadi kendala', description, actionLabel = 'Coba lagi', onAction }) {
   return (
     <div className="feedback-state surface-panel error-state">
       <h3>{title}</h3>
-      <p>{description || 'The request could not be completed. Review the response and retry.'}</p>
+      <p>{description || 'Permintaan belum dapat diproses. Silakan periksa kembali lalu coba lagi.'}</p>
       {onAction ? (
         <Button type="button" variant="secondary" onClick={onAction}>
           {actionLabel}

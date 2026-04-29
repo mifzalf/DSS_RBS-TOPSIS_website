@@ -9,5 +9,13 @@ const toneMap = {
 }
 
 export function StatusBadge({ status }) {
-  return <Badge tone={toneMap[status] || 'neutral'}>{status}</Badge>
+  const labelMap = {
+    ready: 'Siap',
+    warning: 'Perlu perhatian',
+    pending: 'Menunggu',
+    active: 'Aktif',
+    inactive: 'Nonaktif',
+  }
+
+  return <Badge tone={toneMap[status] || 'neutral'}>{labelMap[status] || status}</Badge>
 }

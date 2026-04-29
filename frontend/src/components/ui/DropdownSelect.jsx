@@ -9,7 +9,41 @@ function ChevronIcon({ open }) {
   )
 }
 
-export function DropdownSelect({ value, options, placeholder = 'Select option', onChange, disabled = false }) {
+const computePosition = (triggerRect, popoverHeight = 320) => {
+  const gap = 8
+  const viewportHeight = window.innerHeight
+  const viewportWidth = window.innerWidth
+
+  const belowTop = triggerRect.bottom + gap
+  const belowFits = belowTop + popoverHeight <= viewportHeight
+
+  if (belowFits) {
+    return {
+      top: belowTop,
+      left: Math.max(8, Math.min(triggerRect.left, viewportWidth - triggerRect.width - 16)),
+      width: triggerRect.width,
+    }
+  }
+
+  const aboveBottom = triggerRect.top - gap
+  const aboveFits = aboveBottom - popoverHeight >= 0
+
+  if (aboveFits) {
+    return {
+      top: Math.max(8, aboveBottom - popoverHeight),
+      left: Math.max(8, Math.min(triggerRect.left, viewportWidth - triggerRect.width - 16)),
+      width: triggerRect.width,
+    }
+  }
+
+  return {
+    top: Math.max(8, viewportHeight - popoverHeight - 8),
+    left: Math.max(8, Math.min(triggerRect.left, viewportWidth - triggerRect.width - 16)),
+    width: triggerRect.width,
+  }
+}
+
+export function DropdownSelect({ value, options, placeholder = 'Pilih opsi', onChange, disabled = false }) {
   const [open, setOpen] = useState(false)
   const triggerRef = useRef(null)
   const popoverRef = useRef(null)
@@ -26,12 +60,10 @@ export function DropdownSelect({ value, options, placeholder = 'Select option', 
     }
 
     const rect = triggerRef.current.getBoundingClientRect()
-    setPosition({
-      top: rect.bottom + 8,
-      left: rect.left,
-      width: rect.width,
-    })
-  }, [open])
+    const optionCount = options.length
+    const estimatedPopoverHeight = Math.min(48 * optionCount + 20, 320)
+    setPosition(computePosition(rect, estimatedPopoverHeight))
+  }, [open, options.length])
 
   useEffect(() => {
     if (!open) {
@@ -53,11 +85,9 @@ export function DropdownSelect({ value, options, placeholder = 'Select option', 
       }
 
       const rect = triggerRef.current.getBoundingClientRect()
-      setPosition({
-        top: rect.bottom + 8,
-        left: rect.left,
-        width: rect.width,
-      })
+      const optionCount = options.length
+      const estimatedPopoverHeight = Math.min(48 * optionCount + 20, 320)
+      setPosition(computePosition(rect, estimatedPopoverHeight))
     }
 
     document.addEventListener('mousedown', handleOutside)
@@ -69,7 +99,7 @@ export function DropdownSelect({ value, options, placeholder = 'Select option', 
       window.removeEventListener('resize', handleViewport)
       window.removeEventListener('scroll', handleViewport, true)
     }
-  }, [open])
+  }, [open, options.length])
 
   return (
     <>

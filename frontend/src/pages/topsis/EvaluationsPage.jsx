@@ -28,7 +28,7 @@ export function EvaluationsPage() {
   const deleteMutation = useDeleteEvaluation(selectedId)
 
   if (criteriaQuery.isLoading || alternativesQuery.isLoading || overview.isLoading) {
-    return <LoadingState title="Loading evaluation matrix" description="Calculating completeness across alternatives and criteria." />
+    return <LoadingState title="Memuat matriks evaluasi" description="Menghitung kelengkapan data pada alternatif dan kriteria." />
   }
 
   if (criteriaQuery.error || alternativesQuery.error) {
@@ -49,7 +49,7 @@ export function EvaluationsPage() {
       if (!subCriteriaId) {
         if (existing) {
           await deleteMutation.mutateAsync(existing.id)
-          pushToast({ title: 'Evaluation removed', description: `${criteriaItem.name} has been cleared.`, tone: 'success' })
+          pushToast({ title: 'Evaluasi dihapus', description: `${criteriaItem.name} berhasil dikosongkan.`, tone: 'success' })
         }
         return
       }
@@ -62,22 +62,22 @@ export function EvaluationsPage() {
 
       if (existing) {
         await updateMutation.mutateAsync({ id: existing.id, payload: { sub_criteria_id: Number(subCriteriaId) } })
-        pushToast({ title: 'Evaluation updated', description: `${criteriaItem.name} has been updated.`, tone: 'success' })
+        pushToast({ title: 'Evaluasi diperbarui', description: `${criteriaItem.name} berhasil diperbarui.`, tone: 'success' })
       } else {
         await createMutation.mutateAsync(payload)
-        pushToast({ title: 'Evaluation created', description: `${criteriaItem.name} has been recorded.`, tone: 'success' })
+        pushToast({ title: 'Evaluasi disimpan', description: `${criteriaItem.name} berhasil dicatat.`, tone: 'success' })
       }
     } catch (submitError) {
-      pushToast({ title: 'Evaluation request failed', description: submitError.message, tone: 'error' })
+      pushToast({ title: 'Permintaan evaluasi gagal', description: submitError.message, tone: 'error' })
     }
   }
 
   return (
     <div className="page-stack">
-      <PageHeader eyebrow="TOPSIS Evaluations" title="Use a matrix mindset so scoring feels structured instead of repetitive." description="Select one alternative and assign one sub-criteria value for each weighted criterion." />
+      <PageHeader eyebrow="Evaluasi TOPSIS" title="Isi evaluasi TOPSIS" />
       <div className="content-grid two-column">
-        <SectionCard title="Completeness" description="Shows how close the model is to a recommendation-ready evaluation set.">
-          <ProgressIndicator value={completeness} label="Evaluation coverage" hint={`${totalCompleted} filled cells out of ${totalExpected} expected cells.`} tone={completeness === 100 ? 'success' : 'warning'} />
+        <SectionCard title="Kelengkapan">
+          <ProgressIndicator value={completeness} label="Cakupan evaluasi" hint={`${totalCompleted} sel terisi dari ${totalExpected} sel yang diharapkan.`} tone={completeness === 100 ? 'success' : 'warning'} />
           <div className="alternative-chip-list">
             {(alternativesQuery.data || []).map((alternative) => (
               <button key={alternative.id} type="button" className={`decision-model-tab ${selectedId === alternative.id ? 'active' : ''}`} onClick={() => setSelectedAlternativeId(alternative.id)}>
@@ -86,19 +86,19 @@ export function EvaluationsPage() {
             ))}
           </div>
         </SectionCard>
-        <SectionCard title="Matrix readiness" description="Review fill counts per alternative before opening the row editor below.">
+        <SectionCard title="Kesiapan matriks">
           <div className="rule-condition-list">
             {rows.map((row) => (
               <div key={row.id} className="rule-condition-item">
                 <strong>{row.name}</strong>
-                <span>{row.completed}/{row.expected} filled</span>
+                <span>{row.completed}/{row.expected} terisi</span>
               </div>
             ))}
           </div>
         </SectionCard>
       </div>
 
-      <SectionCard title={selectedAlternative ? `Edit matrix for ${selectedAlternative.name}` : 'Evaluation matrix'} description="Each criteria row supports create, update, or clear for the selected alternative.">
+      <SectionCard title={selectedAlternative ? `Matriks untuk ${selectedAlternative.name}` : 'Matriks evaluasi'}>
         <div className="evaluation-row-list">
           {criteria.map((criteriaItem) => {
             const existing = evaluationsByCriteria.get(criteriaItem.id)
@@ -108,23 +108,23 @@ export function EvaluationsPage() {
               <article key={criteriaItem.id} className="rule-evaluation-card">
                 <div>
                   <strong>{criteriaItem.code || 'C'} - {criteriaItem.name}</strong>
-                  <p>{criteriaItem.type} · weight {criteriaItem.weight}</p>
+                  <p>{criteriaItem.type} · bobot {criteriaItem.weight}</p>
                 </div>
                 <DropdownSelect
                   value={selectedValue}
                   onChange={(nextValue) => handleSelectSubCriteria(criteriaItem, nextValue)}
-                  placeholder="Select sub-criteria"
+                  placeholder="Pilih sub-kriteria"
                   options={[
-                    { value: '', label: 'Select sub-criteria' },
+                    { value: '', label: 'Pilih sub-kriteria' },
                     ...criteriaItem.subCriteria.map((subCriteria) => ({
                       value: String(subCriteria.id),
-                      label: `${subCriteria.label} (value ${subCriteria.value})`,
+                      label: `${subCriteria.label} (nilai ${subCriteria.value})`,
                     })),
                   ]}
                 />
                 <div className="rule-evaluation-card-actions">
-                  <span className={`badge ${existing ? 'badge-success' : 'badge-neutral'}`}>{existing ? 'filled' : 'empty'}</span>
-                  <Button type="button" variant="ghost" disabled={!existing || deleteMutation.isPending} onClick={() => handleSelectSubCriteria(criteriaItem, '')}>Clear</Button>
+                  <span className={`badge ${existing ? 'badge-success' : 'badge-neutral'}`}>{existing ? 'terisi' : 'kosong'}</span>
+                  <Button type="button" variant="ghost" disabled={!existing || deleteMutation.isPending} onClick={() => handleSelectSubCriteria(criteriaItem, '')}>Kosongkan</Button>
                 </div>
               </article>
             )

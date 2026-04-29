@@ -1,7 +1,7 @@
 import { Button } from './Button'
 import { Modal } from './Modal'
 
-export function ConfirmDialog({ open, title, description, confirmLabel = 'Confirm', onClose, onConfirm }) {
+export function ConfirmDialog({ open, title, description, confirmLabel = 'Konfirmasi', onClose, onConfirm }) {
   return (
     <Modal
       open={open}
@@ -10,7 +10,7 @@ export function ConfirmDialog({ open, title, description, confirmLabel = 'Confir
       footer={
         <>
           <Button variant="ghost" type="button" onClick={onClose}>
-            Cancel
+            Batal
           </Button>
           <Button variant="danger" type="button" onClick={onConfirm}>
             {confirmLabel}

@@ -54,7 +54,7 @@ export function RuleEvaluationsPage() {
   const deleteMutation = useDeleteRuleEvaluation(selectedId)
 
   if (alternativesQuery.isLoading || variablesQuery.isLoading || (selectedId && evaluationsQuery.isLoading)) {
-    return <LoadingState title="Loading rule evaluations" description="Preparing alternatives and typed fact values for RBS input." />
+    return <LoadingState title="Memuat evaluasi rule" description="Menyiapkan alternatif dan nilai fakta bertipe untuk input RBS." />
   }
 
   if (alternativesQuery.error || variablesQuery.error || evaluationsQuery.error) {
@@ -74,9 +74,9 @@ export function RuleEvaluationsPage() {
         id: currentEvaluation?.id,
         payload: currentEvaluation?.id ? getPayload(variable, selectedId, rawValue) : getPayload(variable, selectedId, rawValue),
       })
-      pushToast({ title: 'Rule evaluation saved', description: `${variable.name} has been updated for the selected alternative.`, tone: 'success' })
+      pushToast({ title: 'Evaluasi rule disimpan', description: `${variable.name} berhasil diperbarui untuk alternatif terpilih.`, tone: 'success' })
     } catch (error) {
-      pushToast({ title: 'Failed to save rule evaluation', description: error.message, tone: 'error' })
+      pushToast({ title: 'Gagal menyimpan evaluasi rule', description: error.message, tone: 'error' })
     }
   }
 
@@ -85,16 +85,16 @@ export function RuleEvaluationsPage() {
     if (!currentEvaluation) return
     try {
       await deleteMutation.mutateAsync(currentEvaluation.id)
-      pushToast({ title: 'Rule evaluation removed', description: `${variable.name} has been cleared for the selected alternative.`, tone: 'success' })
+      pushToast({ title: 'Evaluasi rule dihapus', description: `${variable.name} berhasil dikosongkan untuk alternatif terpilih.`, tone: 'success' })
     } catch (error) {
-      pushToast({ title: 'Failed to remove rule evaluation', description: error.message, tone: 'error' })
+      pushToast({ title: 'Gagal menghapus evaluasi rule', description: error.message, tone: 'error' })
     }
   }
 
   return (
     <div className="page-stack">
-      <PageHeader eyebrow="Rule Evaluations" title="Fill RBS facts separately from TOPSIS scoring to keep the workflow readable." description="Choose one alternative, then assign typed fact values for each rule variable. Boolean, number, and string inputs are rendered automatically." />
-      <SectionCard title="Alternative selector" description="Rule evaluations are entered per alternative so classification facts stay isolated from TOPSIS scoring.">
+      <PageHeader eyebrow="Evaluasi Rule" title="Isi evaluasi berbasis rule" />
+      <SectionCard title="Pilih alternatif">
         {alternatives.length ? (
           <div className="alternative-chip-list">
             {alternatives.map((alternative) => (
@@ -104,10 +104,10 @@ export function RuleEvaluationsPage() {
             ))}
           </div>
         ) : (
-          <EmptyState title="No alternatives available" description="Create alternatives before filling rule evaluations." />
+          <EmptyState title="Belum ada alternatif" description="Tambahkan alternatif sebelum mengisi evaluasi rule." />
         )}
       </SectionCard>
-      <SectionCard title="Typed fact matrix" description="Each row writes or updates one rule evaluation for the selected alternative.">
+      <SectionCard title="Matriks fakta bertipe">
         {variables.length ? (
           <div className="rule-evaluation-grid">
             {variables.map((variable) => {
@@ -118,34 +118,34 @@ export function RuleEvaluationsPage() {
                 <article key={variable.id} className="rule-evaluation-card">
                   <div>
                     <strong>{variable.code} - {variable.name}</strong>
-                    <p>{variable.description || 'No description provided.'}</p>
+                      <p>{variable.description || 'Belum ada deskripsi.'}</p>
                   </div>
                   <span className="badge badge-info">{variable.value_type}</span>
                   {variable.value_type === 'boolean' ? (
                     <DropdownSelect
                       value={currentValue}
                       onChange={(nextValue) => setDrafts((state) => ({ ...state, [variable.id]: nextValue }))}
-                      placeholder="Select boolean value"
-                      options={[
-                        { value: 'false', label: 'False' },
-                        { value: 'true', label: 'True' },
-                      ]}
-                    />
-                  ) : variable.value_type === 'number' ? (
-                    <input className="input" type="number" value={currentValue} onChange={(event) => setDrafts((state) => ({ ...state, [variable.id]: event.target.value }))} placeholder="Enter number value" />
-                  ) : (
-                    <input className="input" value={currentValue} onChange={(event) => setDrafts((state) => ({ ...state, [variable.id]: event.target.value }))} placeholder="Enter string value" />
-                  )}
-                  <div className="rule-evaluation-card-actions">
-                    <Button type="button" variant="secondary" onClick={() => saveValue(variable)} disabled={upsertMutation.isPending}>Save value</Button>
-                    <Button type="button" variant="ghost" onClick={() => clearValue(variable)} disabled={!currentEvaluation || deleteMutation.isPending}>Clear</Button>
-                  </div>
+                       placeholder="Pilih nilai boolean"
+                       options={[
+                         { value: 'false', label: 'False' },
+                         { value: 'true', label: 'True' },
+                       ]}
+                     />
+                   ) : variable.value_type === 'number' ? (
+                     <input className="input" type="number" value={currentValue} onChange={(event) => setDrafts((state) => ({ ...state, [variable.id]: event.target.value }))} placeholder="Masukkan nilai angka" />
+                   ) : (
+                     <input className="input" value={currentValue} onChange={(event) => setDrafts((state) => ({ ...state, [variable.id]: event.target.value }))} placeholder="Masukkan nilai teks" />
+                   )}
+                   <div className="rule-evaluation-card-actions">
+                     <Button type="button" variant="secondary" onClick={() => saveValue(variable)} disabled={upsertMutation.isPending}>Simpan nilai</Button>
+                     <Button type="button" variant="ghost" onClick={() => clearValue(variable)} disabled={!currentEvaluation || deleteMutation.isPending}>Kosongkan</Button>
+                   </div>
                 </article>
               )
             })}
           </div>
         ) : (
-          <EmptyState title="No rule variables yet" description="Create rule variables first so the matrix can render typed inputs." />
+          <EmptyState title="Belum ada variabel rule" description="Buat variabel rule terlebih dahulu agar input bertipe dapat ditampilkan." />
         )}
       </SectionCard>
     </div>

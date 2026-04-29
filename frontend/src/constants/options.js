@@ -1,7 +1,7 @@
 export const ROLE_OPTIONS = [
-  { value: 'owner', label: 'Owner' },
+  { value: 'owner', label: 'Pemilik' },
   { value: 'editor', label: 'Editor' },
-  { value: 'viewer', label: 'Viewer' },
+  { value: 'viewer', label: 'Peninjau' },
 ]
 
 export const CRITERIA_TYPE_OPTIONS = [
@@ -16,6 +16,6 @@ export const RULE_VARIABLE_TYPE_OPTIONS = [
 ]
 
 export const RULE_ACTION_OPTIONS = [
-  { value: 'assign_benefit', label: 'Assign benefit' },
-  { value: 'reject', label: 'Reject' },
+  { value: 'assign_benefit', label: 'Tetapkan kategori' },
+  { value: 'reject', label: 'Tolak' },
 ]

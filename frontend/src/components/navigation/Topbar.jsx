@@ -22,23 +22,23 @@ export function Topbar({ onMenuToggle }) {
   const mobileProfileRef = useRef(null)
 
   const workspaceMeta = useMemo(() => {
-    const decisionModelName = decisionModelQuery.data?.name || 'Program workspace'
+    const decisionModelName = decisionModelQuery.data?.name || 'Ruang kerja program'
 
     const definitions = [
-      { match: (path) => path === `/decision-models/${id}`, title: 'Overview', subtitle: decisionModelName },
-      { match: (path) => path.endsWith('/members'), title: 'Members', subtitle: decisionModelName },
-      { match: (path) => path.endsWith('/assistance-categories'), title: 'Assistance categories', subtitle: decisionModelName },
-      { match: (path) => path.endsWith('/grade-policies'), title: 'Grade policies', subtitle: decisionModelName },
-      { match: (path) => path.endsWith('/criteria'), title: 'Criteria', subtitle: decisionModelName },
-      { match: (path) => path.endsWith('/alternatives'), title: 'Alternatives', subtitle: decisionModelName },
-      { match: (path) => path.endsWith('/evaluations'), title: 'TOPSIS evaluations', subtitle: decisionModelName },
-      { match: (path) => path.endsWith('/rule-evaluations'), title: 'Rule evaluations', subtitle: decisionModelName },
-      { match: (path) => path.endsWith('/rules'), title: 'Rule base', subtitle: decisionModelName },
-      { match: (path) => path.endsWith('/recommendation'), title: 'Recommendations', subtitle: decisionModelName },
+      { match: (path) => path === `/decision-models/${id}`, title: 'Ringkasan', subtitle: decisionModelName },
+      { match: (path) => path.endsWith('/members'), title: 'Anggota', subtitle: decisionModelName },
+      { match: (path) => path.endsWith('/assistance-categories'), title: 'Kategori', subtitle: decisionModelName },
+      { match: (path) => path.endsWith('/grade-policies'), title: 'Kebijakan grade', subtitle: decisionModelName },
+      { match: (path) => path.endsWith('/criteria'), title: 'Kriteria', subtitle: decisionModelName },
+      { match: (path) => path.endsWith('/alternatives'), title: 'Alternatif', subtitle: decisionModelName },
+      { match: (path) => path.endsWith('/evaluations'), title: 'Evaluasi TOPSIS', subtitle: decisionModelName },
+      { match: (path) => path.endsWith('/rule-evaluations'), title: 'Evaluasi Rule', subtitle: decisionModelName },
+      { match: (path) => path.endsWith('/rules'), title: 'Rule Base', subtitle: decisionModelName },
+      { match: (path) => path.endsWith('/recommendation'), title: 'Rekomendasi', subtitle: decisionModelName },
     ]
 
     const active = definitions.find((item) => item.match(pathname))
-    return active || { title: 'Decision models', subtitle: 'Social assistance review space' }
+    return active || { title: 'Model keputusan', subtitle: 'Ruang kerja sistem pendukung keputusan' }
   }, [decisionModelQuery.data?.name, id, pathname])
 
   useEffect(() => {
@@ -64,10 +64,10 @@ export function Topbar({ onMenuToggle }) {
     <header className="topbar surface-panel">
       <div className="topbar-main">
         <div className="topbar-leading">
-          <button type="button" className="icon-button nav-toggle" onClick={onMenuToggle} aria-label="Toggle navigation">
+          <button type="button" className="icon-button nav-toggle" onClick={onMenuToggle} aria-label="Buka navigasi">
             <MenuIcon />
           </button>
-          <button type="button" className="icon-button nav-toggle-desktop" onClick={onMenuToggle} aria-label="Toggle sidebar width">
+          <button type="button" className="icon-button nav-toggle-desktop" onClick={onMenuToggle} aria-label="Ubah lebar sidebar">
             <MenuIcon />
           </button>
         </div>
@@ -84,7 +84,7 @@ export function Topbar({ onMenuToggle }) {
         <div className="user-chip">
           <span>{user?.name?.[0]?.toUpperCase() || 'U'}</span>
           <div className="user-chip-copy">
-            <strong>{user?.name || 'User'}</strong>
+            <strong>{user?.name || 'Pengguna'}</strong>
             <small>@{user?.username || 'session'}</small>
           </div>
         </div>
@@ -94,13 +94,13 @@ export function Topbar({ onMenuToggle }) {
           className="topbar-logout-button"
           onClick={handleLogout}
         >
-          Logout
+          Keluar
         </Button>
         <div ref={mobileProfileRef} className="mobile-profile-menu">
           <button
             type="button"
             className="mobile-profile-trigger"
-            aria-label="Open profile menu"
+            aria-label="Buka menu profil"
             aria-expanded={mobileProfileOpen}
             onClick={() => setMobileProfileOpen((current) => !current)}
           >
@@ -109,7 +109,7 @@ export function Topbar({ onMenuToggle }) {
           {mobileProfileOpen ? (
             <div className="mobile-profile-popover">
               <div className="mobile-profile-summary">
-                <strong>{user?.name || 'User'}</strong>
+                <strong>{user?.name || 'Pengguna'}</strong>
                 <small>@{user?.username || 'session'}</small>
               </div>
               <Button
@@ -118,7 +118,7 @@ export function Topbar({ onMenuToggle }) {
                 className="mobile-profile-logout"
                 onClick={handleLogout}
               >
-                Logout
+                Keluar
               </Button>
             </div>
           ) : null}

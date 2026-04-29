@@ -60,7 +60,7 @@ export function ActionMenu({ items, align = 'right' }) {
 
   return (
     <div ref={containerRef} className="action-menu">
-      <button ref={triggerRef} type="button" className="icon-button action-menu-trigger" onClick={() => setOpen((current) => !current)} aria-label="Open actions">
+      <button ref={triggerRef} type="button" className="icon-button action-menu-trigger" onClick={() => setOpen((current) => !current)} aria-label="Buka aksi">
         <MoreIcon />
       </button>
 

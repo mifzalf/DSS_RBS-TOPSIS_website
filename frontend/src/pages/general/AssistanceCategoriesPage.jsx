@@ -21,9 +21,9 @@ import { useAssistanceCategories, useCreateAssistanceCategory, useDeleteAssistan
 import { useDecisionModelId } from '../../hooks/useDecisionModelId'
 
 const schema = z.object({
-  code: z.string().min(1, 'Code is required.').max(50, 'Maximum 50 characters.'),
-  name: z.string().min(1, 'Name is required.').max(100, 'Maximum 100 characters.'),
-  description: z.string().max(5000, 'Maximum 5000 characters.').optional().or(z.literal('')),
+  code: z.string().min(1, 'Kode wajib diisi.').max(50, 'Maksimal 50 karakter.'),
+  name: z.string().min(1, 'Nama wajib diisi.').max(100, 'Maksimal 100 karakter.'),
+  description: z.string().max(5000, 'Maksimal 5000 karakter.').optional().or(z.literal('')),
   is_ranked: z.enum(['true', 'false']),
   status_active: z.enum(['true', 'false']),
 })
@@ -44,7 +44,7 @@ export function AssistanceCategoriesPage() {
   const categoryTypeValue = useWatch({ control: form.control, name: 'is_ranked' })
   const categoryStatusValue = useWatch({ control: form.control, name: 'status_active' })
 
-  if (isLoading) return <LoadingState title="Loading assistance categories" description="Preparing master benefit categories for rules, grades, and grouped recommendations." />
+  if (isLoading) return <LoadingState title="Memuat kategori" description="Menyiapkan kategori master untuk rule, grade, dan rekomendasi." />
   if (error) return <ErrorState description={error.message} onAction={refetch} />
 
   const openCreate = () => {
@@ -69,59 +69,59 @@ export function AssistanceCategoriesPage() {
     try {
       if (modalState.category) {
         await updateMutation.mutateAsync({ id: modalState.category.id, payload })
-        pushToast({ title: 'Category updated', description: 'Assistance category settings have been refreshed.', tone: 'success' })
+        pushToast({ title: 'Kategori diperbarui', description: 'Pengaturan kategori berhasil diperbarui.', tone: 'success' })
       } else {
         await createMutation.mutateAsync(payload)
-        pushToast({ title: 'Category created', description: 'New master category is ready for rules and grade policies.', tone: 'success' })
+        pushToast({ title: 'Kategori dibuat', description: 'Kategori master baru siap digunakan untuk rule dan kebijakan grade.', tone: 'success' })
       }
       setModalState({ open: false, category: null })
     } catch (submitError) {
-      pushToast({ title: 'Category request failed', description: submitError.message, tone: 'error' })
+      pushToast({ title: 'Permintaan kategori gagal', description: submitError.message, tone: 'error' })
     }
   })
 
   const handleDelete = async () => {
     try {
       await deleteMutation.mutateAsync(deleteTarget.id)
-      pushToast({ title: 'Category deleted', description: 'Master category has been removed.', tone: 'success' })
+      pushToast({ title: 'Kategori dihapus', description: 'Kategori master berhasil dihapus.', tone: 'success' })
       setDeleteTarget(null)
     } catch (deleteError) {
-      pushToast({ title: 'Failed to delete category', description: deleteError.message, tone: 'error' })
+      pushToast({ title: 'Gagal menghapus kategori', description: deleteError.message, tone: 'error' })
     }
   }
 
   return (
     <div className="page-stack">
-      <PageHeader eyebrow="Assistance Categories" title="Manage the master categories used by rules, grades, and recommendation groups." description="Categories are now the source of truth for category assignment, ranking behavior, and grade policy targeting." actions={<Button type="button" onClick={openCreate}>Add category</Button>} />
-      <SectionCard title="Category catalog" description="Use ranked categories for benefit assignment and rejected categories for not-eligible outcomes.">
+      <PageHeader eyebrow="Kategori" title="Kelola kategori" actions={<Button type="button" onClick={openCreate}>Tambah kategori</Button>} />
+      <SectionCard title="Daftar kategori">
         {data.length ? (
           <DataTable
             columns={[
-              { key: 'code', header: 'Code' },
-              { key: 'name', header: 'Name' },
-              { key: 'description', header: 'Description' },
-              { key: 'is_ranked', header: 'Type', render: (row) => <Badge tone={row.is_ranked ? 'success' : 'warning'}>{row.is_ranked ? 'ranked' : 'rejected'}</Badge> },
-              { key: 'status_active', header: 'Status', render: (row) => <Badge tone={row.status_active ? 'success' : 'neutral'}>{row.status_active ? 'active' : 'inactive'}</Badge> },
-              { key: 'actions', header: '', align: 'right', render: (row) => <ActionMenu items={[{ label: 'Edit', onSelect: () => openEdit(row) }, { label: 'Delete', tone: 'danger', onSelect: () => setDeleteTarget(row) }]} /> },
+              { key: 'code', header: 'Kode' },
+              { key: 'name', header: 'Nama' },
+              { key: 'description', header: 'Deskripsi' },
+              { key: 'is_ranked', header: 'Tipe', render: (row) => <Badge tone={row.is_ranked ? 'success' : 'warning'}>{row.is_ranked ? 'diperingkat' : 'ditolak'}</Badge> },
+              { key: 'status_active', header: 'Status', render: (row) => <Badge tone={row.status_active ? 'success' : 'neutral'}>{row.status_active ? 'aktif' : 'nonaktif'}</Badge> },
+              { key: 'actions', header: '', align: 'right', render: (row) => <ActionMenu items={[{ label: 'Ubah', onSelect: () => openEdit(row) }, { label: 'Hapus', tone: 'danger', onSelect: () => setDeleteTarget(row) }]} /> },
             ]}
             rows={data}
           />
         ) : (
-          <EmptyState title="No categories configured" description="Create at least one assistance category before writing rules or grade policies." actionLabel="Add category" onAction={openCreate} />
+          <EmptyState title="Belum ada kategori" description="Tambahkan minimal satu kategori sebelum membuat rule atau kebijakan grade." actionLabel="Tambah kategori" onAction={openCreate} />
         )}
       </SectionCard>
 
-      <Modal open={modalState.open} title={modalState.category ? 'Edit assistance category' : 'Create assistance category'} onClose={() => setModalState({ open: false, category: null })} footer={<><Button type="button" variant="ghost" onClick={() => setModalState({ open: false, category: null })}>Cancel</Button><Button type="submit" form="assistance-category-form" disabled={form.formState.isSubmitting || createMutation.isPending || updateMutation.isPending}>Save category</Button></>}>
+      <Modal open={modalState.open} title={modalState.category ? 'Ubah kategori' : 'Tambah kategori'} onClose={() => setModalState({ open: false, category: null })} footer={<><Button type="button" variant="ghost" onClick={() => setModalState({ open: false, category: null })}>Batal</Button><Button type="submit" form="assistance-category-form" disabled={form.formState.isSubmitting || createMutation.isPending || updateMutation.isPending}>Simpan kategori</Button></>}>
         <form id="assistance-category-form" className="stack-md" onSubmit={submitForm}>
-          <FormField label="Code" error={form.formState.errors.code?.message}><TextField {...form.register('code')} placeholder="pkh" /></FormField>
-          <FormField label="Name" error={form.formState.errors.name?.message}><TextField {...form.register('name')} placeholder="PKH" /></FormField>
-          <FormField label="Description" error={form.formState.errors.description?.message}><textarea className="input textarea" rows="4" {...form.register('description')} placeholder="Program Keluarga Harapan" /></FormField>
-          <FormField label="Category type" error={form.formState.errors.is_ranked?.message}><DropdownSelect value={categoryTypeValue} options={[{ value: 'true', label: 'Ranked category' }, { value: 'false', label: 'Rejected category' }]} onChange={(value) => form.setValue('is_ranked', value, { shouldValidate: true })} /></FormField>
-          <FormField label="Status" error={form.formState.errors.status_active?.message}><DropdownSelect value={categoryStatusValue} options={[{ value: 'true', label: 'Active' }, { value: 'false', label: 'Inactive' }]} onChange={(value) => form.setValue('status_active', value, { shouldValidate: true })} /></FormField>
+          <FormField label="Kode" error={form.formState.errors.code?.message}><TextField {...form.register('code')} placeholder="pkh" /></FormField>
+          <FormField label="Nama" error={form.formState.errors.name?.message}><TextField {...form.register('name')} placeholder="PKH" /></FormField>
+          <FormField label="Deskripsi" error={form.formState.errors.description?.message}><textarea className="input textarea" rows="4" {...form.register('description')} placeholder="Program Keluarga Harapan" /></FormField>
+          <FormField label="Tipe kategori" error={form.formState.errors.is_ranked?.message}><DropdownSelect value={categoryTypeValue} options={[{ value: 'true', label: 'Kategori diperingkat' }, { value: 'false', label: 'Kategori ditolak' }]} onChange={(value) => form.setValue('is_ranked', value, { shouldValidate: true })} /></FormField>
+          <FormField label="Status" error={form.formState.errors.status_active?.message}><DropdownSelect value={categoryStatusValue} options={[{ value: 'true', label: 'Aktif' }, { value: 'false', label: 'Nonaktif' }]} onChange={(value) => form.setValue('status_active', value, { shouldValidate: true })} /></FormField>
         </form>
       </Modal>
 
-      <ConfirmDialog open={Boolean(deleteTarget)} title="Delete assistance category" description={`Delete ${deleteTarget?.name || 'this category'}?`} confirmLabel={deleteMutation.isPending ? 'Deleting...' : 'Delete'} onClose={() => setDeleteTarget(null)} onConfirm={handleDelete} />
+      <ConfirmDialog open={Boolean(deleteTarget)} title="Hapus kategori" description={`Hapus ${deleteTarget?.name || 'kategori ini'}?`} confirmLabel={deleteMutation.isPending ? 'Menghapus...' : 'Hapus'} onClose={() => setDeleteTarget(null)} onConfirm={handleDelete} />
     </div>
   )
 }
