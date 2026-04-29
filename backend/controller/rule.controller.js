@@ -142,7 +142,7 @@ exports.updateRule = async (req,res)=>{
       updateData.priority = priority
     }
 
-    if(logic_type === "AND" || logic_type === "OR"){
+    if(logic_type === "AND" || logic_type === "OR" || logic_type === "EMPTY"){
       updateData.logic_type = logic_type
     }
 

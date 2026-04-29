@@ -2,6 +2,7 @@ const Rule = require("../../models/rule.model")
 const RuleCondition = require("../../models/rule-condition.model")
 const Alternative = require("../../models/alternative.model")
 const RuleEvaluation = require("../../models/rule-evaluation.model")
+const RuleVariable = require("../../models/rule-variable.model")
 const AssistanceCategory = require("../../models/assistance-category.model")
 const { DEFAULT_REJECTED_CATEGORY, RULE_ACTION_TYPES } = require("../../constants/rule-actions")
 const { RULE_VARIABLE_TYPES } = require("../../constants/rule-variable-types")
@@ -95,14 +96,25 @@ const buildRuleFactMap = (ruleEvaluations) => {
    return factMap
 }
 
-const isRankedCategory = ({ actionType, category }) => {
-   if (NON_RANKED_ACTIONS.has(normalizeActionType(actionType))) {
-      return false
-   }
-
-   const normalizedCategory = String(category || "").trim().toLowerCase()
-   return !NON_RANKED_CATEGORY_KEYWORDS.some(keyword => normalizedCategory.includes(keyword))
-}
+const isAllFactsEmpty = ({ factMap, activeVariableCodes }) => {
+    if (!activeVariableCodes.length) {
+       return false
+    }
+ 
+    return activeVariableCodes.every((code) => {
+       const value = factMap.get(code)
+       return value === undefined || value === null || value === false
+    })
+ }
+ 
+ const isRankedCategory = ({ actionType, category }) => {
+    if (NON_RANKED_ACTIONS.has(normalizeActionType(actionType))) {
+       return false
+    }
+ 
+    const normalizedCategory = String(category || "").trim().toLowerCase()
+    return !NON_RANKED_CATEGORY_KEYWORDS.some(keyword => normalizedCategory.includes(keyword))
+ }
 
 exports.runRuleEngine = async (decisionModelId) => {
    const alternatives = await Alternative.findAll({
@@ -110,36 +122,45 @@ exports.runRuleEngine = async (decisionModelId) => {
       order: [["id", "ASC"]]
    })
 
-   const [rules, fallbackCategory] = await Promise.all([
-      Rule.findAll({
-      where: {
-         decision_model_id: decisionModelId,
-         status_active: true
-       },
-        include: [
-         {
-            association: "conditions",
-            include: [
-               {
-                  association: "ruleVariable",
-                  attributes: ["id", "code", "value_type"]
-               }
-            ]
-         },
-         {
-            association: "categoryRef",
-            attributes: ["id", "code", "name", "is_ranked"]
+    const [rules, fallbackCategory, activeRuleVariables] = await Promise.all([
+       Rule.findAll({
+       where: {
+          decision_model_id: decisionModelId,
+          status_active: true
+        },
+         include: [
+          {
+             association: "conditions",
+             include: [
+                {
+                   association: "ruleVariable",
+                   attributes: ["id", "code", "value_type"]
+                }
+             ]
+          },
+          {
+             association: "categoryRef",
+             attributes: ["id", "code", "name", "is_ranked"]
+           }
+         ],
+        order: [["priority", "ASC"], [{ model: RuleCondition, as: "conditions" }, "id", "ASC"]]
+     }),
+       AssistanceCategory.findOne({
+          where: {
+             decision_model_id: decisionModelId,
+             code: "not_eligible"
           }
-        ],
-       order: [["priority", "ASC"], [{ model: RuleCondition, as: "conditions" }, "id", "ASC"]]
-    }),
-      AssistanceCategory.findOne({
-         where: {
-            decision_model_id: decisionModelId,
-            code: "not_eligible"
-         }
-      })
-   ])
+       }),
+       RuleVariable.findAll({
+          where: {
+             decision_model_id: decisionModelId,
+             status_active: true
+          },
+          attributes: ["code"]
+       })
+    ])
+ 
+    const activeVariableCodes = activeRuleVariables.map(item => item.code)
 
    const results = []
 
@@ -170,10 +191,22 @@ exports.runRuleEngine = async (decisionModelId) => {
       let isRanked = false
       const factMap = factMaps.get(alternative.id) || new Map()
 
-      for (const rule of rules) {
-         const conditions = rule.conditions || []
-
-          const evaluations = conditions.map(condition => {
+       for (const rule of rules) {
+          if (rule.logic_type === "EMPTY") {
+             if (isAllFactsEmpty({ factMap, activeVariableCodes })) {
+                category = rule.categoryRef?.name || null
+                categoryId = rule.categoryRef?.id || null
+                actionType = normalizeActionType(rule.action_type)
+                isRanked = isRankedCategory({ actionType, category })
+                break
+             }
+ 
+             continue
+          }
+ 
+          const conditions = rule.conditions || []
+ 
+           const evaluations = conditions.map(condition => {
             const fieldValue = condition.ruleVariable?.code
                ? factMap.get(condition.ruleVariable.code)
                : alternative[condition.field]
@@ -214,6 +247,7 @@ exports.runRuleEngine = async (decisionModelId) => {
 }
 
 module.exports.NON_RANKED_ACTIONS = NON_RANKED_ACTIONS
+module.exports.isAllFactsEmpty = isAllFactsEmpty
 module.exports.isRankedCategory = isRankedCategory
 module.exports.normalizeActionType = normalizeActionType
 module.exports.DEFAULT_REJECTED_CATEGORY = DEFAULT_REJECTED_CATEGORY

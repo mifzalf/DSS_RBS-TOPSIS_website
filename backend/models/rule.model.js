@@ -30,10 +30,10 @@ const Rule = db.define("Rule", {
       min: 1
     }
   },
-  logic_type: {
-    type: DataTypes.ENUM("AND", "OR"),
-    allowNull: false
-  },
+   logic_type: {
+     type: DataTypes.ENUM("AND", "OR", "EMPTY"),
+     allowNull: false
+   },
   action_type: {
     type: DataTypes.STRING,
     allowNull: false,
