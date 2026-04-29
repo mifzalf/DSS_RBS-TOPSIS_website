@@ -114,7 +114,7 @@ test("serializeGroupedResponse separates ranked and rejected groups", () => {
             category: "PKH",
             action_type: RULE_ACTION_TYPES.ASSIGN_BENEFIT,
             grade_code: RESULT_GRADE_CODES.HIGH_PRIORITY,
-            grade_label: "High priority",
+            grade_label: "Prioritas tinggi",
             preference_score: 0.88,
             rank: 1,
             status: "ranked"
@@ -124,7 +124,7 @@ test("serializeGroupedResponse separates ranked and rejected groups", () => {
             category: "Tidak lulus",
             action_type: RULE_ACTION_TYPES.REJECT,
             grade_code: RESULT_GRADE_CODES.NOT_ELIGIBLE,
-            grade_label: "Not eligible",
+            grade_label: "Tidak memenuhi syarat",
             preference_score: null,
             rank: null,
             status: "rejected"
@@ -140,8 +140,8 @@ test("serializeGroupedResponse separates ranked and rejected groups", () => {
    assert.equal(grouped.rejected_groups.length, 1)
    assert.equal(grouped.ranked_groups[0].items[0].alternative.name, "Citizen A")
    assert.equal(grouped.rejected_groups[0].items[0].alternative.name, "Citizen B")
-   assert.equal(grouped.ranked_groups[0].items[0].grade_label, "High priority")
-   assert.equal(grouped.rejected_groups[0].items[0].grade_label, "Not eligible")
+   assert.equal(grouped.ranked_groups[0].items[0].grade_label, "Prioritas tinggi")
+   assert.equal(grouped.rejected_groups[0].items[0].grade_label, "Tidak memenuhi syarat")
 })
 
 test("grading fallback returns not eligible for rejected results", async () => {
@@ -152,7 +152,7 @@ test("grading fallback returns not eligible for rejected results", async () => {
       policiesByCategory,
       results: [
          {
-            category: "Not eligible",
+            category: "Tidak memenuhi syarat",
             preference_score: null,
             rank: null,
             status: "rejected"
@@ -161,5 +161,5 @@ test("grading fallback returns not eligible for rejected results", async () => {
    })
 
    assert.equal(graded[0].grade_code, RESULT_GRADE_CODES.NOT_ELIGIBLE)
-   assert.equal(graded[0].grade_label, "Not eligible")
+   assert.equal(graded[0].grade_label, "Tidak memenuhi syarat")
 })

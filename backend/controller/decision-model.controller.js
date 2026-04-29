@@ -64,17 +64,35 @@ exports.getAllDecisionModels = async (req, res) => {
 exports.getDecisionModelById = async (req, res) => {
     try {
         const { id } = req.params
-        const decisionModel = await getRequestResource({
-            req,
-            key: "decisionModel",
-            model: DecisionModel,
-            id,
-            notFoundMessage: "Decision model not found"
+        const decisionModel = req.decisionModel || await DecisionModel.findByPk(id, {
+            include: [
+                {
+                    association: "members",
+                    where: { user_id: req.currentUser.id },
+                    attributes: ["role"],
+                    required: false
+                }
+            ]
         })
+
+        if (!decisionModel) {
+            return res.status(404).json({
+                message: "Decision model not found"
+            })
+        }
+
+        req.decisionModel = decisionModel
+
+        const plain = decisionModel.get({ plain: true })
+        const membershipRole = plain.members?.[0]?.role || null
+        delete plain.members
 
         return sendSuccess(res, {
             message: "Decision model details retrieved successfully",
-            data: decisionModel
+            data: {
+                ...plain,
+                role: membershipRole
+            }
         })
     } catch (error) {
         return handleControllerError(res,error)

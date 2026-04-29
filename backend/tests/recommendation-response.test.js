@@ -22,7 +22,7 @@ test("recommendation endpoint returns grouped data as the primary payload", asyn
          },
          {
             alternative_id: 2,
-            category: "Not eligible",
+            category: "Tidak memenuhi syarat",
             preference_score: null,
             rank: null,
             status: "rejected"
@@ -46,7 +46,7 @@ test("recommendation endpoint returns grouped data as the primary payload", asyn
          ],
          rejected_groups: [
             {
-               category: "Not eligible",
+               category: "Tidak memenuhi syarat",
                action_type: "reject",
                status: "rejected",
                items: [

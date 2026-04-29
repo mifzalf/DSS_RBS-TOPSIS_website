@@ -47,20 +47,44 @@ exports.createGradePolicy = async (req, res) => {
 }
 
 exports.getPoliciesByDecisionModel = async (req, res) => {
-   try {
-      const data = await ResultGradePolicy.findAll({
-         where: { decision_model_id: req.params.decisionModelId },
-         include: [{ association: "ranges" }, { association: "categoryRef", attributes:["id","code","name","is_ranked"] }],
-         order: [["category", "ASC"]]
-      })
+    try {
+       const decisionModelId = req.params.decisionModelId
 
-      return sendSuccess(res, {
-         message: "Result grade policy list retrieved successfully",
-         data
-      })
-   } catch (error) {
-      return handleControllerError(res, error)
-   }
+       const [existingPolicies, categories] = await Promise.all([
+          ResultGradePolicy.findAll({
+             where: { decision_model_id: decisionModelId },
+             include: [{ association: "ranges" }, { association: "categoryRef", attributes:["id","code","name","is_ranked"] }]
+          }),
+          AssistanceCategory.findAll({
+             where: { decision_model_id: decisionModelId },
+             attributes: ["id", "is_ranked"]
+          })
+       ])
+
+       const coveredCategoryIds = new Set(existingPolicies.map(p => p.category_id))
+
+       for (const category of categories) {
+          if (!coveredCategoryIds.has(category.id)) {
+             const status = category.is_ranked ? "ranked" : "rejected"
+
+             const policy = await gradePolicyService.createGradePolicy({
+                decision_model_id: Number(decisionModelId),
+                category_id: category.id,
+                applies_to_status: status
+             })
+
+             const hydrated = await loadPolicyWithRelations(policy.id)
+             existingPolicies.push(hydrated)
+          }
+       }
+
+       return sendSuccess(res, {
+          message: "Result grade policy list retrieved successfully",
+          data: existingPolicies
+       })
+    } catch (error) {
+       return handleControllerError(res, error)
+    }
 }
 
 exports.getPolicyById = async (req, res) => {

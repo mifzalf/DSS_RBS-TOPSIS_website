@@ -29,8 +29,6 @@ const getRejectedGrade = () => ({
    grade_label: RESULT_GRADE_LABELS[RESULT_GRADE_CODES.NOT_ELIGIBLE]
 })
 
-const isRejectedGrade = (gradeCode) => gradeCode === RESULT_GRADE_CODES.NOT_ELIGIBLE
-
 const resolveRangeGrade = (score, ranges) => {
    if (score === null || score === undefined) {
       return null
@@ -69,15 +67,13 @@ const applyGrades = async ({ decisionModelId, results, policiesByCategory }) => 
       const matchedRange = resolveRangeGrade(result.preference_score, rankedPolicy?.ranges || [])
 
       if (matchedRange) {
-         const nextStatus = isRejectedGrade(matchedRange.code) ? "rejected" : result.status
-
-         return {
-            ...result,
-            status: nextStatus,
-            grade_code: matchedRange.code,
-            grade_label: matchedRange.label
-         }
-      }
+          return {
+             ...result,
+             status: matchedRange.result_status,
+             grade_code: matchedRange.code,
+             grade_label: matchedRange.label
+          }
+       }
 
       return {
          ...result,
@@ -90,7 +86,6 @@ const applyGrades = async ({ decisionModelId, results, policiesByCategory }) => 
 module.exports = {
    applyGrades,
    getRejectedGrade,
-   isRejectedGrade,
    resolveRangeGrade,
    loadPoliciesByCategory
 }

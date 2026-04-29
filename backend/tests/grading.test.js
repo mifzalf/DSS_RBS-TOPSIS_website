@@ -14,9 +14,9 @@ test("applyGrades maps ranked scores using category policy", async () => {
          "1:ranked",
          {
             ranges: [
-               { code: RESULT_GRADE_CODES.HIGH_PRIORITY, label: "High priority", min_score: 0.7, max_score: 1 },
-               { code: RESULT_GRADE_CODES.MEDIUM_PRIORITY, label: "Medium priority", min_score: 0.4, max_score: 0.6999 },
-               { code: RESULT_GRADE_CODES.LOW_PRIORITY, label: "Low priority", min_score: 0, max_score: 0.3999 }
+               { code: RESULT_GRADE_CODES.HIGH_PRIORITY, label: "Prioritas tinggi", min_score: 0.7, max_score: 1, result_status: "ranked" },
+               { code: RESULT_GRADE_CODES.MEDIUM_PRIORITY, label: "Prioritas sedang", min_score: 0.4, max_score: 0.6999, result_status: "ranked" },
+               { code: RESULT_GRADE_CODES.LOW_PRIORITY, label: "Prioritas rendah", min_score: 0, max_score: 0.3999, result_status: "ranked" }
             ]
          }
       ]
@@ -45,10 +45,10 @@ test("applyGrades can downgrade ranked results to not eligible from configured r
          "1:ranked",
          {
             ranges: [
-               { code: RESULT_GRADE_CODES.HIGH_PRIORITY, label: "High priority", min_score: 0.7, max_score: 1 },
-               { code: RESULT_GRADE_CODES.MEDIUM_PRIORITY, label: "Medium priority", min_score: 0.4, max_score: 0.6999 },
-               { code: RESULT_GRADE_CODES.LOW_PRIORITY, label: "Low priority", min_score: 0.2, max_score: 0.3999 },
-               { code: RESULT_GRADE_CODES.NOT_ELIGIBLE, label: "Not eligible", min_score: 0, max_score: 0.1999 }
+               { code: RESULT_GRADE_CODES.HIGH_PRIORITY, label: "Prioritas tinggi", min_score: 0.7, max_score: 1, result_status: "ranked" },
+               { code: RESULT_GRADE_CODES.MEDIUM_PRIORITY, label: "Prioritas sedang", min_score: 0.4, max_score: 0.6999, result_status: "ranked" },
+               { code: RESULT_GRADE_CODES.LOW_PRIORITY, label: "Prioritas rendah", min_score: 0.2, max_score: 0.3999, result_status: "ranked" },
+               { code: RESULT_GRADE_CODES.NOT_ELIGIBLE, label: "Tidak memenuhi syarat", min_score: 0, max_score: 0.1999, result_status: "rejected" }
             ]
          }
       ]
@@ -63,7 +63,7 @@ test("applyGrades can downgrade ranked results to not eligible from configured r
    })
 
    assert.equal(graded[0].grade_code, RESULT_GRADE_CODES.NOT_ELIGIBLE)
-   assert.equal(graded[0].grade_label, "Not eligible")
+   assert.equal(graded[0].grade_label, "Tidak memenuhi syarat")
    assert.equal(graded[0].status, "rejected")
 })
 
@@ -83,28 +83,10 @@ test("updateGradeRange rejects overlapping score ranges within the same policy",
    }
 })
 
-test("createGradeRange rejects multiple ranges for rejected policies", async () => {
-   const originalFindByPk = ResultGradePolicy.findByPk
-   const originalFindAll = ResultGradeRange.findAll
-
-   ResultGradePolicy.findByPk = async () => ({ id: 7, applies_to_status: "rejected" })
-   ResultGradeRange.findAll = async () => ([{ id: 1 }])
-
-   try {
-      await assert.rejects(
-         () => gradeRangeService.createGradeRange({ result_grade_policy_id: 7, label: "Another", code: "another", min_score: 0, max_score: 1, sort_order: 2 }),
-         ValidationError
-      )
-   } finally {
-      ResultGradePolicy.findByPk = originalFindByPk
-      ResultGradeRange.findAll = originalFindAll
-   }
-})
-
 test("resolveRangeGrade returns matching score bucket", () => {
    const range = gradingService.resolveRangeGrade(0.68, [
-      { code: RESULT_GRADE_CODES.HIGH_PRIORITY, label: "High priority", min_score: 0.7, max_score: 1 },
-      { code: RESULT_GRADE_CODES.MEDIUM_PRIORITY, label: "Medium priority", min_score: 0.4, max_score: 0.6999 }
+      { code: RESULT_GRADE_CODES.HIGH_PRIORITY, label: "Prioritas tinggi", min_score: 0.7, max_score: 1, result_status: "ranked" },
+      { code: RESULT_GRADE_CODES.MEDIUM_PRIORITY, label: "Prioritas sedang", min_score: 0.4, max_score: 0.6999, result_status: "ranked" }
    ])
 
    assert.equal(range.code, RESULT_GRADE_CODES.MEDIUM_PRIORITY)

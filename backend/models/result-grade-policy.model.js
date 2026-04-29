@@ -52,7 +52,7 @@ ResultGradePolicy.belongsTo(DecisionModel, {
 AssistanceCategory.hasMany(ResultGradePolicy, {
    foreignKey: "category_id",
    as: "gradePolicies",
-   onDelete: "SET NULL"
+   onDelete: "CASCADE"
 })
 ResultGradePolicy.belongsTo(AssistanceCategory, {
    foreignKey: "category_id",

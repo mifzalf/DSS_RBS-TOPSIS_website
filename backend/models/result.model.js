@@ -98,7 +98,7 @@ Result.belongsTo(Alternative, {
 AssistanceCategory.hasMany(Result, {
   foreignKey: "category_id",
   as: "results",
-  onDelete: "SET NULL"
+  onDelete: "CASCADE"
 })
 Result.belongsTo(AssistanceCategory, {
   foreignKey: "category_id",

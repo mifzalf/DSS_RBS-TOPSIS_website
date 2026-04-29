@@ -64,7 +64,7 @@ Rule.belongsTo(DecisionModel, {
 AssistanceCategory.hasMany(Rule, {
   foreignKey: "category_id",
   as: "rules",
-  onDelete: "SET NULL"
+  onDelete: "CASCADE"
 })
 Rule.belongsTo(AssistanceCategory, {
   foreignKey: "category_id",

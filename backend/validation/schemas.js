@@ -330,7 +330,8 @@ module.exports = {
             code: { type: "string", required: true, minLength: 1, maxLength: 50 },
             min_score: { type: "number", required: false, min: 0, max: 1 },
             max_score: { type: "number", required: false, min: 0, max: 1 },
-            sort_order: { type: "integer", required: true, min: 1 }
+            sort_order: { type: "integer", required: true, min: 1 },
+            result_status: { type: "enum", required: true, values: ["ranked", "rejected"] }
          }
       },
       update: {
@@ -340,7 +341,8 @@ module.exports = {
             code: { type: "string", required: false, minLength: 1, maxLength: 50 },
             min_score: { type: "number", required: false, min: 0, max: 1 },
             max_score: { type: "number", required: false, min: 0, max: 1 },
-            sort_order: { type: "integer", required: false, min: 1 }
+            sort_order: { type: "integer", required: false, min: 1 },
+            result_status: { type: "enum", required: false, values: ["ranked", "rejected"] }
          }
       },
       byPolicy: {

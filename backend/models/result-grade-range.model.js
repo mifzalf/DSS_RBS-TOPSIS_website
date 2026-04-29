@@ -53,6 +53,13 @@ const ResultGradeRange = db.define("ResultGradeRange", {
          min: 1
       }
    },
+   result_status: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+         isIn: [["ranked", "rejected"]]
+      }
+   },
    created_at: {
       type: DataTypes.DATE
    }

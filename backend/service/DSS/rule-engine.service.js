@@ -8,7 +8,7 @@ const { DEFAULT_REJECTED_CATEGORY, RULE_ACTION_TYPES } = require("../../constant
 const { RULE_VARIABLE_TYPES } = require("../../constants/rule-variable-types")
 
 const NON_RANKED_ACTIONS = new Set([RULE_ACTION_TYPES.REJECT, "disqualify", "not_eligible"])
-const NON_RANKED_CATEGORY_KEYWORDS = ["tidak lulus", "not eligible", "rejected", "reject"]
+const NON_RANKED_CATEGORY_KEYWORDS = ["tidak lulus", "tidak memenuhi syarat", "rejected", "reject"]
 
 const normalizeConditionValue = (fieldValue, conditionValue) => {
    if (typeof fieldValue === "boolean") {

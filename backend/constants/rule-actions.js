@@ -4,7 +4,7 @@ const RULE_ACTION_TYPES = Object.freeze({
 })
 
 const RULE_ACTION_TYPE_VALUES = Object.values(RULE_ACTION_TYPES)
-const DEFAULT_REJECTED_CATEGORY = "Not eligible"
+const DEFAULT_REJECTED_CATEGORY = "Tidak memenuhi syarat"
 
 module.exports = {
    DEFAULT_REJECTED_CATEGORY,

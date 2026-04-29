@@ -6,10 +6,10 @@ const RESULT_GRADE_CODES = Object.freeze({
 })
 
 const RESULT_GRADE_LABELS = Object.freeze({
-   [RESULT_GRADE_CODES.HIGH_PRIORITY]: "High priority",
-   [RESULT_GRADE_CODES.MEDIUM_PRIORITY]: "Medium priority",
-   [RESULT_GRADE_CODES.LOW_PRIORITY]: "Low priority",
-   [RESULT_GRADE_CODES.NOT_ELIGIBLE]: "Not eligible"
+   [RESULT_GRADE_CODES.HIGH_PRIORITY]: "Prioritas tinggi",
+   [RESULT_GRADE_CODES.MEDIUM_PRIORITY]: "Prioritas sedang",
+   [RESULT_GRADE_CODES.LOW_PRIORITY]: "Prioritas rendah",
+   [RESULT_GRADE_CODES.NOT_ELIGIBLE]: "Tidak memenuhi syarat"
 })
 
 module.exports = {

@@ -10,13 +10,13 @@ const { ROLES } = require("../service/authorization.service")
 const authorizeMemberViewer = authorizeDecisionModel({
    source: "params",
    field: "decisionModelId",
-   roles: [ROLES.OWNER, ROLES.EDITOR]
+    roles: [ROLES.OWNER]
 })
 
 const authorizeMemberOwner = authorizeDecisionModel({
-   source: "params",
-   field: "decisionModelId",
-   roles: [ROLES.OWNER]
+    source: "params",
+    field: "decisionModelId",
+    roles: [ROLES.OWNER]
 })
 
 router.get("/", validateRequest(schemas.decisionModelMember.list), authorizeMemberViewer, memberController.listMembers)

@@ -28,20 +28,6 @@ const validateRangeOverlap = async ({ policyId, nextRange, currentId }) => {
    }
 }
 
-const validateRejectedPolicyRules = async ({ policy, currentId }) => {
-   if (policy.applies_to_status !== "rejected") {
-      return
-   }
-
-   const ranges = await ResultGradeRange.findAll({
-      where: { result_grade_policy_id: policy.id }
-   })
-
-   if (ranges.length > 1 || (ranges.length === 1 && (!currentId || ranges[0].id !== currentId))) {
-      throw new ValidationError("Rejected grade policies may only contain one range")
-   }
-}
-
 const validateRange = ({ min_score, max_score }) => {
    if (min_score !== undefined && max_score !== undefined && min_score > max_score) {
       throw new ValidationError("min_score must be less than or equal to max_score")
@@ -56,7 +42,6 @@ const createGradeRange = async (payload) => {
    }
 
    validateRange(payload)
-   await validateRejectedPolicyRules({ policy })
    await validateRangeOverlap({
       policyId: policy.id,
       nextRange: payload
