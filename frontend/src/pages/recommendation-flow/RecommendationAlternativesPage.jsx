@@ -15,6 +15,8 @@ import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { Modal } from '../../components/ui/Modal'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { SectionCard } from '../../components/ui/SectionCard'
+import { ImportWizard } from '../../components/import/ImportWizard'
+import { IMPORT_KINDS } from '../../features/import/import.constants'
 import { useAlternatives, useCreateAlternative, useDeleteAlternative, useUpdateAlternative } from '../../features/alternatives/useAlternatives'
 import { useDecisionModelId } from '../../hooks/useDecisionModelId'
 import { truncateText } from '../../utils/format'
@@ -28,6 +30,7 @@ export function RecommendationAlternativesPage() {
   const decisionModelId = useDecisionModelId()
   const { pushToast } = useFeedback()
   const [open, setOpen] = useState(false)
+  const [importOpen, setImportOpen] = useState(false)
   const [selectedAlternative, setSelectedAlternative] = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
   const { data = [], isLoading, error, refetch } = useAlternatives(decisionModelId)
@@ -80,7 +83,17 @@ export function RecommendationAlternativesPage() {
   return (
     <div className="page-stack">
       <RecommendationFlowNav />
-      <PageHeader eyebrow="Langkah 1/3" title="Daftar alternatif" description="Daftarkan rumah tangga atau kandidat yang akan dinilai dalam rekomendasi." actions={<Button type="button" onClick={openCreate}>Tambah alternatif</Button>} />
+      <PageHeader
+        eyebrow="Langkah 1/3"
+        title="Daftar alternatif"
+        description="Daftarkan rumah tangga atau kandidat yang akan dinilai dalam rekomendasi."
+        actions={
+          <div className="import-action-row">
+            <Button type="button" variant="secondary" onClick={() => setImportOpen(true)}>Import Excel</Button>
+            <Button type="button" onClick={openCreate}>Tambah alternatif</Button>
+          </div>
+        }
+      />
       <SectionCard title="Daftar alternatif">
         <DataTable
           columns={[
@@ -100,6 +113,13 @@ export function RecommendationAlternativesPage() {
       </Modal>
 
       <ConfirmDialog open={Boolean(deleteTarget)} title="Hapus alternatif" description={`Hapus ${deleteTarget?.name || 'alternatif ini'}?`} confirmLabel={deleteMutation.isPending ? 'Menghapus...' : 'Hapus'} onClose={() => setDeleteTarget(null)} onConfirm={handleDelete} />
+
+      <ImportWizard
+        open={importOpen}
+        decisionModelId={decisionModelId}
+        kind={IMPORT_KINDS.ALTERNATIVES}
+        onClose={() => setImportOpen(false)}
+      />
     </div>
   )
 }

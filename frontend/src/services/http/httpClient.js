@@ -21,8 +21,10 @@ async function parseResponse(response) {
 async function request(path, options = {}) {
   const token = authStorage.getToken()
   const headers = new Headers(options.headers || {})
+  const isFormData = options.body instanceof FormData
+  const isRaw = options.raw === true
 
-  if (options.body && !headers.has('Content-Type')) {
+  if (options.body !== undefined && !isFormData && !isRaw && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json')
   }
 
@@ -30,14 +32,36 @@ async function request(path, options = {}) {
     headers.set('Authorization', `Bearer ${token}`)
   }
 
+  let body
+  if (options.body === undefined || options.body === null) {
+    body = undefined
+  } else if (isFormData || isRaw) {
+    body = options.body
+  } else {
+    body = JSON.stringify(options.body)
+  }
+
   try {
-    return await parseResponse(
-      await fetch(`${API_BASE_URL}${path}`, {
-        ...options,
-        headers,
-        body: options.body ? JSON.stringify(options.body) : undefined,
-      }),
-    )
+    const response = await fetch(`${API_BASE_URL}${path}`, {
+      ...options,
+      headers,
+      body,
+    })
+
+    if (options.responseType === 'blob') {
+      if (!response.ok) {
+        const text = await response.text()
+        const error = new Error(text || 'Request failed')
+        error.status = response.status
+        throw error
+      }
+      return {
+        blob: await response.blob(),
+        filename: parseContentDisposition(response.headers.get('content-disposition')),
+      }
+    }
+
+    return await parseResponse(response)
   } catch (error) {
     if (error.status === 401) {
       authStorage.clearSession()
@@ -48,9 +72,17 @@ async function request(path, options = {}) {
   }
 }
 
+function parseContentDisposition(headerValue) {
+  if (!headerValue) return null
+  const match = /filename="?([^";]+)"?/i.exec(headerValue)
+  return match ? match[1] : null
+}
+
 export const httpClient = {
-  get: (path) => request(path),
-  post: (path, body) => request(path, { method: 'POST', body }),
-  patch: (path, body) => request(path, { method: 'PATCH', body }),
-  delete: (path) => request(path, { method: 'DELETE' }),
+  get: (path, options) => request(path, { method: 'GET', ...(options || {}) }),
+  post: (path, body, options) => request(path, { method: 'POST', body, ...(options || {}) }),
+  patch: (path, body, options) => request(path, { method: 'PATCH', body, ...(options || {}) }),
+  delete: (path, options) => request(path, { method: 'DELETE', ...(options || {}) }),
+  download: (path, options) => request(path, { method: 'GET', responseType: 'blob', ...(options || {}) }),
+  upload: (path, formData, options) => request(path, { method: 'POST', body: formData, ...(options || {}) }),
 }
