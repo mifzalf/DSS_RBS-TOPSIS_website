@@ -1674,6 +1674,9 @@
 }
 
 .decision-model-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   padding: 8px 12px;
   border-radius: 999px;
   border: 1px solid var(--border-subtle);
@@ -1687,6 +1690,16 @@
   background: var(--primary-soft);
   border-color: #bfdbfe;
   color: var(--primary);
+}
+
+.decision-model-tab-meta {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.decision-model-tab.active .decision-model-tab-meta {
+  color: currentColor;
 }
 
 .alternative-chip-list {
@@ -2940,6 +2953,14 @@
   border-color: rgba(239, 68, 68, 0.25);
 }
 
+.recommendation-row-excluded td {
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.recommendation-row-excluded td:first-child {
+  border-left: 4px solid #ef4444;
+}
+
 .import-action-row {
   display: flex;
   flex-wrap: wrap;
@@ -2992,4 +3013,3 @@
     max-height: calc(100vh - 2 * var(--space-3, 12px));
   }
 }
-
