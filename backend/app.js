@@ -63,9 +63,10 @@ const createApp = ({ includeRoutes = true } = {}) => {
     const resultGradePolicyRouter = require("./routes/result-grade-policies.route")
     const resultGradeRangeRouter = require("./routes/result-grade-ranges.route")
     const resultsRouter = require("./routes/results.route")
-    const recommendationRouter = require("./routes/recommendation.route")
-    const currentUser = require("./middleware/currentUser")
-    const verifyToken = require("./middleware/jwt")
+      const recommendationRouter = require("./routes/recommendation.route")
+      const importRouter = require("./routes/import.route")
+      const currentUser = require("./middleware/currentUser")
+      const verifyToken = require("./middleware/jwt")
 
     app.use("/auth", authRouter)
 
@@ -83,9 +84,10 @@ const createApp = ({ includeRoutes = true } = {}) => {
     app.use("/rule-evaluations", ruleEvaluationRouter)
     app.use("/result-grade-policies", resultGradePolicyRouter)
     app.use("/result-grade-ranges", resultGradeRangeRouter)
-    app.use("/results", resultsRouter)
-    app.use("/recommendations", recommendationRouter)
-  }
+      app.use("/results", resultsRouter)
+      app.use("/recommendations", recommendationRouter)
+      app.use("/import", importRouter)
+   }
 
   app.use((req, res, next) => {
     next(createError(404))
