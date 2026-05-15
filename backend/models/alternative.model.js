@@ -30,7 +30,14 @@ const Alternative = db.define("Alternative", {
   created_at: {
     type: DataTypes.DATE,
   },
-}, buildModelOptions("alternatives"))
+}, buildModelOptions("alternatives", {
+  indexes: [
+    {
+      unique: true,
+      fields: ["decision_model_id", "name"]
+    }
+  ]
+}))
 
 DecisionModel.hasMany(Alternative, {
   foreignKey: "decision_model_id",

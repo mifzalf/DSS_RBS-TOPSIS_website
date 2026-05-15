@@ -131,6 +131,12 @@ DB_PASSWORD=
 JWT_SECRET=  
 JWT_EXPIRES_IN=  
 
+# Excel Import (opsional, default sudah aman)
+IMPORT_MAX_FILE_SIZE_MB=5
+IMPORT_MAX_ROWS=1000
+IMPORT_PREVIEW_TTL_MINUTES=15
+IMPORT_TEMPLATE_VERSION=1.0.0
+
 ---
 
 ## 🔐 Authentication & Roles
@@ -280,6 +286,51 @@ This guarantees deterministic recommendation output.
 ### Get Results
 
 GET /results/decision-model/:decisionModelId  
+
+---
+
+## 📥 Excel Import
+
+Sistem mendukung import data berjumlah banyak melalui file Excel (`.xlsx`) untuk tiga jenis data:
+
+- **Alternatif** (`/import/decision-model/:decisionModelId/alternatives`)
+- **Evaluasi TOPSIS** (`/import/decision-model/:decisionModelId/topsis-evaluations`)
+- **Evaluasi Rule (RBS)** (`/import/decision-model/:decisionModelId/rule-evaluations`)
+
+Alur import menggunakan pola **Preview-then-Commit** untuk memastikan data divalidasi sebelum disimpan:
+
+```
+1. GET  …/template       → unduh template Excel yang sudah berisi header/dropdown/sheet referensi
+2. POST …/preview        → upload file → backend mengembalikan token dan ringkasan validasi
+3. POST …/commit         → kirim token (sekali pakai, TTL 15 menit) untuk menyimpan data
+```
+
+### Mode Import
+
+- `upsert` (default) — buat baru atau perbarui data yang sudah ada.
+- `create_only` — hanya buat data baru, tolak yang konflik.
+
+### Keamanan
+
+- Hanya `.xlsx` yang diterima (multer + magic bytes verification).
+- Maksimal ukuran file 5 MB (`IMPORT_MAX_FILE_SIZE_MB`).
+- Maksimal 1000 baris per file (`IMPORT_MAX_ROWS`).
+- Token preview sekali pakai, terikat user + decision model + kind.
+- Role yang diperbolehkan untuk preview/commit: `owner` atau `editor`. Viewer hanya boleh download template.
+- Setiap commit dicatat di tabel `import_history` (audit trail).
+
+### Cara Pakai di Frontend
+
+Tombol Import tersedia di:
+
+- Halaman `Daftar alternatif` (langkah 1/3 alur rekomendasi).
+- Halaman `Evaluasi alternatif` (langkah 2/3 alur rekomendasi).
+
+Wizard import memiliki tiga step: **Upload → Preview → Result**. User dapat memilih untuk melewati baris bermasalah dan tetap menyimpan baris valid.
+
+### Dampak ke Hasil Rekomendasi
+
+Setelah import alternatif atau evaluasi sukses, sistem akan menampilkan banner pengingat bahwa hasil rekomendasi sebelumnya mungkin sudah usang. **Hasil lama tidak dihapus otomatis**, sehingga user dapat membandingkan sebelum melakukan generate ulang.
 
 ---
 

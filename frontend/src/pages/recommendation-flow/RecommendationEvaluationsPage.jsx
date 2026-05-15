@@ -8,6 +8,8 @@ import { DropdownSelect } from '../../components/ui/DropdownSelect'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { ProgressIndicator } from '../../components/ui/ProgressIndicator'
 import { SectionCard } from '../../components/ui/SectionCard'
+import { ImportWizard } from '../../components/import/ImportWizard'
+import { IMPORT_KINDS } from '../../features/import/import.constants'
 import { useAlternatives } from '../../features/alternatives/useAlternatives'
 import { useCriteriaWithSubCriteria } from '../../features/criteria/useCriteria'
 import { useEvaluationOverview } from '../../features/evaluation/useEvaluationOverview'
@@ -48,6 +50,8 @@ export function RecommendationEvaluationsPage() {
   const { pushToast } = useFeedback()
   const [selectedAlternativeId, setSelectedAlternativeId] = useState(null)
   const [rbsDrafts, setRbsDrafts] = useState({})
+  const [topsisImportOpen, setTopsisImportOpen] = useState(false)
+  const [rbsImportOpen, setRbsImportOpen] = useState(false)
 
   /* ----- TOPSIS data ----- */
   const criteriaQuery = useCriteriaWithSubCriteria(decisionModelId)
@@ -137,7 +141,21 @@ export function RecommendationEvaluationsPage() {
   return (
     <div className="page-stack">
       <RecommendationFlowNav />
-      <PageHeader eyebrow="Langkah 2/3" title="Evaluasi alternatif" description="Isi jawaban kelayakan (RBS) lalu penilaian TOPSIS untuk alternatif yang dipilih dalam satu halaman." />
+      <PageHeader
+        eyebrow="Langkah 2/3"
+        title="Evaluasi alternatif"
+        description="Isi jawaban kelayakan (RBS) lalu penilaian TOPSIS untuk alternatif yang dipilih dalam satu halaman."
+      />
+
+      <SectionCard
+        title="Bulk Import"
+        description="Unggah file Excel untuk mengisi banyak evaluasi sekaligus. Template di-generate otomatis dari konfigurasi decision model saat ini."
+      >
+        <div className="import-action-row">
+          <Button type="button" variant="secondary" onClick={() => setRbsImportOpen(true)}>Import Evaluasi RBS (Excel)</Button>
+          <Button type="button" variant="secondary" onClick={() => setTopsisImportOpen(true)}>Import Evaluasi TOPSIS (Excel)</Button>
+        </div>
+      </SectionCard>
 
       <SectionCard title="Pilih alternatif">
         <div className="alternative-chip-list">
@@ -231,6 +249,19 @@ export function RecommendationEvaluationsPage() {
           })}
         </div>
       </SectionCard>
+
+      <ImportWizard
+        open={topsisImportOpen}
+        decisionModelId={decisionModelId}
+        kind={IMPORT_KINDS.TOPSIS_EVALUATIONS}
+        onClose={() => setTopsisImportOpen(false)}
+      />
+      <ImportWizard
+        open={rbsImportOpen}
+        decisionModelId={decisionModelId}
+        kind={IMPORT_KINDS.RULE_EVALUATIONS}
+        onClose={() => setRbsImportOpen(false)}
+      />
     </div>
   )
 }
