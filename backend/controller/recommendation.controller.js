@@ -15,14 +15,19 @@ const formatGroupItems = (groups, alternativesCache) => {
                ? { id: alternative.id, name: alternative.name }
                : { id: item.alternative_id },
             category_id: item.category_id,
+            origin_category_id: item.origin_category_id ?? null,
             grade_code: item.grade_code,
             grade_label: item.grade_label,
             preference_score: item.preference_score,
             rank: item.rank,
-            status: item.status
-         }
-      })
-   }))
+            status: item.status,
+            allocation_source: item.allocation_source || "direct",
+            slot_count: item.slot_count ?? null,
+            slot_status: item.slot_status || "not_applicable",
+            slot_position: item.slot_position ?? null
+          }
+       })
+    }))
 }
 
 exports.generateRecommendation = async (req, res) => {

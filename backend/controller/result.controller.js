@@ -70,6 +70,10 @@ exports.getResultsByDecisionModel = async (req,res)=>{
                 },
                 {
                     association: "categoryRef",
+                    attributes:["id","code","name","is_ranked","slot_count","allocation_order","accepts_overflow"]
+                },
+                {
+                    association: "originCategoryRef",
                     attributes:["id","code","name","is_ranked"]
                 }
             ],

@@ -41,7 +41,26 @@ const AssistanceCategory = db.define("AssistanceCategory", {
       allowNull: false,
       defaultValue: true
    },
-   status_active: {
+   slot_count: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      validate: {
+         min: 0
+      }
+   },
+   allocation_order: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      validate: {
+         min: 1
+      }
+   },
+   accepts_overflow: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
+   },
+    status_active: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: true
