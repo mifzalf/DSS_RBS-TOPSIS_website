@@ -7,13 +7,13 @@ module.exports = {
       register: {
          body: {
             name: { type: "string", required: true, minLength: 1, maxLength: 100 },
-            username: { type: "string", required: true, minLength: 3, maxLength: 50 },
+            username: { type: "string", required: true, minLength: 3, maxLength: 50, noWhitespace: true },
             password: { type: "string", required: true, minLength: 6, maxLength: 255, trim: false }
          }
       },
       login: {
          body: {
-            username: { type: "string", required: true, minLength: 3, maxLength: 50 },
+            username: { type: "string", required: true, minLength: 3, maxLength: 50, noWhitespace: true },
             password: { type: "string", required: true, minLength: 1, maxLength: 255, trim: false }
          }
       }
@@ -52,6 +52,9 @@ module.exports = {
             name: { type: "string", required: true, minLength: 1, maxLength: 100 },
             description: { type: "string", required: false, allowEmpty: true, maxLength: 5000 },
             is_ranked: { type: "boolean", required: false },
+            slot_count: { type: "integer", required: false, min: 0 },
+            allocation_order: { type: "integer", required: false, min: 1 },
+            accepts_overflow: { type: "boolean", required: false },
             status_active: { type: "boolean", required: false }
          }
       },
@@ -62,6 +65,9 @@ module.exports = {
             name: { type: "string", required: false, minLength: 1, maxLength: 100 },
             description: { type: "string", required: false, allowEmpty: true, maxLength: 5000 },
             is_ranked: { type: "boolean", required: false },
+            slot_count: { type: "integer", required: false, min: 0 },
+            allocation_order: { type: "integer", required: false, min: 1 },
+            accepts_overflow: { type: "boolean", required: false },
             status_active: { type: "boolean", required: false }
          }
       },

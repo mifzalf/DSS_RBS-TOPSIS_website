@@ -7,7 +7,7 @@ const { getRequestResource } = require("../utils/requestResource")
 
 exports.createAssistanceCategory = async (req, res) => {
    try {
-      const { decision_model_id, code, name, description, is_ranked, status_active } = req.body
+      const { decision_model_id, code, name, description, is_ranked, slot_count, allocation_order, accepts_overflow, status_active } = req.body
 
       const decisionModel = await DecisionModel.findByPk(decision_model_id)
 
@@ -17,12 +17,15 @@ exports.createAssistanceCategory = async (req, res) => {
 
       const category = await assistanceCategoryService.createCategory({
          decision_model_id,
-         code,
-         name,
-         description,
-         is_ranked,
-         status_active
-      })
+          code,
+          name,
+          description,
+          is_ranked,
+          slot_count,
+          allocation_order,
+          accepts_overflow,
+          status_active
+       })
 
       return sendSuccess(res, {
          status: 201,
@@ -80,13 +83,16 @@ exports.updateCategory = async (req, res) => {
       })
 
       const updateData = {}
-      const { code, name, description, is_ranked, status_active } = req.body
+      const { code, name, description, is_ranked, slot_count, allocation_order, accepts_overflow, status_active } = req.body
 
       if (code?.trim()) updateData.code = code
-      if (name?.trim()) updateData.name = name
-      if (description !== undefined) updateData.description = description
-      if (is_ranked !== undefined) updateData.is_ranked = is_ranked
-      if (status_active !== undefined) updateData.status_active = status_active
+       if (name?.trim()) updateData.name = name
+       if (description !== undefined) updateData.description = description
+       if (is_ranked !== undefined) updateData.is_ranked = is_ranked
+       if (slot_count !== undefined) updateData.slot_count = slot_count
+       if (allocation_order !== undefined) updateData.allocation_order = allocation_order
+       if (accepts_overflow !== undefined) updateData.accepts_overflow = accepts_overflow
+       if (status_active !== undefined) updateData.status_active = status_active
 
       await assistanceCategoryService.updateCategory(category, updateData)
 

@@ -10,6 +10,7 @@ import { PageHeader } from '../../components/ui/PageHeader'
 import { SectionCard } from '../../components/ui/SectionCard'
 import { RecommendationFlowNav } from '../../components/navigation/RecommendationFlowNav'
 import { queryKeys } from '../../constants/queryKeys'
+import { useDecisionModel, useDecisionModels } from '../../features/decision-model/useDecisionModels'
 import { useGenerateRecommendation } from '../../features/recommendation/useGenerateRecommendation'
 import { useResults } from '../../features/result/useResults'
 import { useDecisionModelId } from '../../hooks/useDecisionModelId'
@@ -21,6 +22,17 @@ function getGradeTone(gradeCode) {
   if (gradeCode === 'low_priority') return 'warning'
   if (gradeCode === 'not_eligible') return 'neutral'
   return 'neutral'
+}
+
+function getRecommendationRowClassName(row) {
+  if (row.status === 'rejected') return 'recommendation-row-excluded'
+  if (row.slot_status === 'outside_slot') return 'recommendation-row-excluded'
+  return undefined
+}
+
+function formatSlotLabel(group) {
+  if (group.action_type === 'reject') return null
+  return group.slot_count == null ? 'Tanpa batas' : `${group.slot_count} slot`
 }
 
 function resolveCategoryName(item) {
@@ -50,6 +62,7 @@ function groupResultsFromFlat(results) {
         category_id: item.category_id ?? null,
         category: resolveCategoryName(item),
         action_type: isRanked === false ? 'reject' : 'assign_benefit',
+        slot_count: item.categoryRef?.slot_count ?? item.slot_count ?? null,
         status: 'mixed',
         items: [],
       })
@@ -121,10 +134,22 @@ function normalizeRecommendationGroups(payload) {
   }
 }
 
+function buildDisplayRows(items = []) {
+  return items.map((item, index) => ({
+    ...item,
+    display_rank: index + 1,
+  }))
+}
+
 export function RecommendationResultsPage() {
   const decisionModelId = useDecisionModelId()
   const queryClient = useQueryClient()
   const { pushToast } = useFeedback()
+  const decisionModelQuery = useDecisionModel(decisionModelId)
+  const decisionModelsQuery = useDecisionModels()
+  const role = decisionModelQuery.data?.role
+    || (decisionModelsQuery.data || []).find((item) => String(item.id) === String(decisionModelId))?.role
+  const canManage = role === 'owner' || role === 'editor'
   const generateMutation = useGenerateRecommendation(decisionModelId)
   const resultsQuery = useResults(decisionModelId)
   const generationCountRef = useRef(0)
@@ -172,6 +197,7 @@ export function RecommendationResultsPage() {
   const rankedGroups = recommendation?.data?.ranked_groups || []
   const rejectedGroups = recommendation?.data?.rejected_groups || []
   const meta = recommendation?.meta
+  const decisionModelName = meta?.decisionModel?.name || decisionModelQuery.data?.name || '-'
 
   return (
     <div className="page-stack">
@@ -180,16 +206,16 @@ export function RecommendationResultsPage() {
         eyebrow="Langkah 3/3"
         title="Hasil rekomendasi"
         description="Tinjau hasil pengelompokan dan prioritas akhir setiap grup bantuan."
-        actions={
+        actions={canManage ? (
           <Button type="button" onClick={onGenerate} disabled={generateMutation.isPending}>
             {generateMutation.isPending ? 'Memperbarui...' : 'Perbarui rekomendasi'}
           </Button>
-        }
+        ) : undefined}
       />
       <SectionCard title="Ringkasan rekomendasi">
         {recommendation ? (
           <div className="recommendation-summary-grid">
-            <article className="mini-card"><strong>Program</strong><p>{meta?.decisionModel?.name || '-'}</p></article>
+            <article className="mini-card"><strong>Program</strong><p>{decisionModelName}</p></article>
             <article className="mini-card"><strong>Total rumah tangga ditinjau</strong><p>{meta?.count || 0}</p></article>
             <article className="mini-card"><strong>Kelompok prioritas</strong><p>{rankedGroups.length}</p></article>
             <article className="mini-card"><strong>Kelompok tidak direkomendasikan</strong><p>{rejectedGroups.length}</p></article>
@@ -203,21 +229,29 @@ export function RecommendationResultsPage() {
         <SectionCard key={`ranked-${group.category_id || group.category}`} title={group.category}>
           <div className="recommendation-group-head">
             <Badge tone="success">daftar prioritas</Badge>
+            {formatSlotLabel(group) ? <span>Slot: {formatSlotLabel(group)}</span> : null}
             <span>{group.items.length} rumah tangga</span>
           </div>
+          {(() => {
+            const orderedRows = buildDisplayRows([
+              ...group.items.filter((item) => item.status !== 'rejected'),
+              ...group.items.filter((item) => item.status === 'rejected'),
+            ])
+
+            return (
           <DataTable
             columns={[
-              { key: 'rank', header: 'Peringkat' },
+              { key: 'display_rank', header: 'Peringkat' },
               { key: 'alternative', header: 'Rumah tangga', render: (row) => row.alternative?.name || `Rumah tangga ${row.alternative?.id}` },
               { key: 'grade', header: 'Grade', render: (row) => <Badge tone={getGradeTone(row.grade_code)}>{row.grade_label || '-'}</Badge> },
               { key: 'status', header: 'Status', render: (row) => <Badge tone={row.status === 'rejected' ? 'warning' : 'success'}>{row.status === 'rejected' ? 'ditolak' : 'diperingkat'}</Badge> },
               { key: 'preference_score', header: 'Nilai preferensi', render: (row) => row.preference_score == null ? '-' : formatDecimal(row.preference_score) },
             ]}
-            rows={[
-              ...group.items.filter((item) => item.status !== 'rejected'),
-              ...group.items.filter((item) => item.status === 'rejected'),
-            ]}
+            rows={orderedRows}
+            getRowClassName={getRecommendationRowClassName}
           />
+            )
+          })()}
         </SectionCard>
       ))}
 

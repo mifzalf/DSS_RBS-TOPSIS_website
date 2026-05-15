@@ -63,8 +63,13 @@ test("rejected groups skip TOPSIS fields", () => {
          decision_model_id: 9,
          alternative_id: 4,
          category_id: undefined,
+         origin_category_id: undefined,
          category: "Tidak lulus",
          action_type: RULE_ACTION_TYPES.REJECT,
+         allocation_source: "rejected",
+         slot_count: null,
+         slot_status: "not_applicable",
+         slot_position: null,
          grade_code: null,
          grade_label: null,
          preference_score: null,
@@ -75,8 +80,13 @@ test("rejected groups skip TOPSIS fields", () => {
          decision_model_id: 9,
          alternative_id: 8,
          category_id: undefined,
+         origin_category_id: undefined,
          category: "Tidak lulus",
          action_type: RULE_ACTION_TYPES.REJECT,
+         allocation_source: "rejected",
+         slot_count: null,
+         slot_status: "not_applicable",
+         slot_position: null,
          grade_code: null,
          grade_label: null,
          preference_score: null,
@@ -84,6 +94,32 @@ test("rejected groups skip TOPSIS fields", () => {
          status: "rejected"
       }
    ])
+})
+
+test("applySlotStatus marks ranks beyond capacity as outside slot", () => {
+   assert.deepEqual(
+      recommendationService.applySlotStatus({ item: { rank: 1 }, slotCount: null }),
+      {
+         slot_status: "within_slot",
+         slot_position: 1
+      }
+   )
+
+   assert.deepEqual(
+      recommendationService.applySlotStatus({ item: { rank: 2 }, slotCount: 2 }),
+      {
+         slot_status: "within_slot",
+         slot_position: 2
+      }
+   )
+
+   assert.deepEqual(
+      recommendationService.applySlotStatus({ item: { rank: 3 }, slotCount: 2 }),
+      {
+         slot_status: "outside_slot",
+         slot_position: null
+      }
+   )
 })
 
 test("rule engine classification treats reject actions as non-ranked", () => {

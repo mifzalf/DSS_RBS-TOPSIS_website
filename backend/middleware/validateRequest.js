@@ -22,6 +22,10 @@ const validators = {
          throw new ValidationError(`${field} must be at most ${rule.maxLength} characters long`)
       }
 
+      if (rule.noWhitespace && /\s/.test(nextValue)) {
+         throw new ValidationError(`${field} must not contain spaces`)
+      }
+
       return nextValue
    },
    integer(value, rule, field) {

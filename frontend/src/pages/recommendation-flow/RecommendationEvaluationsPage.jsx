@@ -6,9 +6,9 @@ import { RecommendationFlowNav } from '../../components/navigation/Recommendatio
 import { Button } from '../../components/ui/Button'
 import { DropdownSelect } from '../../components/ui/DropdownSelect'
 import { PageHeader } from '../../components/ui/PageHeader'
-import { ProgressIndicator } from '../../components/ui/ProgressIndicator'
 import { SectionCard } from '../../components/ui/SectionCard'
 import { ImportWizard } from '../../components/import/ImportWizard'
+import { useDecisionModel, useDecisionModels } from '../../features/decision-model/useDecisionModels'
 import { IMPORT_KINDS } from '../../features/import/import.constants'
 import { useAlternatives } from '../../features/alternatives/useAlternatives'
 import { useCriteriaWithSubCriteria } from '../../features/criteria/useCriteria'
@@ -47,6 +47,8 @@ function readRbsValue(evaluation, variable) {
 
 export function RecommendationEvaluationsPage() {
   const decisionModelId = useDecisionModelId()
+  const decisionModelQuery = useDecisionModel(decisionModelId)
+  const decisionModelsQuery = useDecisionModels()
   const { pushToast } = useFeedback()
   const [selectedAlternativeId, setSelectedAlternativeId] = useState(null)
   const [rbsDrafts, setRbsDrafts] = useState({})
@@ -69,6 +71,9 @@ export function RecommendationEvaluationsPage() {
   const rbsEvaluationsQuery = useRuleEvaluations(selectedId)
   const upsertRbsMutation = useUpsertRuleEvaluation(selectedId)
   const deleteRbsMutation = useDeleteRuleEvaluation(selectedId)
+  const role = decisionModelQuery.data?.role
+    || (decisionModelsQuery.data || []).find((item) => String(item.id) === String(decisionModelId))?.role
+  const canManage = role === 'owner' || role === 'editor'
 
   if (criteriaQuery.isLoading || alternativesQuery.isLoading || overview.isLoading || variablesQuery.isLoading || (selectedId && rbsEvaluationsQuery.isLoading)) {
     return <LoadingState title="Memuat evaluasi" description="Menyiapkan matriks TOPSIS dan fakta RBS untuk alternatif terpilih." />
@@ -81,13 +86,11 @@ export function RecommendationEvaluationsPage() {
   const criteria = criteriaQuery.data || []
   const alternatives = alternativesQuery.data || []
   const rows = overview.data || []
+  const overviewById = new Map(rows.map((row) => [row.id, row]))
   const variables = variablesQuery.data || []
   const rbsEvaluations = rbsEvaluationsQuery.data || []
   const rbsEvaluationsByVariable = new Map(rbsEvaluations.map((item) => [item.rule_variable_id, item]))
 
-  const totalCompleted = rows.reduce((sum, row) => sum + row.completed, 0)
-  const totalExpected = rows.reduce((sum, row) => sum + row.expected, 0)
-  const completeness = totalExpected ? Math.round((totalCompleted / totalExpected) * 100) : 0
   const topsisEvaluationsByCriteria = new Map((selectedOverview?.evaluations || []).map((item) => [item.criteria_id, item]))
 
   const handleSelectSubCriteria = async (criteriaItem, subCriteriaId) => {
@@ -147,41 +150,33 @@ export function RecommendationEvaluationsPage() {
         description="Isi jawaban kelayakan (RBS) lalu penilaian TOPSIS untuk alternatif yang dipilih dalam satu halaman."
       />
 
-      <SectionCard
-        title="Bulk Import"
-        description="Unggah file Excel untuk mengisi banyak evaluasi sekaligus. Template di-generate otomatis dari konfigurasi decision model saat ini."
-      >
-        <div className="import-action-row">
-          <Button type="button" variant="secondary" onClick={() => setRbsImportOpen(true)}>Import Evaluasi RBS (Excel)</Button>
-          <Button type="button" variant="secondary" onClick={() => setTopsisImportOpen(true)}>Import Evaluasi TOPSIS (Excel)</Button>
-        </div>
-      </SectionCard>
+      {canManage ? (
+        <SectionCard
+          title="Bulk Import"
+          description="Unggah file Excel untuk mengisi banyak evaluasi sekaligus. Template di-generate otomatis dari konfigurasi decision model saat ini."
+        >
+          <div className="import-action-row">
+            <Button type="button" variant="secondary" onClick={() => setRbsImportOpen(true)}>Import Evaluasi RBS (Excel)</Button>
+            <Button type="button" variant="secondary" onClick={() => setTopsisImportOpen(true)}>Import Evaluasi TOPSIS (Excel)</Button>
+          </div>
+        </SectionCard>
+      ) : null}
 
       <SectionCard title="Pilih alternatif">
         <div className="alternative-chip-list">
-          {alternatives.map((alternative) => (
-            <button key={alternative.id} type="button" className={`decision-model-tab ${selectedId === alternative.id ? 'active' : ''}`} onClick={() => setSelectedAlternativeId(alternative.id)}>
-              {alternative.name}
-            </button>
-          ))}
+          {alternatives.map((alternative) => {
+            const row = overviewById.get(alternative.id)
+            const count = row ? `${row.completed}/${row.expected}` : '0/0'
+
+            return (
+              <button key={alternative.id} type="button" className={`decision-model-tab ${selectedId === alternative.id ? 'active' : ''}`} onClick={() => setSelectedAlternativeId(alternative.id)}>
+                <span>{alternative.name}</span>
+                <small className="decision-model-tab-meta">{count}</small>
+              </button>
+            )
+          })}
         </div>
       </SectionCard>
-
-      <div className="content-grid two-column">
-        <SectionCard title="Cakupan TOPSIS">
-          <ProgressIndicator value={completeness} label="Cakupan TOPSIS" hint={`${totalCompleted} sel terisi dari ${totalExpected} sel yang diharapkan.`} tone={completeness === 100 ? 'success' : 'warning'} />
-        </SectionCard>
-        <SectionCard title="Kesiapan matriks">
-          <div className="rule-condition-list">
-            {rows.map((row) => (
-              <div key={row.id} className="rule-condition-item">
-                <strong>{row.name}</strong>
-                <span>{row.completed}/{row.expected} terisi</span>
-              </div>
-            ))}
-          </div>
-        </SectionCard>
-      </div>
 
       <SectionCard title={selectedAlternative ? `RBS — ${selectedAlternative.name}` : 'Evaluasi Kelayakan'} description="Isi fakta bertipe untuk setiap variabel rule yang berlaku pada alternatif ini.">
         <div className="rule-evaluation-grid">
@@ -198,18 +193,21 @@ export function RecommendationEvaluationsPage() {
                   {variable.value_type === 'boolean' ? (
                     <DropdownSelect
                       value={currentValue}
+                      disabled={!canManage}
                       onChange={(nextValue) => setRbsDrafts((state) => ({ ...state, [variable.id]: nextValue }))}
                       options={[{ value: 'false', label: 'False' }, { value: 'true', label: 'True' }]}
                     />
                   ) : variable.value_type === 'number' ? (
-                    <input className="input" type="number" value={currentValue} onChange={(event) => setRbsDrafts((state) => ({ ...state, [variable.id]: event.target.value }))} placeholder="Masukkan nilai angka" />
+                    <input className="input" type="number" value={currentValue} onChange={(event) => setRbsDrafts((state) => ({ ...state, [variable.id]: event.target.value }))} placeholder="Masukkan nilai angka" disabled={!canManage} />
                   ) : (
-                    <input className="input" type="text" value={currentValue} onChange={(event) => setRbsDrafts((state) => ({ ...state, [variable.id]: event.target.value }))} placeholder="Masukkan nilai teks" />
+                    <input className="input" type="text" value={currentValue} onChange={(event) => setRbsDrafts((state) => ({ ...state, [variable.id]: event.target.value }))} placeholder="Masukkan nilai teks" disabled={!canManage} />
                   )}
-                  <div className="evaluation-card-actions">
-                    <Button type="button" onClick={() => saveRbsValue(variable)} disabled={upsertRbsMutation.isPending}>Simpan</Button>
-                    {currentEvaluation ? <Button type="button" variant="ghost" onClick={() => clearRbsValue(variable)}>Kosongkan</Button> : null}
-                  </div>
+                  {canManage ? (
+                    <div className="evaluation-card-actions">
+                      <Button type="button" onClick={() => saveRbsValue(variable)} disabled={upsertRbsMutation.isPending}>Simpan</Button>
+                      {currentEvaluation ? <Button type="button" variant="ghost" onClick={() => clearRbsValue(variable)}>Kosongkan</Button> : null}
+                    </div>
+                  ) : null}
                 </div>
               </article>
             )
@@ -231,6 +229,7 @@ export function RecommendationEvaluationsPage() {
                 <div className="rule-evaluation-card-inputs">
                   <DropdownSelect
                     value={selectedValue}
+                    disabled={!canManage}
                     onChange={(nextValue) => handleSelectSubCriteria(criteriaItem, nextValue)}
                     placeholder="Pilih sub-kriteria"
                     options={[
@@ -238,7 +237,7 @@ export function RecommendationEvaluationsPage() {
                       ...criteriaItem.subCriteria.map((sub) => ({ value: String(sub.id), label: `${sub.label} (nilai ${sub.value})` })),
                     ]}
                   />
-                  {existing ? (
+                  {canManage && existing ? (
                     <div className="evaluation-card-actions">
                       <Button type="button" variant="ghost" onClick={() => handleSelectSubCriteria(criteriaItem, '')}>Kosongkan</Button>
                     </div>

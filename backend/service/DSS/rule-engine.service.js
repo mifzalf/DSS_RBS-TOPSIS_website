@@ -96,6 +96,23 @@ const buildRuleFactMap = (ruleEvaluations) => {
    return factMap
 }
 
+const isTruthy = (value) => {
+   if (value === undefined || value === null || value === false) {
+      return false
+   }
+
+   if (typeof value === "string") {
+      const normalized = value.trim().toLowerCase()
+      return normalized !== "false" && normalized !== "0" && normalized !== ""
+   }
+
+   if (typeof value === "number") {
+      return value !== 0
+   }
+
+   return true
+}
+
 const isAllFactsEmpty = ({ factMap, activeVariableCodes }) => {
     if (!activeVariableCodes.length) {
        return false
@@ -103,7 +120,7 @@ const isAllFactsEmpty = ({ factMap, activeVariableCodes }) => {
  
     return activeVariableCodes.every((code) => {
        const value = factMap.get(code)
-       return value === undefined || value === null || value === false
+       return !isTruthy(value)
     })
  }
  
@@ -122,8 +139,8 @@ exports.runRuleEngine = async (decisionModelId) => {
       order: [["id", "ASC"]]
    })
 
-    const [rules, fallbackCategory, activeRuleVariables] = await Promise.all([
-       Rule.findAll({
+    const [rules, fallbackCategories, activeRuleVariables] = await Promise.all([
+        Rule.findAll({
        where: {
           decision_model_id: decisionModelId,
           status_active: true
@@ -140,17 +157,19 @@ exports.runRuleEngine = async (decisionModelId) => {
           },
           {
              association: "categoryRef",
-             attributes: ["id", "code", "name", "is_ranked"]
-           }
+             attributes: ["id", "code", "name", "is_ranked", "slot_count", "allocation_order", "accepts_overflow"]
+            }
          ],
         order: [["priority", "ASC"], [{ model: RuleCondition, as: "conditions" }, "id", "ASC"]]
      }),
-       AssistanceCategory.findOne({
-          where: {
-             decision_model_id: decisionModelId,
-             code: "not_eligible"
-          }
-       }),
+        AssistanceCategory.findAll({
+           where: {
+              decision_model_id: decisionModelId,
+              is_ranked: false,
+              status_active: true
+           },
+           order: [["id", "ASC"]]
+        }),
        RuleVariable.findAll({
           where: {
              decision_model_id: decisionModelId,
@@ -162,7 +181,10 @@ exports.runRuleEngine = async (decisionModelId) => {
  
     const activeVariableCodes = activeRuleVariables.map(item => item.code)
 
-   const results = []
+    const fallbackCategory = fallbackCategories.find((category) => category.code === "not_eligible")
+       || fallbackCategories[0]
+
+    const results = []
 
    const alternativeIds = alternatives.map(item => item.id)
    const ruleEvaluations = alternativeIds.length
@@ -184,49 +206,59 @@ exports.runRuleEngine = async (decisionModelId) => {
       factMaps.set(alternative.id, buildRuleFactMap(facts))
    }
 
+   const doesRuleMatch = ({ rule, alternative, factMap }) => {
+      if (rule.logic_type === "EMPTY") {
+         return isAllFactsEmpty({ factMap, activeVariableCodes })
+      }
+
+      const conditions = rule.conditions || []
+
+      const evaluations = conditions.map(condition => {
+         const fieldValue = condition.ruleVariable?.code
+            ? factMap.get(condition.ruleVariable.code)
+            : alternative[condition.field]
+
+         return evaluateCondition(
+            fieldValue,
+            condition.operator,
+            condition.value
+         )
+      })
+
+      return matchesRule(rule, evaluations)
+   }
+
    for (const alternative of alternatives) {
       let category = null
       let categoryId = null
       let actionType = RULE_ACTION_TYPES.REJECT
       let isRanked = false
+      let slotCount = null
+      let allocationOrder = null
+      let acceptsOverflow = false
+      const eligibleCategoryIds = []
       const factMap = factMaps.get(alternative.id) || new Map()
 
        for (const rule of rules) {
-          if (rule.logic_type === "EMPTY") {
-             if (isAllFactsEmpty({ factMap, activeVariableCodes })) {
-                category = rule.categoryRef?.name || null
-                categoryId = rule.categoryRef?.id || null
-                actionType = normalizeActionType(rule.action_type)
-                isRanked = isRankedCategory({ actionType, category })
-                break
-             }
- 
-             continue
+          const matched = doesRuleMatch({ rule, alternative, factMap })
+          const ruleCategoryName = rule.categoryRef?.name || null
+          const ruleActionType = normalizeActionType(rule.action_type)
+          const ruleIsRanked = isRankedCategory({ actionType: ruleActionType, category: ruleCategoryName })
+
+          if (matched && rule.categoryRef?.id && ruleIsRanked) {
+             eligibleCategoryIds.push(rule.categoryRef.id)
           }
- 
-          const conditions = rule.conditions || []
- 
-           const evaluations = conditions.map(condition => {
-            const fieldValue = condition.ruleVariable?.code
-               ? factMap.get(condition.ruleVariable.code)
-               : alternative[condition.field]
 
-            return evaluateCondition(
-               fieldValue,
-               condition.operator,
-               condition.value
-            )
-
-         })
-
-         if (matchesRule(rule, evaluations)) {
-            category = rule.categoryRef?.name || null
-            categoryId = rule.categoryRef?.id || null
-            actionType = normalizeActionType(rule.action_type)
-            isRanked = isRankedCategory({ actionType, category })
-            break
-         }
-      }
+          if (matched && !category) {
+             category = rule.categoryRef?.name || null
+             categoryId = rule.categoryRef?.id || null
+             actionType = ruleActionType
+             isRanked = ruleIsRanked
+             slotCount = rule.categoryRef?.slot_count ?? null
+             allocationOrder = rule.categoryRef?.allocation_order ?? null
+             acceptsOverflow = Boolean(rule.categoryRef?.accepts_overflow)
+          }
+       }
 
       if (!category) {
          category = fallbackCategory?.name || DEFAULT_REJECTED_CATEGORY
@@ -238,8 +270,12 @@ exports.runRuleEngine = async (decisionModelId) => {
          category_id: categoryId,
          category,
          action_type: actionType,
-         is_ranked: isRanked
-        })
+         is_ranked: isRanked,
+         slot_count: slotCount,
+         allocation_order: allocationOrder,
+         accepts_overflow: acceptsOverflow,
+         eligible_category_ids: Array.from(new Set(eligibleCategoryIds))
+         })
 
    }
 
@@ -252,3 +288,4 @@ module.exports.isRankedCategory = isRankedCategory
 module.exports.normalizeActionType = normalizeActionType
 module.exports.DEFAULT_REJECTED_CATEGORY = DEFAULT_REJECTED_CATEGORY
 module.exports.getRuleEvaluationValue = getRuleEvaluationValue
+module.exports.isTruthy = isTruthy

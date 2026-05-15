@@ -16,6 +16,7 @@ import { Modal } from '../../components/ui/Modal'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { SectionCard } from '../../components/ui/SectionCard'
 import { ImportWizard } from '../../components/import/ImportWizard'
+import { useDecisionModel, useDecisionModels } from '../../features/decision-model/useDecisionModels'
 import { IMPORT_KINDS } from '../../features/import/import.constants'
 import { useAlternatives, useCreateAlternative, useDeleteAlternative, useUpdateAlternative } from '../../features/alternatives/useAlternatives'
 import { useDecisionModelId } from '../../hooks/useDecisionModelId'
@@ -28,6 +29,8 @@ const schema = z.object({
 
 export function RecommendationAlternativesPage() {
   const decisionModelId = useDecisionModelId()
+  const decisionModelQuery = useDecisionModel(decisionModelId)
+  const decisionModelsQuery = useDecisionModels()
   const { pushToast } = useFeedback()
   const [open, setOpen] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
@@ -38,6 +41,9 @@ export function RecommendationAlternativesPage() {
   const updateMutation = useUpdateAlternative(decisionModelId)
   const deleteMutation = useDeleteAlternative(decisionModelId)
   const form = useForm({ resolver: zodResolver(schema), defaultValues: { name: '', description: '' } })
+  const role = decisionModelQuery.data?.role
+    || (decisionModelsQuery.data || []).find((item) => String(item.id) === String(decisionModelId))?.role
+  const canManage = role === 'owner' || role === 'editor'
 
   if (isLoading) return <LoadingState title="Memuat alternatif" description="Menyiapkan daftar rumah tangga atau kandidat yang dinilai." />
   if (error) return <ErrorState description={error.message} onAction={refetch} />
@@ -87,25 +93,25 @@ export function RecommendationAlternativesPage() {
         eyebrow="Langkah 1/3"
         title="Daftar alternatif"
         description="Daftarkan rumah tangga atau kandidat yang akan dinilai dalam rekomendasi."
-        actions={
+        actions={canManage ? (
           <div className="import-action-row">
             <Button type="button" variant="secondary" onClick={() => setImportOpen(true)}>Import Excel</Button>
             <Button type="button" onClick={openCreate}>Tambah alternatif</Button>
           </div>
-        }
+        ) : undefined}
       />
       <SectionCard title="Daftar alternatif">
         <DataTable
           columns={[
             { key: 'name', header: 'Alternatif' },
             { key: 'description', header: 'Deskripsi', render: (row) => truncateText(row.description, 100) },
-            { key: 'actions', header: '', align: 'right', render: (row) => <ActionMenu items={[{ label: 'Ubah', onSelect: () => openEdit(row) }, { label: 'Hapus', tone: 'danger', onSelect: () => setDeleteTarget(row) }]} /> },
+            ...(canManage ? [{ key: 'actions', header: '', align: 'right', render: (row) => <ActionMenu items={[{ label: 'Ubah', onSelect: () => openEdit(row) }, { label: 'Hapus', tone: 'danger', onSelect: () => setDeleteTarget(row) }]} /> }] : []),
           ]}
           rows={data}
         />
       </SectionCard>
 
-      <Modal open={open} title={selectedAlternative ? 'Ubah alternatif' : 'Tambah alternatif'} onClose={() => setOpen(false)} footer={<><Button type="button" variant="ghost" onClick={() => setOpen(false)}>Batal</Button><Button type="submit" form="rec-alt-form" disabled={form.formState.isSubmitting || createMutation.isPending || updateMutation.isPending}>Simpan</Button></>}>
+      <Modal open={open} title={selectedAlternative ? 'Ubah alternatif' : 'Tambah alternatif'} onClose={() => setOpen(false)} footer={<><Button type="button" variant="ghost" onClick={() => setOpen(false)}>Batal</Button><Button type="submit" form="rec-alt-form" disabled={form.formState.isSubmitting || createMutation.isPending || updateMutation.isPending}>Simpan</Button></>}> 
         <form id="rec-alt-form" className="stack-md" onSubmit={onSubmit}>
           <FormField label="Nama" error={form.formState.errors.name?.message}><TextField {...form.register('name')} placeholder="Rumah Tangga A" /></FormField>
           <FormField label="Deskripsi" error={form.formState.errors.description?.message}><textarea className="input textarea" rows="4" {...form.register('description')} placeholder="Jelaskan alternatif atau rumah tangga ini." /></FormField>

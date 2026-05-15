@@ -22,7 +22,11 @@ const User = db.define("User", {
     unique: true,
     validate: {
       notEmpty: true,
-      len: [3, 50]
+      len: [3, 50],
+      is: {
+        args: /^\S+$/,
+        msg: "Username must not contain spaces"
+      }
     }
   },
   password: {

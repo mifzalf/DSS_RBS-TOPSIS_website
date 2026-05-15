@@ -9,6 +9,7 @@ import { LoadingState } from '../../components/feedback/LoadingState'
 import { DataTable } from '../../components/data-display/DataTable'
 import { DropdownSelect } from '../../components/ui/DropdownSelect'
 import { FormField } from '../../components/form/FormField'
+import { NumberField } from '../../components/form/NumberField'
 import { TextField } from '../../components/form/TextField'
 import { ActionMenu } from '../../components/ui/ActionMenu'
 import { Badge } from '../../components/ui/Badge'
@@ -25,6 +26,9 @@ const schema = z.object({
   name: z.string().min(1, 'Nama wajib diisi.').max(100, 'Maksimal 100 karakter.'),
   description: z.string().max(5000, 'Maksimal 5000 karakter.').optional().or(z.literal('')),
   is_ranked: z.enum(['true', 'false']),
+  slot_count: z.string().optional().or(z.literal('')),
+  allocation_order: z.string().optional().or(z.literal('')),
+  accepts_overflow: z.enum(['true', 'false']),
   status_active: z.enum(['true', 'false']),
 })
 
@@ -39,21 +43,31 @@ export function AssistanceCategoriesPage() {
   const deleteMutation = useDeleteAssistanceCategory(decisionModelId)
   const form = useForm({
     resolver: zodResolver(schema),
-    defaultValues: { code: '', name: '', description: '', is_ranked: 'true', status_active: 'true' },
+    defaultValues: { code: '', name: '', description: '', is_ranked: 'true', slot_count: '', allocation_order: '', accepts_overflow: 'false', status_active: 'true' },
   })
   const categoryTypeValue = useWatch({ control: form.control, name: 'is_ranked' })
+  const acceptsOverflowValue = useWatch({ control: form.control, name: 'accepts_overflow' })
   const categoryStatusValue = useWatch({ control: form.control, name: 'status_active' })
 
   if (isLoading) return <LoadingState title="Memuat tipe keputusan" description="Menyiapkan tipe keputusan untuk rule, grade, dan rekomendasi." />
   if (error) return <ErrorState description={error.message} onAction={refetch} />
 
   const openCreate = () => {
-    form.reset({ code: '', name: '', description: '', is_ranked: 'true', status_active: 'true' })
+    form.reset({ code: '', name: '', description: '', is_ranked: 'true', slot_count: '', allocation_order: '', accepts_overflow: 'false', status_active: 'true' })
     setModalState({ open: true, category: null })
   }
 
   const openEdit = (category) => {
-    form.reset({ code: category.code, name: category.name, description: category.description || '', is_ranked: String(Boolean(category.is_ranked)), status_active: String(Boolean(category.status_active)) })
+    form.reset({
+      code: category.code,
+      name: category.name,
+      description: category.description || '',
+      is_ranked: String(Boolean(category.is_ranked)),
+      slot_count: category.slot_count == null ? '' : String(category.slot_count),
+      allocation_order: category.allocation_order == null ? '' : String(category.allocation_order),
+      accepts_overflow: String(Boolean(category.accepts_overflow)),
+      status_active: String(Boolean(category.status_active)),
+    })
     setModalState({ open: true, category })
   }
 
@@ -64,6 +78,9 @@ export function AssistanceCategoriesPage() {
       name: values.name,
       description: values.description,
       is_ranked: values.is_ranked === 'true',
+      slot_count: values.is_ranked === 'true' && values.slot_count !== '' ? Number(values.slot_count) : null,
+      allocation_order: values.is_ranked === 'true' && values.allocation_order !== '' ? Number(values.allocation_order) : null,
+      accepts_overflow: values.is_ranked === 'true' ? values.accepts_overflow === 'true' : false,
       status_active: values.status_active === 'true',
     }
     try {
@@ -100,6 +117,9 @@ export function AssistanceCategoriesPage() {
               { key: 'name', header: 'Nama' },
               { key: 'description', header: 'Deskripsi' },
               { key: 'is_ranked', header: 'Tipe', render: (row) => <Badge tone={row.is_ranked ? 'success' : 'warning'}>{row.is_ranked ? 'diperingkat' : 'ditolak'}</Badge> },
+              { key: 'slot_count', header: 'Slot', render: (row) => !row.is_ranked ? '-' : row.slot_count == null ? 'Tanpa batas' : row.slot_count },
+              { key: 'allocation_order', header: 'Urutan', render: (row) => !row.is_ranked ? '-' : row.allocation_order || '-' },
+              { key: 'accepts_overflow', header: 'Overflow', render: (row) => !row.is_ranked ? '-' : <Badge tone={row.accepts_overflow ? 'info' : 'neutral'}>{row.accepts_overflow ? 'ya' : 'tidak'}</Badge> },
               { key: 'status_active', header: 'Status', render: (row) => <Badge tone={row.status_active ? 'success' : 'neutral'}>{row.status_active ? 'aktif' : 'nonaktif'}</Badge> },
               { key: 'actions', header: '', align: 'right', render: (row) => <ActionMenu items={[{ label: 'Ubah', onSelect: () => openEdit(row) }, { label: 'Hapus', tone: 'danger', onSelect: () => setDeleteTarget(row) }]} /> },
             ]}
@@ -116,6 +136,19 @@ export function AssistanceCategoriesPage() {
           <FormField label="Nama" error={form.formState.errors.name?.message}><TextField {...form.register('name')} placeholder="PKH" /></FormField>
           <FormField label="Deskripsi" error={form.formState.errors.description?.message}><textarea className="input textarea" rows="4" {...form.register('description')} placeholder="Program Keluarga Harapan" /></FormField>
           <FormField label="Tipe" error={form.formState.errors.is_ranked?.message}><DropdownSelect value={categoryTypeValue} options={[{ value: 'true', label: 'Diperingkat' }, { value: 'false', label: 'Ditolak' }]} onChange={(value) => form.setValue('is_ranked', value, { shouldValidate: true })} /></FormField>
+          {categoryTypeValue === 'true' ? (
+            <>
+              <FormField label="Slot" hint="Kosongkan untuk tanpa batas." error={form.formState.errors.slot_count?.message}>
+                <NumberField min="0" step="1" {...form.register('slot_count')} placeholder="10" />
+              </FormField>
+              <FormField label="Urutan alokasi" hint="Dipakai untuk urutan fallback overflow." error={form.formState.errors.allocation_order?.message}>
+                <NumberField min="1" step="1" {...form.register('allocation_order')} placeholder="1" />
+              </FormField>
+              <FormField label="Menerima overflow" hint="Kategori tanpa rulebase akan menerima overflow otomatis meskipun ini dimatikan." error={form.formState.errors.accepts_overflow?.message}>
+                <DropdownSelect value={acceptsOverflowValue} options={[{ value: 'false', label: 'Tidak' }, { value: 'true', label: 'Ya' }]} onChange={(value) => form.setValue('accepts_overflow', value, { shouldValidate: true })} />
+              </FormField>
+            </>
+          ) : null}
           <FormField label="Status" error={form.formState.errors.status_active?.message}><DropdownSelect value={categoryStatusValue} options={[{ value: 'true', label: 'Aktif' }, { value: 'false', label: 'Nonaktif' }]} onChange={(value) => form.setValue('status_active', value, { shouldValidate: true })} /></FormField>
         </form>
       </Modal>

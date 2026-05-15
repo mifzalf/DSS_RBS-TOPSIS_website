@@ -74,3 +74,37 @@ test("validateRequest rejects invalid payloads with 400 response", async () => {
    assert.equal(res.statusCode, 400)
    assert.equal(res.payload.message, "role must be one of: owner, editor, viewer")
 })
+
+test("validateRequest rejects username values with spaces", async () => {
+   const middleware = validateRequest({
+      body: {
+         username: { type: "string", required: true, minLength: 3, maxLength: 50, noWhitespace: true }
+      }
+   })
+
+   const req = {
+      body: {
+         username: "user name"
+      }
+   }
+
+   const res = {
+      statusCode: 200,
+      payload: null,
+      status(code) {
+         this.statusCode = code
+         return this
+      },
+      json(payload) {
+         this.payload = payload
+         return this
+      }
+   }
+
+   middleware(req, res, () => {
+      throw new Error("next() should not be called for invalid usernames")
+   })
+
+   assert.equal(res.statusCode, 400)
+   assert.equal(res.payload.message, "username must not contain spaces")
+})

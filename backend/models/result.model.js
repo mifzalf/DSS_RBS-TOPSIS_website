@@ -24,6 +24,33 @@ const Result = db.define("Result", {
     type: DataTypes.INTEGER,
     allowNull: false,
   },
+  origin_category_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
+  allocation_source: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: "direct",
+    validate: {
+      isIn: [["direct", "overflow", "rejected"]]
+    }
+  },
+  slot_status: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: "not_applicable",
+    validate: {
+      isIn: [["within_slot", "outside_slot", "not_applicable"]]
+    }
+  },
+  slot_position: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    validate: {
+      min: 1
+    }
+  },
   grade_code: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -103,6 +130,11 @@ AssistanceCategory.hasMany(Result, {
 Result.belongsTo(AssistanceCategory, {
   foreignKey: "category_id",
   as: "categoryRef"
+})
+
+Result.belongsTo(AssistanceCategory, {
+  foreignKey: "origin_category_id",
+  as: "originCategoryRef"
 })
 
 module.exports = Result

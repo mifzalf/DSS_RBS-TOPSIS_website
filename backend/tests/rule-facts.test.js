@@ -52,3 +52,23 @@ test("rule engine normalizes boolean fact values from rule evaluations", () => {
 
    assert.equal(factValue, false)
 })
+
+test("isAllFactsEmpty treats string false values as empty facts", () => {
+   const result = ruleEngineService.isAllFactsEmpty({
+      factMap: new Map([
+         ["V1", "false"],
+         ["V2", "0"],
+         ["V3", ""]
+      ]),
+      activeVariableCodes: ["V1", "V2", "V3"]
+   })
+
+   assert.equal(result, true)
+})
+
+test("isTruthy treats non-empty non-false strings as true", () => {
+   assert.equal(ruleEngineService.isTruthy("true"), true)
+   assert.equal(ruleEngineService.isTruthy("ya"), true)
+   assert.equal(ruleEngineService.isTruthy("false"), false)
+   assert.equal(ruleEngineService.isTruthy("0"), false)
+})
