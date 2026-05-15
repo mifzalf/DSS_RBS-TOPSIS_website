@@ -67,14 +67,29 @@ exports.getResultsByDecisionModel = async (req,res)=>{
                 {
                     association: "alternative",
                     attributes:["id","name"]
+                },
+                {
+                    association: "categoryRef",
+                    attributes:["id","code","name","is_ranked"]
                 }
             ],
-            order:[["rank","ASC"]]
+            order:[
+                ["category_id","ASC"],
+                ["rank","ASC"]
+            ]
+        })
+
+        const payload = results.map((result) => {
+            const plain = typeof result.get === "function" ? result.get({ plain: true }) : result
+            return {
+                ...plain,
+                category: plain.categoryRef?.name || null
+            }
         })
 
         return sendSuccess(res, {
             message: "Result list retrieved successfully",
-            data: results
+            data: payload
         })
 
     }catch(error){

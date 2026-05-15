@@ -23,16 +23,33 @@ function getGradeTone(gradeCode) {
   return 'neutral'
 }
 
+function resolveCategoryName(item) {
+  return (
+    item.categoryRef?.name
+    || item.category
+    || (item.category_id != null ? `Kategori #${item.category_id}` : null)
+    || 'Tidak direkomendasikan'
+  )
+}
+
+function resolveCategoryKey(item) {
+  if (item.category_id != null) return `id:${item.category_id}`
+  if (item.categoryRef?.name) return `name:${item.categoryRef.name}`
+  if (item.category) return `name:${item.category}`
+  return 'unassigned'
+}
+
 function groupResultsFromFlat(results) {
   const grouped = new Map()
 
   results.forEach((item) => {
-    const key = String(item.category_id || item.category || 'unassigned')
+    const key = resolveCategoryKey(item)
+    const isRanked = item.categoryRef?.is_ranked
     if (!grouped.has(key)) {
       grouped.set(key, {
         category_id: item.category_id ?? null,
-        category: item.category || 'Tidak direkomendasikan',
-        action_type: item.status === 'rejected' && item.preference_score == null ? 'reject' : 'assign_benefit',
+        category: resolveCategoryName(item),
+        action_type: isRanked === false ? 'reject' : 'assign_benefit',
         status: 'mixed',
         items: [],
       })
@@ -42,9 +59,33 @@ function groupResultsFromFlat(results) {
 
   const groups = Array.from(grouped.values())
 
+  // Pertama prioritaskan flag is_ranked dari kategori jika tersedia,
+  // lalu fallback ke heuristik berbasis preference_score/rank.
+  const rankedGroups = []
+  const rejectedGroups = []
+
+  for (const group of groups) {
+    const hasRankedSignal = group.items.some(
+      (item) => item.preference_score != null || item.rank != null,
+    )
+    const allEmpty = group.items.every(
+      (item) => item.preference_score == null && item.rank == null,
+    )
+
+    if (group.action_type === 'reject') {
+      rejectedGroups.push(group)
+    } else if (hasRankedSignal) {
+      rankedGroups.push(group)
+    } else if (allEmpty) {
+      rejectedGroups.push(group)
+    } else {
+      rankedGroups.push(group)
+    }
+  }
+
   return {
-    ranked_groups: groups.filter((group) => group.items.some((item) => item.preference_score != null || item.rank != null)),
-    rejected_groups: groups.filter((group) => group.items.every((item) => item.preference_score == null && item.rank == null)),
+    ranked_groups: rankedGroups,
+    rejected_groups: rejectedGroups,
   }
 }
 

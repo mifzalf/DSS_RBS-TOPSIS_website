@@ -183,11 +183,10 @@ exports.generateRecommendation = async (decisionModelId) => {
       if (results.length) {
          await Result.bulkCreate(
             results.map(result => ({
-                decision_model_id: result.decision_model_id,
-                alternative_id: result.alternative_id,
-                category_id: result.category_id,
-                category: result.category,
-                grade_code: result.grade_code,
+               decision_model_id: result.decision_model_id,
+               alternative_id: result.alternative_id,
+               category_id: result.category_id,
+               grade_code: result.grade_code,
                grade_label: result.grade_label,
                preference_score: result.preference_score,
                rank: result.rank,
