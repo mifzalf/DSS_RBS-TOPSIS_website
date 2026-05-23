@@ -195,7 +195,8 @@ export function RecommendationEvaluationsPage() {
                       value={currentValue}
                       disabled={!canManage}
                       onChange={(nextValue) => setRbsDrafts((state) => ({ ...state, [variable.id]: nextValue }))}
-                      options={[{ value: 'false', label: 'False' }, { value: 'true', label: 'True' }]}
+                      placeholder="Pilih nilai"
+                      options={[{ value: 'false', label: 'Tidak' }, { value: 'true', label: 'Ya' }]}
                     />
                   ) : variable.value_type === 'number' ? (
                     <input className="input" type="number" value={currentValue} onChange={(event) => setRbsDrafts((state) => ({ ...state, [variable.id]: event.target.value }))} placeholder="Masukkan nilai angka" disabled={!canManage} />

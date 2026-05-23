@@ -125,11 +125,11 @@ export function RuleEvaluationsPage() {
                     <DropdownSelect
                       value={currentValue}
                       onChange={(nextValue) => setDrafts((state) => ({ ...state, [variable.id]: nextValue }))}
-                       placeholder="Pilih nilai boolean"
-                       options={[
-                         { value: 'false', label: 'False' },
-                         { value: 'true', label: 'True' },
-                       ]}
+                        placeholder="Pilih nilai"
+                        options={[
+                          { value: 'false', label: 'Tidak' },
+                          { value: 'true', label: 'Ya' },
+                        ]}
                      />
                    ) : variable.value_type === 'number' ? (
                      <input className="input" type="number" value={currentValue} onChange={(event) => setDrafts((state) => ({ ...state, [variable.id]: event.target.value }))} placeholder="Masukkan nilai angka" />
