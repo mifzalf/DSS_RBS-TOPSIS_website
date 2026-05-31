@@ -190,19 +190,13 @@ export function RecommendationEvaluationsPage() {
                   <p>{variable.value_type}{variable.description ? ` · ${variable.description}` : ''}</p>
                 </div>
                 <div className="rule-evaluation-card-inputs">
-                  {variable.value_type === 'boolean' ? (
-                    <DropdownSelect
-                      value={currentValue}
-                      disabled={!canManage}
-                      onChange={(nextValue) => setRbsDrafts((state) => ({ ...state, [variable.id]: nextValue }))}
-                      placeholder="Pilih nilai"
-                      options={[{ value: 'false', label: 'Tidak' }, { value: 'true', label: 'Ya' }]}
-                    />
-                  ) : variable.value_type === 'number' ? (
-                    <input className="input" type="number" value={currentValue} onChange={(event) => setRbsDrafts((state) => ({ ...state, [variable.id]: event.target.value }))} placeholder="Masukkan nilai angka" disabled={!canManage} />
-                  ) : (
-                    <input className="input" type="text" value={currentValue} onChange={(event) => setRbsDrafts((state) => ({ ...state, [variable.id]: event.target.value }))} placeholder="Masukkan nilai teks" disabled={!canManage} />
-                  )}
+                  <DropdownSelect
+                    value={typeof currentValue === 'boolean' ? String(currentValue) : (currentValue ?? '')}
+                    disabled={!canManage}
+                    onChange={(nextValue) => setRbsDrafts((state) => ({ ...state, [variable.id]: nextValue }))}
+                    placeholder="Pilih nilai"
+                    options={[{ value: 'false', label: 'Tidak' }, { value: 'true', label: 'Ya' }]}
+                  />
                   {canManage ? (
                     <div className="evaluation-card-actions">
                       <Button type="button" onClick={() => saveRbsValue(variable)} disabled={upsertRbsMutation.isPending}>Simpan</Button>
