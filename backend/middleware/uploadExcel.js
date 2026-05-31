@@ -5,7 +5,6 @@ const { ValidationError } = require("../utils/appError")
 
 const XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 const XLSX_EXTENSION = ".xlsx"
-
 const getMaxFileSizeBytes = () => {
    const configured = Number(process.env.IMPORT_MAX_FILE_SIZE_MB)
    const safeConfigured = Number.isFinite(configured) && configured > 0 ? configured : 5
@@ -24,10 +23,6 @@ const buildMulter = () => multer({
 
       if (!lowerName.endsWith(XLSX_EXTENSION)) {
          return callback(new ValidationError("Only .xlsx files are allowed"))
-      }
-
-      if (file.mimetype && file.mimetype !== XLSX_MIME && file.mimetype !== "application/octet-stream") {
-         return callback(new ValidationError("File MIME type does not match .xlsx"))
       }
 
       callback(null, true)
