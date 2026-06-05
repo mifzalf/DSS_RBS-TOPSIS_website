@@ -40,6 +40,19 @@ export function useUpdateDecisionModel() {
   })
 }
 
+export function useDuplicateDecisionModel() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, payload }) => decisionModelApi.duplicate(id, payload),
+    onSuccess: () => {
+      // Invalidate hanya daftar model: detail model sumber tidak berubah,
+      // detail model baru belum dipakai sampai user menavigasi ke sana.
+      queryClient.invalidateQueries({ queryKey: queryKeys.decisionModels })
+    },
+  })
+}
+
 export function useDeleteDecisionModel() {
   const queryClient = useQueryClient()
 

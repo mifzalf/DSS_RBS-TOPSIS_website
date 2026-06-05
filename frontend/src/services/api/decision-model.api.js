@@ -7,4 +7,5 @@ export const decisionModelApi = {
   create: async (payload) => unwrapResponse(await httpClient.post('/decision-model', payload)),
   update: async (id, payload) => unwrapResponse(await httpClient.patch(`/decision-model/${id}`, payload)),
   remove: async (id) => unwrapResponse(await httpClient.delete(`/decision-model/${id}`)),
+  duplicate: async (id, payload) => unwrapResponse(await httpClient.post(`/decision-model/${id}/duplicate`, payload)),
 }

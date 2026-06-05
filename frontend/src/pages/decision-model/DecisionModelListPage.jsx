@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { Link } from 'react-router-dom'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../app/providers/useAuth'
 import { useFeedback } from '../../app/providers/useFeedback'
 import { EmptyState } from '../../components/feedback/EmptyState'
@@ -19,7 +20,7 @@ import { PageHeader } from '../../components/ui/PageHeader'
 import { SectionCard } from '../../components/ui/SectionCard'
 import { StatCard } from '../../components/ui/StatCard'
 import { WORKFLOW_STEPS } from '../../constants/workflow'
-import { useCreateDecisionModel, useDeleteDecisionModel, useDecisionModels, useUpdateDecisionModel } from '../../features/decision-model/useDecisionModels'
+import { useCreateDecisionModel, useDeleteDecisionModel, useDecisionModels, useDuplicateDecisionModel, useUpdateDecisionModel } from '../../features/decision-model/useDecisionModels'
 import { decisionModelSchema } from '../../features/decision-model/decisionModel.schema'
 import { formatDate, truncateText } from '../../utils/format'
 
@@ -28,14 +29,19 @@ export function DecisionModelListPage() {
   const [journeyOpen, setJourneyOpen] = useState(false)
   const [selectedModel, setSelectedModel] = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
+  const [duplicateTarget, setDuplicateTarget] = useState(null)
+  const [duplicateName, setDuplicateName] = useState('')
+  const [duplicateIncludeAlternatives, setDuplicateIncludeAlternatives] = useState(true)
   const [mobileProfileOpen, setMobileProfileOpen] = useState(false)
   const mobileProfileRef = useRef(null)
+  const navigate = useNavigate()
   const { user, logout } = useAuth()
   const { pushToast } = useFeedback()
   const { data = [], isLoading, error, refetch } = useDecisionModels()
   const createMutation = useCreateDecisionModel()
   const updateMutation = useUpdateDecisionModel()
   const deleteMutation = useDeleteDecisionModel()
+  const duplicateMutation = useDuplicateDecisionModel()
   const readyModelCount = useMemo(
     () =>
       data.filter((item) => {
@@ -110,6 +116,52 @@ export function DecisionModelListPage() {
     setValue('name', model.name || '')
     setValue('descriptions', model.descriptions || '')
     setOpen(true)
+  }
+
+  const openDuplicateModal = (model) => {
+    setDuplicateTarget(model)
+    setDuplicateName(`${model.name || 'Untitled'} (Copy)`)
+    setDuplicateIncludeAlternatives(true)
+  }
+
+  const closeDuplicateModal = () => {
+    setDuplicateTarget(null)
+    setDuplicateName('')
+    setDuplicateIncludeAlternatives(true)
+  }
+
+  const handleDuplicate = async () => {
+    if (!duplicateTarget) return
+
+    const trimmedName = duplicateName.trim()
+
+    if (!trimmedName) {
+      pushToast({ title: 'Nama tidak valid', description: 'Nama model duplikat tidak boleh kosong.', tone: 'error' })
+      return
+    }
+
+    try {
+      const created = await duplicateMutation.mutateAsync({
+        id: duplicateTarget.id,
+        payload: {
+          name: trimmedName,
+          include_alternatives: duplicateIncludeAlternatives,
+        },
+      })
+      pushToast({
+        title: 'Model berhasil diduplikasi',
+        description: duplicateIncludeAlternatives
+          ? 'Seluruh konfigurasi beserta alternatif dan jawabannya disalin.'
+          : 'Struktur konfigurasi disalin tanpa alternatif.',
+        tone: 'success',
+      })
+      closeDuplicateModal()
+      if (created?.id) {
+        navigate(`/decision-models/${created.id}`)
+      }
+    } catch (submitError) {
+      pushToast({ title: 'Gagal menduplikasi model', description: submitError.message, tone: 'error' })
+    }
   }
 
   const handleDelete = async () => {
@@ -218,6 +270,9 @@ export function DecisionModelListPage() {
                   <ActionMenu
                     items={[
                        { label: 'Ubah', onSelect: () => openEditModal(model) },
+                       ...(model.role === 'owner'
+                          ? [{ label: 'Duplikat', onSelect: () => openDuplicateModal(model) }]
+                          : []),
                        { label: 'Hapus', tone: 'danger', onSelect: () => setDeleteTarget(model) },
                     ]}
                   />
@@ -281,6 +336,47 @@ export function DecisionModelListPage() {
             <textarea className="input textarea" rows="4" placeholder="Jelaskan keputusan yang didukung model ini." {...register('descriptions')} />
           </FormField>
         </form>
+      </Modal>
+
+      <Modal
+        open={Boolean(duplicateTarget)}
+        title="Duplikat model keputusan"
+        onClose={closeDuplicateModal}
+        footer={
+          <>
+            <Button type="button" variant="ghost" onClick={closeDuplicateModal} disabled={duplicateMutation.isPending}>
+              Batal
+            </Button>
+            <Button type="button" onClick={handleDuplicate} disabled={duplicateMutation.isPending}>
+              {duplicateMutation.isPending ? 'Menduplikasi...' : 'Duplikat'}
+            </Button>
+          </>
+        }
+      >
+        <div className="stack-md">
+          <FormField label="Nama model baru" hint="Anda dapat mengubah nama default sebelum menduplikasi.">
+            <TextField
+              value={duplicateName}
+              onChange={(event) => setDuplicateName(event.target.value)}
+              placeholder="Nama model duplikat"
+            />
+          </FormField>
+          <label className="duplicate-include-option" style={{ display: 'flex', gap: 12, alignItems: 'flex-start', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={duplicateIncludeAlternatives}
+              onChange={(event) => setDuplicateIncludeAlternatives(event.target.checked)}
+              style={{ marginTop: 4 }}
+            />
+            <span style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <strong>Sertakan alternatif beserta seluruh nilainya</strong>
+              <small style={{ color: 'var(--text-muted, #6b7280)' }}>
+                Alternatif, evaluasi sub-kriteria, dan nilai variabel RBS akan ikut diduplikasi.
+                Kategori, kriteria, variabel, aturan, dan kebijakan grade selalu diduplikasi.
+              </small>
+            </span>
+          </label>
+        </div>
       </Modal>
 
       <ConfirmDialog
