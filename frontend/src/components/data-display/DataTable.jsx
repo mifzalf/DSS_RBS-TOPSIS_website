@@ -19,7 +19,7 @@ export function DataTable({ columns, rows, emptyMessage = 'Belum ada data.', get
               <tr key={row.id || rowIndex} className={getRowClassName ? getRowClassName(row) : undefined}>
                 {columns.map((column) => (
                   <td key={column.key} className={cn(column.align === 'right' && 'align-right')}>
-                    {column.render ? column.render(row) : row[column.key]}
+                    {column.render ? column.render(row, rowIndex) : row[column.key]}
                   </td>
                 ))}
               </tr>

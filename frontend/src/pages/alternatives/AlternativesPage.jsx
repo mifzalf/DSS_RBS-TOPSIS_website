@@ -79,12 +79,15 @@ export function AlternativesPage() {
   return (
     <div className="page-stack">
       <PageHeader eyebrow="Alternatif" title="Kelola data alternatif" actions={<Button type="button" onClick={openCreate}>Tambah alternatif</Button>} />
-      <SectionCard title="Daftar alternatif">
+      <SectionCard
+        title="Daftar alternatif"
+        description={`Total ${data.length} alternatif terdaftar pada model ini.`}
+      >
         <DataTable
           columns={[
+            { key: 'row_number', header: 'No.', align: 'right', render: (_row, rowIndex) => rowIndex + 1 },
             { key: 'name', header: 'Alternatif' },
             { key: 'description', header: 'Deskripsi', render: (row) => truncateText(row.description, 100) },
-            { key: 'created_at', header: 'Dibuat' },
             { key: 'actions', header: '', align: 'right', render: (row) => <ActionMenu items={[{ label: 'Ubah', onSelect: () => openEdit(row) }, { label: 'Hapus', tone: 'danger', onSelect: () => setDeleteTarget(row) }]} /> },
           ]}
           rows={data}
