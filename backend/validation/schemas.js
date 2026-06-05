@@ -42,6 +42,13 @@ module.exports = {
       },
       idParam: {
          params: { id: positiveId }
+      },
+      duplicate: {
+         params: { id: positiveId },
+         body: {
+            name: { type: "string", required: false, minLength: 1, maxLength: 150 },
+            include_alternatives: { type: "boolean", required: false }
+         }
       }
    },
    assistanceCategory: {

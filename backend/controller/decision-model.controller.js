@@ -1,5 +1,6 @@
 const DecisionModel = require("../models/decision-model.model")
 const decisionModelService = require("../service/decision-model.service")
+const decisionModelDuplicateService = require("../service/decision-model-duplicate.service")
 const handleControllerError = require("../utils/controllerError")
 const { sendSuccess } = require("../utils/apiResponse")
 const { getRequestResource } = require("../utils/requestResource")
@@ -130,6 +131,29 @@ exports.updateDecisionModel = async (req, res) => {
         })
     } catch (error) {
         return handleControllerError(res,error)
+    }
+}
+
+exports.duplicateDecisionModel = async (req, res) => {
+    try {
+        const sourceModelId = req.decisionModelId || Number(req.params.id)
+        const userId = req.currentUser?.id
+        const { name, include_alternatives } = req.body || {}
+
+        const newDecisionModel = await decisionModelDuplicateService.duplicateDecisionModel({
+            sourceModelId,
+            userId,
+            name,
+            includeAlternatives: include_alternatives !== false
+        })
+
+        return sendSuccess(res, {
+            status: 201,
+            message: "Decision model duplicated successfully",
+            data: newDecisionModel
+        })
+    } catch (error) {
+        return handleControllerError(res, error)
     }
 }
 

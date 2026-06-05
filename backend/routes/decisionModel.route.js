@@ -55,6 +55,16 @@ router.delete(
    decisionModelController.deleteDecisionModel
 )
 
+router.post(
+   "/:id/duplicate",
+   validateRequest(schemas.decisionModel.duplicate),
+   authorizeDecisionModel({
+      getId: loadDecisionModel,
+      roles: [ROLES.OWNER]
+   }),
+   decisionModelController.duplicateDecisionModel
+)
+
 router.use(
    "/:decisionModelId/members",
    decisionModelMemberRouter
