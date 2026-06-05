@@ -20,7 +20,11 @@ const validateRangeOverlap = async ({ policyId, nextRange, currentId }) => {
 
       const existingMin = normalizeScore(range.min_score, 0)
       const existingMax = normalizeScore(range.max_score, 1)
-      const overlaps = nextMin <= existingMax && nextMax >= existingMin
+      // Overlap dianggap terjadi hanya jika kedua rentang benar-benar tumpang tindih
+      // secara interior. Titik singgung (mis. existingMax == nextMin) dianggap sah
+      // sebagai batas berdampingan supaya user bisa membentuk rentang menyambung
+      // tanpa gap seperti 0.00-0.34, 0.35-0.49, 0.50-0.64, 0.65-1.00.
+      const overlaps = nextMin < existingMax && nextMax > existingMin
 
       if (overlaps) {
          throw new ValidationError("Grade ranges must not overlap within the same policy")
