@@ -28,17 +28,24 @@ export function GradePoliciesPage() {
 
   const saveRange = async (range) => {
     const draft = drafts[range.id] || {}
-    const minRaw = draft.min ?? range.min_score ?? ''
     const maxRaw = draft.max ?? range.max_score ?? ''
 
+    if (maxRaw === '' || maxRaw === null) {
+      pushToast({ title: 'Batas maksimum wajib diisi', description: `Isi batas maks untuk ${range.label}.`, tone: 'error' })
+      return
+    }
+
     try {
+      // Catatan: kolom `code` sengaja TIDAK dikirim. `code` adalah kunci
+      // canonical (mis. 'high_priority', 'medium_priority', dst) yang dipakai
+      // di seluruh aplikasi untuk pewarnaan badge, ikon, dan logika downstream.
+      // Menurunkannya dari label akan merusak pemetaan tone di halaman hasil
+      // rekomendasi setiap kali user mengganti label/tier.
       await updateRangeMutation.mutateAsync({
         id: range.id,
         payload: {
           label: range.label,
-          code: range.label.toLowerCase().replace(/\s+/g, '_'),
-          min_score: minRaw === '' ? null : Number(minRaw),
-          max_score: maxRaw === '' ? null : Number(maxRaw),
+          max_score: Number(maxRaw),
           sort_order: range.sort_order,
           result_status: range.result_status,
         },
@@ -66,7 +73,7 @@ export function GradePoliciesPage() {
       <PageHeader
         eyebrow="Kebijakan Pemeringkatan"
         title="Kelola pemeringkatan"
-        description="Nilai minimum dan maksimum bisa diubah. Label, status, dan urutan diatur otomatis oleh sistem."
+        description="Cukup atur batas maksimum tiap tier. Batas bawah dihitung otomatis dari tier di bawahnya, sehingga tidak ada gap maupun tumpang tindih."
       />
 
       <SectionCard title="Daftar kebijakan">
@@ -91,7 +98,6 @@ export function GradePoliciesPage() {
                       .sort((a, b) => a.sort_order - b.sort_order)
                       .map((range) => {
                         const draft = drafts[range.id] || {}
-                        const minValue = draft.min !== undefined ? draft.min : (range.min_score ?? '')
                         const maxValue = draft.max !== undefined ? draft.max : (range.max_score ?? '')
 
                         return (
@@ -101,19 +107,6 @@ export function GradePoliciesPage() {
                               <Badge tone={range.result_status === 'rejected' ? 'warning' : 'success'}>{range.result_status === 'rejected' ? 'Ditolak' : 'Diperingkat'}</Badge>
                             </div>
                             <div className="grade-range-fields">
-                              <label className="grade-range-field">
-                                <span>Min</span>
-                                <input
-                                  className="input"
-                                  type="number"
-                                  min="0"
-                                  max="1"
-                                  step="0.01"
-                                  value={minValue}
-                                  onChange={(e) => setDraft(range.id, 'min', e.target.value)}
-                                  placeholder="0"
-                                />
-                              </label>
                               <label className="grade-range-field">
                                 <span>Maks</span>
                                 <input

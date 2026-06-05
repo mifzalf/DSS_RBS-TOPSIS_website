@@ -137,29 +137,43 @@ export function RecommendationLogicPage() {
                   {policy.applies_to_status === 'ranked' ? 'Diperingkat' : 'Ditolak'}
                 </Badge>
               </div>
-              {policy.ranges?.length ? (
-                <div className="logic-grade-ranges">
-                  {policy.ranges.slice().sort((a, b) => a.sort_order - b.sort_order).map((range) => (
-                    <div key={range.id} className="logic-grade-range">
-                      <div className="logic-grade-range-bar">
-                        <span className="logic-grade-label">{range.label}</span>
-                        <span className="logic-grade-score-range">
-                          {range.min_score != null ? range.min_score.toFixed(2) : '0.00'} — {range.max_score != null ? range.max_score.toFixed(2) : '1.00'}
-                        </span>
-                      </div>
-                      <div className="progress-track logic-grade-track">
-                        <div
-                          className="progress-fill progress-fill-accent"
-                          style={{
-                            marginLeft: `${(range.min_score ?? 0) * 100}%`,
-                            width: `${((range.max_score ?? 1) - (range.min_score ?? 0)) * 100}%`,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : <p className="subtle-text">Belum ada rentang prioritas.</p>}
+              {policy.ranges?.length ? (() => {
+                // Visualisasi menurunkan batas bawah tiap tier dari max_score tier
+                // di bawahnya (sort_order lebih besar). Tier paling bawah dimulai
+                // dari 0. Tier paling atas mencakup hingga 1.0 saat max_score-nya
+                // belum dikonfigurasi.
+                const sorted = policy.ranges.slice().sort((a, b) => a.sort_order - b.sort_order)
+
+                return (
+                  <div className="logic-grade-ranges">
+                    {sorted.map((range, index) => {
+                      const lower = sorted[index + 1]?.max_score ?? 0
+                      const upper = range.max_score ?? 1
+                      const width = Math.max(0, upper - lower)
+
+                      return (
+                        <div key={range.id} className="logic-grade-range">
+                          <div className="logic-grade-range-bar">
+                            <span className="logic-grade-label">{range.label}</span>
+                            <span className="logic-grade-score-range">
+                              {lower.toFixed(2)} — {upper.toFixed(2)}
+                            </span>
+                          </div>
+                          <div className="progress-track logic-grade-track">
+                            <div
+                              className="progress-fill progress-fill-accent"
+                              style={{
+                                marginLeft: `${lower * 100}%`,
+                                width: `${width * 100}%`,
+                              }}
+                            />
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )
+              })() : <p className="subtle-text">Belum ada rentang prioritas.</p>}
             </article>
           )) : <p className="subtle-text">Belum ada kebijakan pemeringkatan yang ditentukan.</p>}
         </div>
