@@ -2,39 +2,56 @@ const ResultGradeRange = require("../models/result-grade-range.model")
 const ResultGradePolicy = require("../models/result-grade-policy.model")
 const { NotFoundError, ValidationError } = require("../utils/appError")
 
-const normalizeScore = (value, fallback) => (value ?? fallback)
+// Mekanisme grade range berbasis "threshold turun":
+// - Yang disimpan hanyalah max_score per range (batas atas inclusive).
+// - Batas bawah setiap range dihitung otomatis dari max_score range yang lebih
+//   rendah satu tingkat di bawahnya. Range paling bawah memiliki batas bawah 0.
+// - Konsekuensinya tidak ada lagi konsep overlap antar range; cukup pastikan
+//   max_score tiap range dalam satu policy unik dan berada di [0, 1].
+// Catatan: kolom min_score sengaja dibiarkan ada di schema untuk backward
+// compatibility, tetapi tidak lagi divalidasi maupun dipakai dalam resolusi
+// grade (lihat grading.service.js).
 
-const validateRangeOverlap = async ({ policyId, nextRange, currentId }) => {
-   const ranges = await ResultGradeRange.findAll({
-      where: { result_grade_policy_id: policyId },
-      order: [["sort_order", "ASC"]]
-   })
+const SCORE_COMPARISON_PRECISION = 6
 
-   const nextMin = normalizeScore(nextRange.min_score, 0)
-   const nextMax = normalizeScore(nextRange.max_score, 1)
-
-   for (const range of ranges) {
-      if (currentId && range.id === currentId) {
-         continue
-      }
-
-      const existingMin = normalizeScore(range.min_score, 0)
-      const existingMax = normalizeScore(range.max_score, 1)
-      // Overlap dianggap terjadi hanya jika kedua rentang benar-benar tumpang tindih
-      // secara interior. Titik singgung (mis. existingMax == nextMin) dianggap sah
-      // sebagai batas berdampingan supaya user bisa membentuk rentang menyambung
-      // tanpa gap seperti 0.00-0.34, 0.35-0.49, 0.50-0.64, 0.65-1.00.
-      const overlaps = nextMin < existingMax && nextMax > existingMin
-
-      if (overlaps) {
-         throw new ValidationError("Grade ranges must not overlap within the same policy")
-      }
-   }
+const roundScore = (value) => {
+   if (!Number.isFinite(value)) return value
+   const factor = 10 ** SCORE_COMPARISON_PRECISION
+   return Math.round(value * factor) / factor
 }
 
-const validateRange = ({ min_score, max_score }) => {
-   if (min_score !== undefined && max_score !== undefined && min_score > max_score) {
-      throw new ValidationError("min_score must be less than or equal to max_score")
+const validateMaxScore = (value) => {
+   if (value === null || value === undefined) {
+      throw new ValidationError("max_score is required")
+   }
+
+   const numeric = Number(value)
+
+   if (!Number.isFinite(numeric)) {
+      throw new ValidationError("max_score must be a number")
+   }
+
+   if (numeric < 0 || numeric > 1) {
+      throw new ValidationError("max_score must be between 0 and 1")
+   }
+
+   return roundScore(numeric)
+}
+
+const validateUniqueMaxScore = async ({ policyId, nextMaxScore, currentId }) => {
+   const ranges = await ResultGradeRange.findAll({
+      where: { result_grade_policy_id: policyId }
+   })
+
+   const rounded = roundScore(nextMaxScore)
+
+   for (const range of ranges) {
+      if (currentId && range.id === currentId) continue
+      if (range.max_score === null || range.max_score === undefined) continue
+
+      if (roundScore(Number(range.max_score)) === rounded) {
+         throw new ValidationError("Each grade range must have a unique max score within the same policy")
+      }
    }
 }
 
@@ -45,33 +62,46 @@ const createGradeRange = async (payload) => {
       throw new NotFoundError("Result grade policy not found")
    }
 
-   validateRange(payload)
-   await validateRangeOverlap({
+   const maxScore = validateMaxScore(payload.max_score)
+
+   await validateUniqueMaxScore({
       policyId: policy.id,
-      nextRange: payload
+      nextMaxScore: maxScore
    })
 
    return ResultGradeRange.create({
       ...payload,
+      min_score: null,
+      max_score: maxScore,
       created_at: new Date()
    })
 }
 
 const updateGradeRange = async (range, payload) => {
-   const nextRange = {
-      min_score: payload.min_score ?? range.min_score,
-      max_score: payload.max_score ?? range.max_score
+   const updates = {}
+
+   if (payload.max_score !== undefined) {
+      const maxScore = validateMaxScore(payload.max_score)
+
+      await validateUniqueMaxScore({
+         policyId: range.result_grade_policy_id,
+         nextMaxScore: maxScore,
+         currentId: range.id
+      })
+
+      updates.max_score = maxScore
    }
 
-   validateRange(nextRange)
+   // min_score tidak lagi dipakai untuk menentukan grade; pastikan tetap null
+   // untuk menghindari kebingungan dengan data lama.
+   updates.min_score = null
 
-   await validateRangeOverlap({
-      policyId: range.result_grade_policy_id,
-      nextRange,
-      currentId: range.id
-   })
+   if (payload.label !== undefined) updates.label = payload.label
+   if (payload.code !== undefined) updates.code = payload.code
+   if (payload.sort_order !== undefined) updates.sort_order = payload.sort_order
+   if (payload.result_status !== undefined) updates.result_status = payload.result_status
 
-   await range.update(payload)
+   await range.update(updates)
    return range
 }
 

@@ -67,15 +67,18 @@ test("applyGrades can downgrade ranked results to not eligible from configured r
    assert.equal(graded[0].status, "rejected")
 })
 
-test("updateGradeRange rejects overlapping score ranges within the same policy", async () => {
+test("updateGradeRange rejects duplicate max_score within the same policy", async () => {
    const originalFindAll = ResultGradeRange.findAll
    ResultGradeRange.findAll = async () => ([
-      { id: 1, min_score: 0.4, max_score: 0.7 }
+      { id: 1, max_score: 0.7 }
    ])
 
    try {
       await assert.rejects(
-         () => gradeRangeService.updateGradeRange({ id: 2, result_grade_policy_id: 10, min_score: 0.2, max_score: 0.39, update: async () => {} }, { min_score: 0.35, max_score: 0.5 }),
+         () => gradeRangeService.updateGradeRange(
+            { id: 2, result_grade_policy_id: 10, max_score: 0.5, update: async () => {} },
+            { max_score: 0.7 }
+         ),
          ValidationError
       )
    } finally {
@@ -83,11 +86,43 @@ test("updateGradeRange rejects overlapping score ranges within the same policy",
    }
 })
 
-test("resolveRangeGrade returns matching score bucket", () => {
-   const range = gradingService.resolveRangeGrade(0.68, [
-      { code: RESULT_GRADE_CODES.HIGH_PRIORITY, label: "Prioritas tinggi", min_score: 0.7, max_score: 1, result_status: "ranked" },
-      { code: RESULT_GRADE_CODES.MEDIUM_PRIORITY, label: "Prioritas sedang", min_score: 0.4, max_score: 0.6999, result_status: "ranked" }
+test("updateGradeRange accepts adjacent thresholds that touch each other", async () => {
+   const originalFindAll = ResultGradeRange.findAll
+   ResultGradeRange.findAll = async () => ([
+      { id: 1, max_score: 0.5 }
    ])
 
-   assert.equal(range.code, RESULT_GRADE_CODES.MEDIUM_PRIORITY)
+   let updated = null
+
+   try {
+      await gradeRangeService.updateGradeRange(
+         { id: 2, result_grade_policy_id: 10, max_score: 0.4, update: async (values) => { updated = values } },
+         { max_score: 1 }
+      )
+   } finally {
+      ResultGradeRange.findAll = originalFindAll
+   }
+
+   assert.equal(updated.max_score, 1)
+   assert.equal(updated.min_score, null)
+})
+
+test("resolveRangeGrade picks the tier whose threshold covers the score", () => {
+   const ranges = [
+      { code: RESULT_GRADE_CODES.HIGH_PRIORITY, label: "Prioritas tinggi", max_score: 1, result_status: "ranked" },
+      { code: RESULT_GRADE_CODES.MEDIUM_PRIORITY, label: "Prioritas sedang", max_score: 0.65, result_status: "ranked" },
+      { code: RESULT_GRADE_CODES.LOW_PRIORITY, label: "Prioritas rendah", max_score: 0.5, result_status: "ranked" },
+      { code: RESULT_GRADE_CODES.NOT_ELIGIBLE, label: "Tidak memenuhi", max_score: 0.34, result_status: "rejected" }
+   ]
+
+   // 0.68 berada di antara 0.65 dan 1.0 -> masuk tier tinggi.
+   assert.equal(gradingService.resolveRangeGrade(0.68, ranges).code, RESULT_GRADE_CODES.HIGH_PRIORITY)
+   // 0.65 sebagai batas atas tier sedang (inclusive) -> tier sedang.
+   assert.equal(gradingService.resolveRangeGrade(0.65, ranges).code, RESULT_GRADE_CODES.MEDIUM_PRIORITY)
+   // 0.5 sebagai batas atas tier rendah -> tier rendah.
+   assert.equal(gradingService.resolveRangeGrade(0.5, ranges).code, RESULT_GRADE_CODES.LOW_PRIORITY)
+   // 0 sebagai batas bawah tier paling rendah -> tier paling bawah.
+   assert.equal(gradingService.resolveRangeGrade(0, ranges).code, RESULT_GRADE_CODES.NOT_ELIGIBLE)
+   // Skor di antara 0 dan threshold paling bawah -> tier paling bawah.
+   assert.equal(gradingService.resolveRangeGrade(0.2, ranges).code, RESULT_GRADE_CODES.NOT_ELIGIBLE)
 })
