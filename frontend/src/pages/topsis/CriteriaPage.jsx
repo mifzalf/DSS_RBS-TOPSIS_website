@@ -134,7 +134,7 @@ export function CriteriaPage() {
   const submitSubCriteria = subCriteriaForm.handleSubmit(async (values) => {
     try {
       if (selectedSubCriteria) {
-        await updateSubCriteriaMutation.mutateAsync({ id: selectedSubCriteria.id, payload: values })
+        await updateSubCriteriaMutation.mutateAsync({ id: selectedSubCriteria.id, criteriaId: selectedCriteria?.id ?? selectedSubCriteria.criteria_id, payload: values })
         pushToast({ title: 'Sub-kriteria diperbarui', description: 'Opsi penilaian berhasil diperbarui.', tone: 'success' })
       } else {
         await createSubCriteriaMutation.mutateAsync({ criteriaId: selectedCriteria.id, payload: { criteria_id: selectedCriteria.id, ...values } })
@@ -153,7 +153,7 @@ export function CriteriaPage() {
         pushToast({ title: 'Kriteria dihapus', description: 'Kriteria beserta opsi turunannya berhasil dihapus.', tone: 'success' })
       }
       if (deleteState.type === 'subCriteria') {
-        await deleteSubCriteriaMutation.mutateAsync(deleteState.item.id)
+        await deleteSubCriteriaMutation.mutateAsync({ id: deleteState.item.id, criteriaId: deleteState.item.criteria_id })
         pushToast({ title: 'Sub-kriteria dihapus', description: 'Opsi penilaian berhasil dihapus.', tone: 'success' })
       }
       setDeleteState({ type: null, item: null })
@@ -236,7 +236,7 @@ export function CriteriaPage() {
                           <ActionMenu
                             items={[
                                { label: 'Ubah', onSelect: () => openEditSubCriteria(item, subCriteria) },
-                               { label: 'Hapus', tone: 'danger', onSelect: () => setDeleteState({ type: 'subCriteria', item: subCriteria }) },
+                               { label: 'Hapus', tone: 'danger', onSelect: () => setDeleteState({ type: 'subCriteria', item: { ...subCriteria, criteria_id: subCriteria.criteria_id ?? item.id } }) },
                             ]}
                           />
                         </div>

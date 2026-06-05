@@ -7,9 +7,14 @@ export function QueryProvider({ children }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 30_000,
+            staleTime: 0,
+            gcTime: 5 * 60_000,
             retry: 1,
             refetchOnWindowFocus: false,
+            refetchOnMount: 'always',
+          },
+          mutations: {
+            retry: 0,
           },
         },
       }),

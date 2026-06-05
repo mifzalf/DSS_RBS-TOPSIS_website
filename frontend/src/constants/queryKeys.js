@@ -4,6 +4,7 @@ export const queryKeys = {
   decisionModel: (id) => ['decision-models', id],
   members: (decisionModelId) => ['decision-models', decisionModelId, 'members'],
   criteria: (decisionModelId) => ['criteria', decisionModelId],
+  subCriteria: (criteriaId) => ['sub-criteria', criteriaId],
   alternatives: (decisionModelId) => ['alternatives', decisionModelId],
   evaluations: (alternativeId) => ['evaluations', alternativeId],
   ruleVariables: (decisionModelId) => ['rule-variables', decisionModelId],

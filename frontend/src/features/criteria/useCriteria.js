@@ -16,7 +16,7 @@ export function useCriteriaWithSubCriteria(decisionModelId) {
 
   const subCriteriaQueries = useQueries({
     queries: criteria.map((item) => ({
-      queryKey: ['sub-criteria', item.id],
+      queryKey: queryKeys.subCriteria(item.id),
       queryFn: () => criteriaApi.listSubCriteria(item.id),
       enabled: Boolean(item.id),
     })),
@@ -62,7 +62,12 @@ export function useCreateSubCriteria(decisionModelId) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: ({ criteriaId, payload }) => criteriaApi.createSubCriteria(criteriaId, payload),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.criteria(decisionModelId) }),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.criteria(decisionModelId) })
+      if (variables?.criteriaId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.subCriteria(variables.criteriaId) })
+      }
+    },
   })
 }
 
@@ -70,14 +75,28 @@ export function useUpdateSubCriteria(decisionModelId) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: ({ id, payload }) => criteriaApi.updateSubCriteria(id, payload),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.criteria(decisionModelId) }),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.criteria(decisionModelId) })
+      if (variables?.criteriaId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.subCriteria(variables.criteriaId) })
+      } else {
+        queryClient.invalidateQueries({ queryKey: ['sub-criteria'] })
+      }
+    },
   })
 }
 
 export function useDeleteSubCriteria(decisionModelId) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: criteriaApi.removeSubCriteria,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.criteria(decisionModelId) }),
+    mutationFn: ({ id }) => criteriaApi.removeSubCriteria(id),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.criteria(decisionModelId) })
+      if (variables?.criteriaId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.subCriteria(variables.criteriaId) })
+      } else {
+        queryClient.invalidateQueries({ queryKey: ['sub-criteria'] })
+      }
+    },
   })
 }
