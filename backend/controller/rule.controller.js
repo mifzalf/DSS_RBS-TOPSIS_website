@@ -21,7 +21,8 @@ exports.createRule = async (req,res)=>{
       priority,
       logic_type,
       action_type,
-      category_id
+      category_id,
+      min_match_count
     } = req.body
 
     const decisionModel = await DecisionModel.findByPk(decision_model_id)
@@ -47,6 +48,7 @@ exports.createRule = async (req,res)=>{
       priority,
       logic_type,
       action_type,
+      min_match_count: logic_type === "AT_LEAST_N" ? (min_match_count ?? null) : null,
       status_active:true,
       created_at:new Date()
     })
@@ -131,7 +133,8 @@ exports.updateRule = async (req,res)=>{
       logic_type,
       action_type,
       category_id,
-      status_active
+      status_active,
+      min_match_count
     } = req.body
 
     if(name?.trim()){
@@ -142,8 +145,18 @@ exports.updateRule = async (req,res)=>{
       updateData.priority = priority
     }
 
-    if(logic_type === "AND" || logic_type === "OR" || logic_type === "EMPTY"){
+    if(logic_type === "AND" || logic_type === "OR" || logic_type === "EMPTY" || logic_type === "AT_LEAST_N"){
       updateData.logic_type = logic_type
+    }
+
+    const nextLogicType = updateData.logic_type ?? rule.logic_type
+
+    if(nextLogicType === "AT_LEAST_N"){
+      if(min_match_count !== undefined){
+        updateData.min_match_count = min_match_count
+      }
+    } else if(logic_type && logic_type !== "AT_LEAST_N"){
+      updateData.min_match_count = null
     }
 
     if(action_type === RULE_ACTION_TYPES.ASSIGN_BENEFIT || action_type === RULE_ACTION_TYPES.REJECT){

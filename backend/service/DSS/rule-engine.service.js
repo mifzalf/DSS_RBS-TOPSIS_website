@@ -58,6 +58,12 @@ const matchesRule = (rule, evaluations) => {
       return evaluations.some(Boolean)
    }
 
+   if (rule.logic_type === "AT_LEAST_N") {
+      const need = Number(rule.min_match_count) || 1
+      const matched = evaluations.reduce((sum, value) => (value ? sum + 1 : sum), 0)
+      return matched >= need
+   }
+
    return evaluations.every(Boolean)
 }
 
@@ -206,9 +212,13 @@ exports.runRuleEngine = async (decisionModelId) => {
       factMaps.set(alternative.id, buildRuleFactMap(facts))
    }
 
-   const doesRuleMatch = ({ rule, alternative, factMap }) => {
+   const doesRuleMatch = ({ rule, alternative, factMap, alreadyMatched }) => {
+      // EMPTY = catch-all/default rule. Match kalau alternatif belum cocok dengan
+      // rule berbobot (priority lebih tinggi) mana pun. Ini menangkap alternatif
+      // yang "tidak punya rule sendiri", baik karena tidak punya variabel sama
+      // sekali maupun karena variabelnya tidak cukup untuk memenuhi rule lain.
       if (rule.logic_type === "EMPTY") {
-         return isAllFactsEmpty({ factMap, activeVariableCodes })
+         return !alreadyMatched
       }
 
       const conditions = rule.conditions || []
@@ -240,7 +250,7 @@ exports.runRuleEngine = async (decisionModelId) => {
       const factMap = factMaps.get(alternative.id) || new Map()
 
        for (const rule of rules) {
-          const matched = doesRuleMatch({ rule, alternative, factMap })
+          const matched = doesRuleMatch({ rule, alternative, factMap, alreadyMatched: Boolean(category) })
           const ruleCategoryName = rule.categoryRef?.name || null
           const ruleActionType = normalizeActionType(rule.action_type)
           const ruleIsRanked = isRankedCategory({ actionType: ruleActionType, category: ruleCategoryName })

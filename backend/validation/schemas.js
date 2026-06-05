@@ -201,9 +201,10 @@ module.exports = {
             decision_model_id: positiveId,
             name: { type: "string", required: true, minLength: 1, maxLength: 150 },
             priority: { type: "integer", required: true, min: 1 },
-            logic_type: { type: "enum", required: true, values: ["AND", "OR", "EMPTY"] },
+            logic_type: { type: "enum", required: true, values: ["AND", "OR", "EMPTY", "AT_LEAST_N"] },
             action_type: { type: "enum", required: true, values: RULE_ACTION_TYPE_VALUES },
-            category_id: positiveId
+            category_id: positiveId,
+            min_match_count: { type: "integer", required: false, min: 1 }
          }
       },
       update: {
@@ -211,7 +212,8 @@ module.exports = {
          body: {
             name: { type: "string", required: false, minLength: 1, maxLength: 150 },
             priority: { type: "integer", required: false, min: 1 },
-            logic_type: { type: "enum", required: false, values: ["AND", "OR", "EMPTY"] },
+            logic_type: { type: "enum", required: false, values: ["AND", "OR", "EMPTY", "AT_LEAST_N"] },
+            min_match_count: { type: "integer", required: false, min: 1 },
             action_type: { type: "enum", required: false, values: RULE_ACTION_TYPE_VALUES },
             category_id: { type: "integer", required: false, min: 1 },
             status_active: { type: "boolean", required: false }

@@ -34,7 +34,7 @@ const syncDatabase = async () => {
       return
    }
 
-   await db.sync()
+   await db.sync({ alter: true })
    console.log("Database synced")
 }
 

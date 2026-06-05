@@ -31,8 +31,15 @@ const Rule = db.define("Rule", {
     }
   },
    logic_type: {
-     type: DataTypes.ENUM("AND", "OR", "EMPTY"),
+     type: DataTypes.ENUM("AND", "OR", "EMPTY", "AT_LEAST_N"),
      allowNull: false
+   },
+   min_match_count: {
+     type: DataTypes.INTEGER,
+     allowNull: true,
+     validate: {
+       min: 1
+     }
    },
   action_type: {
     type: DataTypes.STRING,
