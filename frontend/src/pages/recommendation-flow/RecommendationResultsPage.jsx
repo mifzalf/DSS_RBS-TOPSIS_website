@@ -16,11 +16,22 @@ import { useResults } from '../../features/result/useResults'
 import { useDecisionModelId } from '../../hooks/useDecisionModelId'
 import { formatDecimal } from '../../utils/format'
 
-function getGradeTone(gradeCode) {
-  if (gradeCode === 'high_priority') return 'success'
-  if (gradeCode === 'medium_priority') return 'info'
-  if (gradeCode === 'low_priority') return 'warning'
-  if (gradeCode === 'not_eligible') return 'neutral'
+// Pemetaan tone badge grade. Dibuat toleran terhadap:
+// - Kode canonical bahasa Inggris (default seed: high_priority, dst).
+// - Kode turunan dari label berbahasa Indonesia yang sempat ditulis oleh
+//   versi GradePoliciesPage sebelumnya (mis. 'prioritas_tinggi').
+// - Variasi separator (spasi, dash, atau underscore).
+// Pemetaan berdasarkan substring agar perubahan label tidak memutus warna.
+function getGradeTone(gradeCode, gradeLabel) {
+  const haystack = `${gradeCode || ''} ${gradeLabel || ''}`.toLowerCase()
+
+  if (!haystack.trim()) return 'neutral'
+
+  if (haystack.includes('high') || haystack.includes('tinggi')) return 'success'
+  if (haystack.includes('medium') || haystack.includes('sedang')) return 'info'
+  if (haystack.includes('low') || haystack.includes('rendah')) return 'warning'
+  if (haystack.includes('not_eligible') || haystack.includes('not eligible') || haystack.includes('tidak memenuhi') || haystack.includes('ditolak')) return 'neutral'
+
   return 'neutral'
 }
 
@@ -243,7 +254,7 @@ export function RecommendationResultsPage() {
             columns={[
               { key: 'display_rank', header: 'Peringkat' },
               { key: 'alternative', header: 'Rumah tangga', render: (row) => row.alternative?.name || `Rumah tangga ${row.alternative?.id}` },
-              { key: 'grade', header: 'Grade', render: (row) => <Badge tone={getGradeTone(row.grade_code)}>{row.grade_label || '-'}</Badge> },
+              { key: 'grade', header: 'Grade', render: (row) => <Badge tone={getGradeTone(row.grade_code, row.grade_label)}>{row.grade_label || '-'}</Badge> },
               { key: 'status', header: 'Status', render: (row) => <Badge tone={row.status === 'rejected' ? 'warning' : 'success'}>{row.status === 'rejected' ? 'ditolak' : 'diperingkat'}</Badge> },
               { key: 'preference_score', header: 'Nilai preferensi', render: (row) => row.preference_score == null ? '-' : formatDecimal(row.preference_score) },
             ]}
@@ -269,7 +280,7 @@ export function RecommendationResultsPage() {
                   <p>{item.grade_label || 'Belum ada label grade'}</p>
                 </div>
                 <div className="recommendation-rejected-badges">
-                  <Badge tone={getGradeTone(item.grade_code)}>{item.grade_label || item.grade_code || 'belum digrade'}</Badge>
+                  <Badge tone={getGradeTone(item.grade_code, item.grade_label)}>{item.grade_label || item.grade_code || 'belum digrade'}</Badge>
                   <Badge tone="warning">{item.status === 'rejected' ? 'ditolak' : 'tolak'}</Badge>
                 </div>
               </article>
