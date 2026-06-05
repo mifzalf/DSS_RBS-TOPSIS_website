@@ -16,6 +16,7 @@ import { Modal } from '../../components/ui/Modal'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { SectionCard } from '../../components/ui/SectionCard'
 import { TextField } from '../../components/form/TextField'
+import { NumberField } from '../../components/form/NumberField'
 import { queryKeys } from '../../constants/queryKeys'
 import { RULE_ACTION_OPTIONS, RULE_VARIABLE_TYPE_OPTIONS } from '../../constants/options'
 import { useAssistanceCategories } from '../../features/assistance-categories/useAssistanceCategories'
@@ -32,14 +33,21 @@ const variableSchema = z.object({
   status_active: z.enum(['true', 'false']),
 })
 
-const ruleSchema = z.object({
-  name: z.string().min(1, 'Nama wajib diisi.').max(150, 'Maksimal 150 karakter.'),
-  priority: z.coerce.number().int().min(1, 'Prioritas minimal adalah 1.'),
-  logic_type: z.enum(['AND', 'OR', 'EMPTY']),
-  action_type: z.enum(['assign_benefit', 'reject']),
-  category_id: z.string().min(1, 'Tipe keputusan wajib dipilih.'),
-  status_active: z.enum(['true', 'false']),
-})
+const ruleSchema = z
+  .object({
+    name: z.string().min(1, 'Nama wajib diisi.').max(150, 'Maksimal 150 karakter.'),
+    priority: z.coerce.number().int().min(1, 'Prioritas minimal adalah 1.'),
+    logic_type: z.enum(['AND', 'OR', 'EMPTY', 'AT_LEAST_N']),
+    min_match_count: z.union([z.coerce.number().int().min(1, 'Minimal 1.'), z.literal('').transform(() => undefined)]).optional(),
+    action_type: z.enum(['assign_benefit', 'reject']),
+    category_id: z.string().min(1, 'Tipe keputusan wajib dipilih.'),
+    status_active: z.enum(['true', 'false']),
+  })
+  .superRefine((values, ctx) => {
+    if (values.logic_type === 'AT_LEAST_N' && (!values.min_match_count || values.min_match_count < 1)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['min_match_count'], message: 'Wajib diisi minimal 1 saat logika "Minimal N dari kondisi".' })
+    }
+  })
 
 const conditionSchema = z.object({
   rule_variable_id: z.string().min(1, 'Variabel rule wajib dipilih.'),
@@ -61,21 +69,29 @@ export function RulesPage() {
   const createVariableMutation = useCreateRuleVariable(decisionModelId)
   const updateVariableMutation = useUpdateRuleVariable(decisionModelId)
   const deleteVariableMutation = useDeleteRuleVariable(decisionModelId)
+  const invalidateRulesAndConditions = (ruleId) => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.rules(decisionModelId) })
+    if (ruleId) {
+      queryClient.invalidateQueries({ queryKey: queryKeys.ruleConditions(ruleId) })
+    } else {
+      queryClient.invalidateQueries({ queryKey: ['rules'] })
+    }
+  }
   const ruleMutation = useMutation({
     mutationFn: ({ id, payload }) => (id ? ruleApi.update(id, payload) : ruleApi.create(payload)),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.rules(decisionModelId) }),
+    onSuccess: () => invalidateRulesAndConditions(),
   })
   const conditionMutation = useMutation({
     mutationFn: ({ id, payload }) => (id ? ruleApi.updateCondition(id, payload) : ruleApi.createCondition(payload)),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.rules(decisionModelId) }),
+    onSuccess: (_data, variables) => invalidateRulesAndConditions(variables?.ruleId ?? variables?.payload?.rule_id),
   })
   const deleteRuleMutation = useMutation({
     mutationFn: ruleApi.remove,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.rules(decisionModelId) }),
+    onSuccess: () => invalidateRulesAndConditions(),
   })
   const deleteConditionMutation = useMutation({
-    mutationFn: ruleApi.removeCondition,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.rules(decisionModelId) }),
+    mutationFn: ({ id }) => ruleApi.removeCondition(id),
+    onSuccess: (_data, variables) => invalidateRulesAndConditions(variables?.ruleId),
   })
 
   const variableForm = useForm({
@@ -84,7 +100,7 @@ export function RulesPage() {
   })
   const ruleForm = useForm({
     resolver: zodResolver(ruleSchema),
-    defaultValues: { name: '', priority: 1, logic_type: 'AND', action_type: 'assign_benefit', category_id: '', status_active: 'true' },
+    defaultValues: { name: '', priority: 1, logic_type: 'AND', min_match_count: '', action_type: 'assign_benefit', category_id: '', status_active: 'true' },
   })
   const conditionForm = useForm({
     resolver: zodResolver(conditionSchema),
@@ -122,12 +138,12 @@ export function RulesPage() {
   }
 
   const openCreateRule = () => {
-    ruleForm.reset({ name: '', priority: data.length + 1, logic_type: 'AND', action_type: 'assign_benefit', category_id: '', status_active: 'true' })
+    ruleForm.reset({ name: '', priority: data.length + 1, logic_type: 'AND', min_match_count: '', action_type: 'assign_benefit', category_id: '', status_active: 'true' })
     setRuleModal({ open: true, rule: null })
   }
 
   const openEditRule = (rule) => {
-    ruleForm.reset({ name: rule.name || '', priority: rule.priority, logic_type: rule.logic_type, action_type: rule.action_type, category_id: String(rule.category_id || ''), status_active: String(Boolean(rule.status_active)) })
+    ruleForm.reset({ name: rule.name || '', priority: rule.priority, logic_type: rule.logic_type, min_match_count: rule.min_match_count ?? '', action_type: rule.action_type, category_id: String(rule.category_id || ''), status_active: String(Boolean(rule.status_active)) })
     setRuleModal({ open: true, rule })
   }
 
@@ -171,6 +187,7 @@ export function RulesPage() {
       action_type: values.action_type,
       category_id: Number(values.category_id),
       status_active: values.status_active === 'true',
+      min_match_count: values.logic_type === 'AT_LEAST_N' ? Number(values.min_match_count) : null,
     }
 
     try {
@@ -211,7 +228,7 @@ export function RulesPage() {
         pushToast({ title: 'Rule dihapus', description: 'Konfigurasi rule berhasil dihapus.', tone: 'success' })
       }
       if (deleteState.type === 'condition') {
-        await deleteConditionMutation.mutateAsync(deleteState.item.id)
+        await deleteConditionMutation.mutateAsync({ id: deleteState.item.id, ruleId: deleteState.item.ruleId })
         pushToast({ title: 'Kondisi dihapus', description: 'Kondisi rule berhasil dihapus.', tone: 'success' })
       }
       setDeleteState({ type: null, item: null })
@@ -257,7 +274,7 @@ export function RulesPage() {
                 <div className="rule-card-head">
                   <div>
                     <strong>{rule.name || `Rule ${rule.priority}`}</strong>
-                    <p>Prioritas {rule.priority} · {rule.logic_type}</p>
+                    <p>Prioritas {rule.priority} · {rule.logic_type === 'AT_LEAST_N' ? `Minimal ${rule.min_match_count || 1} dari kondisi` : rule.logic_type}</p>
                   </div>
                   <div className="rule-card-badges">
                     <Badge tone={rule.action_type === 'reject' ? 'warning' : 'success'}>{rule.action_type === 'reject' ? 'tolak' : 'tetapkan tipe keputusan'}</Badge>
@@ -283,7 +300,7 @@ export function RulesPage() {
                           <strong>{condition.ruleVariable ? `${condition.ruleVariable.code} · ${condition.ruleVariable.name}` : condition.field}</strong>
                           <span>{condition.operator} {condition.value}</span>
                         </div>
-                        <ActionMenu items={[{ label: 'Ubah kondisi', onSelect: () => openEditCondition(rule, condition) }, { label: 'Hapus kondisi', tone: 'danger', onSelect: () => setDeleteState({ type: 'condition', item: condition }) }]} />
+                        <ActionMenu items={[{ label: 'Ubah kondisi', onSelect: () => openEditCondition(rule, condition) }, { label: 'Hapus kondisi', tone: 'danger', onSelect: () => setDeleteState({ type: 'condition', item: { ...condition, ruleId: rule.id } }) }]} />
                       </div>
                     )) : <p>Belum ada kondisi.</p>}
                   </div>
@@ -308,7 +325,12 @@ export function RulesPage() {
         <form id="rule-form" className="stack-md" onSubmit={submitRule}>
           <FormField label="Nama" error={ruleForm.formState.errors.name?.message}><TextField {...ruleForm.register('name')} placeholder="Rule kelayakan 1" /></FormField>
           <FormField label="Prioritas" error={ruleForm.formState.errors.priority?.message}><TextField type="number" {...ruleForm.register('priority')} /></FormField>
-          <FormField label="Tipe logika" error={ruleForm.formState.errors.logic_type?.message}><DropdownSelect value={ruleLogicTypeValue} options={[{ value: 'AND', label: 'AND' }, { value: 'OR', label: 'OR' }, { value: 'EMPTY', label: 'EMPTY (semua null/false)' }]} onChange={(value) => ruleForm.setValue('logic_type', value, { shouldValidate: true })} /></FormField>
+          <FormField label="Tipe logika" error={ruleForm.formState.errors.logic_type?.message}><DropdownSelect value={ruleLogicTypeValue} options={[{ value: 'AND', label: 'AND (semua kondisi terpenuhi)' }, { value: 'OR', label: 'OR (minimal satu kondisi terpenuhi)' }, { value: 'AT_LEAST_N', label: 'Minimal N dari kondisi' }, { value: 'EMPTY', label: 'EMPTY (semua null/false)' }]} onChange={(value) => ruleForm.setValue('logic_type', value, { shouldValidate: true })} /></FormField>
+          {ruleLogicTypeValue === 'AT_LEAST_N' ? (
+            <FormField label="Minimal kondisi terpenuhi" hint="Jumlah minimum kondisi yang harus bernilai true agar rule cocok." error={ruleForm.formState.errors.min_match_count?.message}>
+              <NumberField {...ruleForm.register('min_match_count')} min="1" step="1" placeholder="contoh: 2" />
+            </FormField>
+          ) : null}
           <FormField label="Aksi" error={ruleForm.formState.errors.action_type?.message}><DropdownSelect value={ruleActionTypeValue} options={RULE_ACTION_OPTIONS} onChange={(value) => ruleForm.setValue('action_type', value, { shouldValidate: true })} /></FormField>
           <FormField label="Tipe keputusan" error={ruleForm.formState.errors.category_id?.message}><DropdownSelect value={ruleCategoryValue} options={[{ value: '', label: selectedActionType === 'reject' ? 'Pilih tipe ditolak' : 'Pilih tipe diperingkat' }, ...filteredCategories.map((item) => ({ value: String(item.id), label: `${item.name} (${item.code})` }))]} onChange={(value) => ruleForm.setValue('category_id', value, { shouldValidate: true })} /></FormField>
           <FormField label="Status" error={ruleForm.formState.errors.status_active?.message}><DropdownSelect value={ruleStatusValue} options={[{ value: 'true', label: 'Aktif' }, { value: 'false', label: 'Nonaktif' }]} onChange={(value) => ruleForm.setValue('status_active', value, { shouldValidate: true })} /></FormField>
