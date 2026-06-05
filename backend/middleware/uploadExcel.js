@@ -5,6 +5,41 @@ const { ValidationError } = require("../utils/appError")
 
 const XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 const XLSX_EXTENSION = ".xlsx"
+
+// Browser/OS/office suite yang berbeda kirim MIME type berbeda untuk file .xlsx
+// (mis. WPS Office: application/wps-office.xlsx, LibreOffice, Numbers, dll).
+// Validasi konten sebenarnya tetap dilakukan oleh verifyMagicBytes() yang membaca
+// magic bytes asli ZIP/XLSX, jadi filter MIME di sini cukup permisif untuk mencegah
+// false reject. Kita tetap menolak MIME yang jelas berbeda (image, pdf, video, dll).
+const ALLOWED_XLSX_MIMES = new Set([
+   XLSX_MIME,
+   "application/octet-stream",
+   "application/zip",
+   "application/x-zip",
+   "application/x-zip-compressed",
+   "application/vnd.ms-excel",
+   "application/excel",
+   "application/x-excel",
+   "application/x-msexcel",
+   ""
+])
+
+const XLSX_MIME_PATTERNS = [
+   /xlsx/i,
+   /excel/i,
+   /spreadsheet/i,
+   /wps-office/i,
+   /openxmlformats/i,
+   /^application\/zip/i,
+   /^application\/x-zip/i
+]
+
+const isAllowedXlsxMime = (mimetype) => {
+   if (!mimetype) return true
+   if (ALLOWED_XLSX_MIMES.has(mimetype)) return true
+   return XLSX_MIME_PATTERNS.some((pattern) => pattern.test(mimetype))
+}
+
 const getMaxFileSizeBytes = () => {
    const configured = Number(process.env.IMPORT_MAX_FILE_SIZE_MB)
    const safeConfigured = Number.isFinite(configured) && configured > 0 ? configured : 5
@@ -23,6 +58,12 @@ const buildMulter = () => multer({
 
       if (!lowerName.endsWith(XLSX_EXTENSION)) {
          return callback(new ValidationError("Only .xlsx files are allowed"))
+      }
+
+      const mimetype = String(file.mimetype || "").toLowerCase()
+
+      if (!isAllowedXlsxMime(mimetype)) {
+         return callback(new ValidationError(`File MIME type does not match .xlsx (received: ${file.mimetype})`))
       }
 
       callback(null, true)
