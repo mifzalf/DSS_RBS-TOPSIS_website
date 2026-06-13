@@ -53,6 +53,14 @@ export function RuleEvaluationsPage() {
   const upsertMutation = useUpsertRuleEvaluation(selectedId)
   const deleteMutation = useDeleteRuleEvaluation(selectedId)
 
+  // Switching alternatives must reset local drafts; otherwise a draft typed for
+  // the previous alternative would leak onto the next one and mask server data.
+  const handleSelectAlternative = (alternativeId) => {
+    if (alternativeId === selectedId) return
+    setSelectedAlternativeId(alternativeId)
+    setDrafts({})
+  }
+
   if (alternativesQuery.isLoading || variablesQuery.isLoading || (selectedId && evaluationsQuery.isLoading)) {
     return <LoadingState title="Memuat evaluasi rule" description="Menyiapkan alternatif dan nilai fakta bertipe untuk input RBS." />
   }
@@ -72,7 +80,13 @@ export function RuleEvaluationsPage() {
     try {
       await upsertMutation.mutateAsync({
         id: currentEvaluation?.id,
-        payload: currentEvaluation?.id ? getPayload(variable, selectedId, rawValue) : getPayload(variable, selectedId, rawValue),
+        payload: getPayload(variable, selectedId, rawValue),
+      })
+      // Drop the draft so the row reflects the freshly invalidated server value.
+      setDrafts((state) => {
+        const next = { ...state }
+        delete next[variable.id]
+        return next
       })
       pushToast({ title: 'Evaluasi rule disimpan', description: `${variable.name} berhasil diperbarui untuk alternatif terpilih.`, tone: 'success' })
     } catch (error) {
@@ -85,6 +99,11 @@ export function RuleEvaluationsPage() {
     if (!currentEvaluation) return
     try {
       await deleteMutation.mutateAsync(currentEvaluation.id)
+      setDrafts((state) => {
+        const next = { ...state }
+        delete next[variable.id]
+        return next
+      })
       pushToast({ title: 'Evaluasi rule dihapus', description: `${variable.name} berhasil dikosongkan untuk alternatif terpilih.`, tone: 'success' })
     } catch (error) {
       pushToast({ title: 'Gagal menghapus evaluasi rule', description: error.message, tone: 'error' })
@@ -98,7 +117,7 @@ export function RuleEvaluationsPage() {
         {alternatives.length ? (
           <div className="alternative-chip-list">
             {alternatives.map((alternative) => (
-              <button key={alternative.id} type="button" className={`decision-model-tab ${selectedId === alternative.id ? 'active' : ''}`} onClick={() => setSelectedAlternativeId(alternative.id)}>
+              <button key={alternative.id} type="button" className={`decision-model-tab ${selectedId === alternative.id ? 'active' : ''}`} onClick={() => handleSelectAlternative(alternative.id)}>
                 {alternative.name}
               </button>
             ))}

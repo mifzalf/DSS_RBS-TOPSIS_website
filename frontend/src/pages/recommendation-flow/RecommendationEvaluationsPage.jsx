@@ -71,6 +71,14 @@ export function RecommendationEvaluationsPage() {
   const rbsEvaluationsQuery = useRuleEvaluations(selectedId)
   const upsertRbsMutation = useUpsertRuleEvaluation(selectedId)
   const deleteRbsMutation = useDeleteRuleEvaluation(selectedId)
+
+  // Switching alternatives must reset local RBS drafts; otherwise a draft typed
+  // for the previous alternative would leak onto the next one and mask its data.
+  const handleSelectAlternative = (alternativeId) => {
+    if (alternativeId === selectedId) return
+    setSelectedAlternativeId(alternativeId)
+    setRbsDrafts({})
+  }
   const role = decisionModelQuery.data?.role
     || (decisionModelsQuery.data || []).find((item) => String(item.id) === String(decisionModelId))?.role
   const canManage = role === 'owner' || role === 'editor'
@@ -124,6 +132,12 @@ export function RecommendationEvaluationsPage() {
         id: currentEvaluation?.id,
         payload: getRbsPayload(variable, selectedId, rawValue),
       })
+      // Drop the draft so the row reflects the freshly invalidated server value.
+      setRbsDrafts((state) => {
+        const next = { ...state }
+        delete next[variable.id]
+        return next
+      })
       pushToast({ title: 'Evaluasi rule disimpan', description: `${variable.name} berhasil diperbarui.`, tone: 'success' })
     } catch (error) {
       pushToast({ title: 'Gagal menyimpan evaluasi rule', description: error.message, tone: 'error' })
@@ -135,6 +149,11 @@ export function RecommendationEvaluationsPage() {
     if (!currentEvaluation) return
     try {
       await deleteRbsMutation.mutateAsync(currentEvaluation.id)
+      setRbsDrafts((state) => {
+        const next = { ...state }
+        delete next[variable.id]
+        return next
+      })
       pushToast({ title: 'Evaluasi rule dihapus', description: `${variable.name} berhasil dikosongkan.`, tone: 'success' })
     } catch (error) {
       pushToast({ title: 'Gagal menghapus evaluasi rule', description: error.message, tone: 'error' })
@@ -169,7 +188,7 @@ export function RecommendationEvaluationsPage() {
             const count = row ? `${row.completed}/${row.expected}` : '0/0'
 
             return (
-              <button key={alternative.id} type="button" className={`decision-model-tab ${selectedId === alternative.id ? 'active' : ''}`} onClick={() => setSelectedAlternativeId(alternative.id)}>
+              <button key={alternative.id} type="button" className={`decision-model-tab ${selectedId === alternative.id ? 'active' : ''}`} onClick={() => handleSelectAlternative(alternative.id)}>
                 <span>{alternative.name}</span>
                 <small className="decision-model-tab-meta">{count}</small>
               </button>
