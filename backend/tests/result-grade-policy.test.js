@@ -6,9 +6,20 @@ const { ValidationError } = require("../utils/appError")
 const gradeRangeService = require("../service/result-grade-range.service")
 const ResultGradePolicy = require("../models/result-grade-policy.model")
 
-test("updateGradeRange rejects invalid min/max score combinations", async () => {
+test("updateGradeRange rejects max_score outside [0, 1]", async () => {
    await assert.rejects(
-      () => gradeRangeService.updateGradeRange({ update: async () => {}, min_score: 0.2, max_score: 0.4 }, { min_score: 0.8, max_score: 0.3 }),
+      () => gradeRangeService.updateGradeRange(
+         { id: 1, result_grade_policy_id: 10, update: async () => {} },
+         { max_score: 1.5 }
+      ),
+      ValidationError
+   )
+
+   await assert.rejects(
+      () => gradeRangeService.updateGradeRange(
+         { id: 1, result_grade_policy_id: 10, update: async () => {} },
+         { max_score: -0.1 }
+      ),
       ValidationError
    )
 })
