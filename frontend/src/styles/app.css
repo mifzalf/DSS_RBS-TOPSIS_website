@@ -1366,6 +1366,14 @@
   transform: translateX(0);
 }
 
+.action-menu-popover-right.action-menu-popover-top {
+  transform: translate(-100%, -100%);
+}
+
+.action-menu-popover-left.action-menu-popover-top {
+  transform: translateY(-100%);
+}
+
 .action-menu-item {
   width: 100%;
   text-align: left;
